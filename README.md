@@ -1,5 +1,5 @@
 # Nebula
-Coog Interactive's Experimental Game Engines
+Coog Interactive's Experimental Game Engine
 
 ## Building
 Nebula currently uses the WAF build system, but it may be changed out for something else in the future. Building requires python to be installed.
