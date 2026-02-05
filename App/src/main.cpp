@@ -1,11 +1,10 @@
 #include <iostream>
-#include "greet.h"
+#include <Nebula.h>
+#include "header.h"
 
 int main()
 {
-    std::string name;
-    std::cout << "Enter your name: ";
-    std::cin >> name;
-
-    Nebula::Greet(name);
+    std::cout << "Hello, world!" << std::endl;
+    std::cout << "The magic number is " << magicNumber << std::endl;
+    Nebula::Greet("John Doe");
 }
