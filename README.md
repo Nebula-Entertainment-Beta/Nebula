@@ -2,17 +2,11 @@
 Coog Interactive's Experimental Game Engine
 
 ## Building
-Nebula currently uses the WAF build system, but it may be changed out for something else in the future. Building requires python to be installed.
+Nebula currently uses the CMake build system, but it may be changed out for something else in the future. Building requires cmake to be installed.
 ```
-python3 ./waf configure build
-```
-If you want to generate a Visual Studio SLN, then just append `msvs` to it.
-```
-python3 ./waf configure build msvs
-```
-Same for `xcode6`
-```
-python3 ./waf configure build xcode6
+cmake -B build
+cd build
+make
 ```
 ## Typing Conventions
 - `camelCase` for variables
