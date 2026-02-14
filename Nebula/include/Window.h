@@ -7,6 +7,9 @@ namespace Nebula
     {
     public:
         Window(std::string_view title, int width, int height);
+
         ~Window();
     };
+    
+       
 }
