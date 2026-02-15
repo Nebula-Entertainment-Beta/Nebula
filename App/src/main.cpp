@@ -10,13 +10,12 @@ int main()
     std::cout << "The magic number is " << magicNumber << std::endl;
 
     Nebula::Window window("Nebula", 800, 600);
-    
-    while (true)
+    while (!window.destroy())
     {
         window.update();
     }
 
-    
+    window.destroy();
 
     return 0;
 }

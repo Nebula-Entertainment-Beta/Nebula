@@ -10,7 +10,9 @@ namespace Nebula
         Window(std::string_view title, int width, int height);
         void create();
         void update();
+        bool destroy();
         ~Window();
+        
         
         
          

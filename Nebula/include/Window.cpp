@@ -12,7 +12,7 @@ namespace Nebula
           std::cerr << "Failed to initialize GLFW" << std::endl;
           return;
       }
-      
+
       m_window = glfwCreateWindow(width, height, title.data(), nullptr, nullptr);
 
       if(m_window != nullptr)
@@ -41,5 +41,14 @@ namespace Nebula
       }
       glfwSwapBuffers(m_window);
       glfwPollEvents();
+  }
+  bool Window::destroy()
+  {
+      if (!m_window)
+      {
+          std::cerr << "Failed to destroy GLFW window" << std::endl;
+          return true;
+      }
+      return glfwWindowShouldClose(m_window);
   }
 }
