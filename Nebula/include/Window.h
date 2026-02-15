@@ -1,5 +1,6 @@
 #pragma once
 #include <string_view>
+#include <GLFW/glfw3.h>
 
 namespace Nebula
 {
@@ -7,9 +8,16 @@ namespace Nebula
     {
     public:
         Window(std::string_view title, int width, int height);
-
+        void create();
+        void update();
         ~Window();
-    };
+        
+        
+         
+        
     
-       
+
+    private:
+        GLFWwindow* m_window;
+    };  
 }
