@@ -5,5 +5,5 @@ project(Nebula VERSION 0.1
 
 add_subdirectory(App)
 add_subdirectory(Nebula)
-add_subdirectory(glfw)
+add_subdirectory(Nebula/vendor/glfw)
 set(CMAKE_CXX_STANDARD 17)
