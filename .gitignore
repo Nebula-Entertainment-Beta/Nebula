@@ -44,5 +44,3 @@
 # CMake build directories
 build/
 **/build/
-
-**/vendor/
