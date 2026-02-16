@@ -18,8 +18,9 @@ int main()
     }
 
     // close the window and clean up resources
-
-    window.closeWindow();
+    
+    
+    
 
     return 0;
 }
