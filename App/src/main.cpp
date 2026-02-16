@@ -12,13 +12,14 @@ int main()
     // Create a window using the glfw library
     Nebula::Window window("Nebula", 800, 600);
     //making the window visible
-    while (!window.destroy())
+    while (!window.closeWindow())
     {
         window.update();
     }
 
-    // Destroy the window and clean up resources
-    window.destroy();
+    // close the window and clean up resources
+
+    window.closeWindow();
 
     return 0;
 }

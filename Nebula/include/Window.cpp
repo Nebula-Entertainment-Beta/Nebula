@@ -42,7 +42,7 @@ namespace Nebula
       glfwSwapBuffers(m_window);
       glfwPollEvents();
   }
-  bool Window::destroy()
+  bool Window::closeWindow()
   {
       if (!m_window)
       {
