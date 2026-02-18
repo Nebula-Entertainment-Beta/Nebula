@@ -14,22 +14,11 @@ namespace Nebula
       }
 
       m_window = glfwCreateWindow(width, height, title.data(), nullptr, nullptr);
-
-      if(m_window != nullptr)
-      {
-          std::cout << "GLFW window created successfully" << std::endl;
-      }
-      else
+      if(m_window == NULL)
       {
           std::cerr << "Failed to create GLFW window" << std::endl;
-          
       }
-      
-  }
-
-  Window::~Window()
-  {
-      glfwDestroyWindow(m_window);
+      glfwMakeContextCurrent(m_window);
   }
   
   void Window::update()
@@ -43,13 +32,13 @@ namespace Nebula
       glfwPollEvents();
   }
 
-  bool Window::closeWindow()
+  bool Window::shouldWindowClose()
   {
-      if (!m_window)
-      {
-          std::cerr << "Failed to destroy GLFW window" << std::endl;
-          return true;
-      }
       return glfwWindowShouldClose(m_window);
+  }
+
+  Window::~Window()
+  {
+      glfwDestroyWindow(m_window);
   }
 }
