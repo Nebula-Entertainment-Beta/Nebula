@@ -5,6 +5,6 @@ project(Nebula VERSION 0.1
 
 add_subdirectory(vendor/glfw)
 
-add_library(Nebula SHARED include/Window.cpp)
+add_library(Nebula SHARED src/Window.cpp)
 target_include_directories(Nebula PUBLIC include ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glfw/include)
 target_link_libraries(Nebula PUBLIC glfw)
