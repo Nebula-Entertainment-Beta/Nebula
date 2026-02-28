@@ -2,6 +2,9 @@
 #include <string_view>
 #include <GLFW/glfw3.h>
 
+// This class is responsible for creating and managing the application window using GLFW. 
+//It provides methods to update the window, check if it should close, 
+//and clean up resources when the window is destroyed.
 namespace Nebula
 {
     class Window

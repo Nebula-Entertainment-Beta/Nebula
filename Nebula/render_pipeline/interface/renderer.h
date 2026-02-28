@@ -1,11 +1,22 @@
 #include <iostream>
+#include <GLFW/glfw3.h>
+#include <glad/glad.h>
 
-class Renderer {
-public:
-    void render() {
-        std::cout << "Rendering..." << std::endl;
-        // Add rendering logic here
-        std::cout << "Render complete." << std::endl;
+
+namespace Nebula
+{
+    class Renderer {
+
+      public:
+          void init();
+          void render();
+          void cleanup();
+      private:
+      
+          GLuint m_VAO, m_VBO, m_EBO;
           
-    }
-};
+
+    };
+
+
+}
