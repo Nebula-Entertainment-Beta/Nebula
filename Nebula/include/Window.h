@@ -9,7 +9,7 @@ namespace Nebula
     public:
         Window(std::string_view title, int width, int height);
         void update();
-        bool closeWindow();
+        bool shouldWindowClose();
         ~Window();
     private:
         GLFWwindow* m_window;
