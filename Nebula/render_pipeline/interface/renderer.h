@@ -8,12 +8,17 @@ namespace Nebula
     class Renderer {
 
       public:
-          void init();
-          void render();
-          void cleanup();
+          static void init();
+          static void Shutdown();
+          static void BeginFrame();
+          static void EndFrame();
+          static void drawIndexed(unsigned int count);
+
       private:
-      
-          GLuint m_VAO, m_VBO, m_EBO;
+            Renderer() = default;
+        
+
+          
           
 
     };
