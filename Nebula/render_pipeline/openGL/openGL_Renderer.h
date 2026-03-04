@@ -8,20 +8,12 @@ namespace Nebula
     class OpenGL_Renderer : public RenderAPI
     {
     public:
-        void init() override
-        {
-            std::cout << "Initializing OpenGL Renderer" << std::endl;
-        }
-
-        void drawIndexed(unsigned int count) override
-        {
-            std::cout << "Drawing " << count << " indexed vertices with OpenGL" << std::endl;
-        }
-
-        void Shutdown() override
-        {
-            std::cout << "Shutting down OpenGL Renderer" << std::endl;
-        }
+        void init() override;
+        void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
+        void clear(const glm::vec4& color) override;
+        void drawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
+        void Shutdown() override;
+        
 
     };
 }
