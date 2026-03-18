@@ -4,10 +4,15 @@
 
 namespace Nebula
 {
+    RendererAPIType RenderAPI::s_API = RendererAPIType::OpenGL;
+    RendererAPIType RenderAPI::getAPI(){
+        return s_API;
+    }
     std::unique_ptr<RenderAPI> createrendererAPI()
     {
-        // Here you can decide which RenderAPI implementation to create based on your needs
-        // For example, you might want to check for the platform or user settings
+        RenderAPI::s_API =RendererAPIType::OpenGL;
         return std::make_unique<OpenGL_Renderer>();
+
+        
     }
 }
