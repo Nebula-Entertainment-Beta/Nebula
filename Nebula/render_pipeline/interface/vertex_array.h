@@ -2,6 +2,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
+
 namespace Nebula {
 
     class VertexBuffer;

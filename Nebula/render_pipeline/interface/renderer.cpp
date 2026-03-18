@@ -2,6 +2,7 @@
 #include "renderAPI.h"
 #include "vertex_array.h"
 
+
 namespace Nebula {
 
   std::unique_ptr<RenderAPI> Renderer::s_renderAPI =nullptr;
@@ -9,6 +10,7 @@ namespace Nebula {
   void Renderer::init() {
       // Initialization code
       // For example, you might want to create an instance of a specific RenderAPI implementation
+      s_renderAPI = createrendererAPI();
       if(s_renderAPI){
         s_renderAPI->init();
       }
