@@ -8,9 +8,12 @@ namespace Nebula
     RendererAPIType RenderAPI::getAPI(){
         return s_API;
     }
+    void RenderAPI::setAPI(RendererAPIType api){
+        s_API = api;
+    }
     std::unique_ptr<RenderAPI> createrendererAPI()
     {
-        RenderAPI::s_API =RendererAPIType::OpenGL;
+        RenderAPI::setAPI(RendererAPIType::OpenGL);
         return std::make_unique<OpenGL_Renderer>();
 
         
