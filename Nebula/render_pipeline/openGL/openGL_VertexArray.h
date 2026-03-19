@@ -1,23 +1,29 @@
-
+#pragma once
+#include <cstdint>
+#include <memory>
+#include <vector>
 #include "vertex_array.h"
+#include "../../render_pipeline/interface/vertex_buffer.h"
+
 
 namespace Nebula {
 
     class OpenGL_VertexArray : public VertexArray {
     public:
         OpenGL_VertexArray();
-        virtual ~OpenGL_VertexArray();
+       ~OpenGL_VertexArray();
 
-        virtual void bind() const override;
-        virtual void unbind() const override;
+        void bind() const override;
+        void unbind() const override;
 
-        virtual void addVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) override;
-        virtual void setIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) override;
+        void addVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) override;
+        void setIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) override;
 
-        virtual const std::vector<std::shared_ptr<VertexBuffer>>& getVertexBuffers() const override;
-        virtual const std::shared_ptr<IndexBuffer>& getIndexBuffer() const override;
+        const std::vector<std::shared_ptr<VertexBuffer>>& getVertexBuffers() const override;
+        const std::shared_ptr<IndexBuffer>& getIndexBuffer() const override;
         static std::shared_ptr<VertexArray> create();
     private:
+        uint32_t m_rendererID =0;
         std::vector<std::shared_ptr<VertexBuffer>> m_vertexBuffers;
         std::shared_ptr<IndexBuffer> m_indexBuffer;
     };
