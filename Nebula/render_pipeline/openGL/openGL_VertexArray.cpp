@@ -1,5 +1,5 @@
 #include "openGL_VertexArray.h"
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 
 
@@ -33,7 +33,50 @@ namespace Nebula{
 
     void OpenGL_VertexArray::addVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) {
         // Add a vertex buffer
+        bind();
+        vertexBuffer->bind();
+        const auto& layout = vertexBuffer->getlayout();
+
+        for(const auto& element : layout.elements){
+            glEnableVertexAttribArray(element.location);
+
+            switch(element.type){
+                case VertexAttributeType::Float:
+                glVertexAttribPointer(
+                    element.location,
+                    element.componentCount,
+                    GL_FLOAT,
+                    element.normalized ? GL_TRUE : GL_FALSE,
+                    static_cast<GLsizei>(layout.strideBytes),
+                    reinterpret_cast<const void*>(element.offsetBytes));
+
+                break;
+
+                case VertexAttributeType::Int:
+                glVertexAttribIPointer(
+                    element.location,
+                    element.componentCount,
+                    GL_INT,
+                    static_cast<GLsizei>(layout.strideBytes),
+                    reinterpret_cast<const void*>(element.offsetBytes));
+
+                break;
+
+                case VertexAttributeType::UInt:
+                glVertexAttribIPointer(
+                    element.location,
+                    element.componentCount,
+                    GL_UNSIGNED_INT,
+                    static_cast<GLsizei>(layout.strideBytes),
+                    reinterpret_cast<const void*>(element.offsetBytes));
+
+                break;
+            
+            }
+        }
         m_vertexBuffers.push_back(vertexBuffer);
+        vertexBuffer->unbind();
+        unbind();
     }
 
     void OpenGL_VertexArray::setIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) {
