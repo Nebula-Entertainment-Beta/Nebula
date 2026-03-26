@@ -9,7 +9,7 @@ namespace Nebula{
   enum class BufferUsage {Static, Dynamic, Stream};
   enum class VertexAttributeType{Float, Int, UInt};
 
-  struct vertexBufferElement{
+  struct VertexBufferElement{
     uint32_t location =0;
     uint32_t componentCount =0;
     VertexAttributeType type = VertexAttributeType::Float;
@@ -18,9 +18,9 @@ namespace Nebula{
 
   };
 
-  struct vertexBufferLayout {
+  struct VertexBufferLayout {
     size_t strideBytes;
-    std:: vector<vertexBufferElement> elements;
+    std::vector<VertexBufferElement> elements;
   };
 
   class VertexBuffer{
@@ -29,7 +29,7 @@ namespace Nebula{
       virtual ~VertexBuffer() = default;
        virtual void bind() const = 0;
       virtual void unbind() const = 0;
-      virtual const vertexBufferLayout& getlayout() const =0;
+      virtual const VertexBufferLayout& getlayout() const =0;
 
 
 
@@ -37,7 +37,7 @@ namespace Nebula{
         const void* data,
         size_t sizeBytes,
         BufferUsage usage,
-        const vertexBufferLayout& layout
+        const VertexBufferLayout& layout
       );
 
   };

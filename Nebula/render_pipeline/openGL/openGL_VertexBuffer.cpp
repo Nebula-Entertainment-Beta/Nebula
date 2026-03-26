@@ -12,7 +12,7 @@ namespace Nebula{
     return GL_STATIC_DRAW;
   }
 
-  OpenGL_VertexBuffer::OpenGL_VertexBuffer(const void* data,size_t sizeBytes,BufferUsage usage,const vertexBufferLayout& layout):m_layout(layout)
+  OpenGL_VertexBuffer::OpenGL_VertexBuffer(const void* data,size_t sizeBytes,BufferUsage usage,const VertexBufferLayout& layout):m_layout(layout)
   {
     glGenBuffers(1, &m_rendererID);
     glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
@@ -33,7 +33,7 @@ namespace Nebula{
     glBindBuffer(GL_ARRAY_BUFFER, 0);
   }
 
-  std::shared_ptr<VertexBuffer> OpenGL_VertexBuffer::create(const void* data,size_t sizeBytes,BufferUsage usage,const vertexBufferLayout& layout) 
+  std::shared_ptr<VertexBuffer> OpenGL_VertexBuffer::create(const void* data,size_t sizeBytes,BufferUsage usage,const VertexBufferLayout& layout) 
   {
     return std::make_shared<OpenGL_VertexBuffer>(data, sizeBytes, usage, layout);
   }

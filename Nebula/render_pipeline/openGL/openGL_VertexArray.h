@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 #include "vertex_array.h"
-#include "../../render_pipeline/interface/vertex_buffer.h"
+#include "../interface/vertex_buffer.h"
 
 
 namespace Nebula {
@@ -21,7 +21,9 @@ namespace Nebula {
 
         const std::vector<std::shared_ptr<VertexBuffer>>& getVertexBuffers() const override;
         const std::shared_ptr<IndexBuffer>& getIndexBuffer() const override;
-        static std::shared_ptr<VertexArray> create();
+        static std::shared_ptr<VertexArray> create(){
+            return std::make_shared<OpenGL_VertexArray>();
+        }
     private:
         uint32_t m_rendererID =0;
         std::vector<std::shared_ptr<VertexBuffer>> m_vertexBuffers;
