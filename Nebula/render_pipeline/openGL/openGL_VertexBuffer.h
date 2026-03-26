@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "vertex_buffer.h"
+#include "../interface/vertex_buffer.h"
 
 namespace Nebula{
   class OpenGL_VertexBuffer : public VertexBuffer{
@@ -12,13 +12,13 @@ namespace Nebula{
         const void* data,
         size_t sizeBytes,
         BufferUsage usage,
-        const vertexBufferLayout& layout
+        const VertexBufferLayout& layout
       );
       ~OpenGL_VertexBuffer() override;
       void bind() const override;
       void unbind() const override;
 
-      const vertexBufferLayout& getlayout() const override {
+      const VertexBufferLayout& getlayout() const override {
         return m_layout;
       }
 
@@ -26,10 +26,10 @@ namespace Nebula{
         const void* data,
         size_t sizeBytes,
         BufferUsage usage,
-        const vertexBufferLayout& layout);
+        const VertexBufferLayout& layout);
     
     private:
         uint32_t m_rendererID =0;
-        vertexBufferLayout m_layout;
+        VertexBufferLayout m_layout;
   };
 }

@@ -1,5 +1,5 @@
 #include "openGL_Renderer.h"
-#include "vertex_array.h"
+#include "../interface/vertex_array.h"
 
 
 

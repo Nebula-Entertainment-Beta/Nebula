@@ -1,4 +1,5 @@
 #include "openGL_VertexArray.h"
+#include "openGL_IndexBuffer.h"
 #include <glad/glad.h>
 
 
@@ -80,21 +81,21 @@ namespace Nebula{
     }
 
     void OpenGL_VertexArray::setIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) {
-        // Set the index buffer
+        
+        bind();
+        indexBuffer->bind();
         m_indexBuffer = indexBuffer;
+        unbind();
     }
 
     const std::vector<std::shared_ptr<VertexBuffer>>& OpenGL_VertexArray::getVertexBuffers() const {
-        // Return the vertex buffers
+        
         return m_vertexBuffers;
     }
 
     const std::shared_ptr<IndexBuffer>& OpenGL_VertexArray::getIndexBuffer() const {
-        // Return the index buffer
+        
         return m_indexBuffer;
     }
 
-    std::shared_ptr<VertexArray> OpenGL_VertexArray::create() {
-        return std::make_shared<OpenGL_VertexArray>();
-    }
-}
+    

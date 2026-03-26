@@ -1,5 +1,5 @@
-#include <Nebula/render_pipeline/interface/vertex_array.h>
-#include "openGL_VertexArray.h" 
+#include "vertex_array.h"
+#include "../openGL/openGL_VertexArray.h" 
 #include "renderAPI.h"
 
 
@@ -13,10 +13,10 @@ namespace Nebula {
         {
             
             case RendererAPIType::OpenGL:
-                return std:: make_shared<OpenGL_VertexArray>();    
+                return std::make_shared<OpenGL_VertexArray>();    
             
             default:
-                nullptr;
+                return nullptr;
             }
         }
    
