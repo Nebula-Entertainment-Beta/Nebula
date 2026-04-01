@@ -34,6 +34,6 @@ namespace Nebula
 
     
 
-    std::unique_ptr<RenderAPI> createRendererAPI();
+    std::unique_ptr<RenderAPI> createrendererAPI();
 
 }

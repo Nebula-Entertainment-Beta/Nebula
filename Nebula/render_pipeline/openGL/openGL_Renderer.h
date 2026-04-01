@@ -1,3 +1,5 @@
+#pragma once
+#ifndef NEBULA_OPENGL_RENDERER_H
 #include<iostream>
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -17,3 +19,4 @@ namespace Nebula
 
     };
 }
+#endif

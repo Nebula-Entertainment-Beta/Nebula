@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
-#include "vertex_buffer.h"
+
 
 namespace Nebula{
   class IndexBuffer{

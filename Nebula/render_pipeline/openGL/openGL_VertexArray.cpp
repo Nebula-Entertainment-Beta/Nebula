@@ -72,7 +72,10 @@ namespace Nebula{
                     reinterpret_cast<const void*>(element.offsetBytes));
 
                 break;
-            
+
+                default:
+                   return;
+
             }
         }
         m_vertexBuffers.push_back(vertexBuffer);
@@ -97,5 +100,7 @@ namespace Nebula{
         
         return m_indexBuffer;
     }
+
+}
 
     
