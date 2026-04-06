@@ -8,7 +8,7 @@ namespace Nebula{
         const void* data,
         size_t sizeBytes,
         BufferUsage usage,
-        const vertexBufferLayout& layout){
+        const VertexBufferLayout& layout){
 
 
         switch (RenderAPI::getAPI()){
