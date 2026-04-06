@@ -1,7 +1,9 @@
 #include "Window.h"
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string_view>
+
 
 namespace Nebula
 { 
@@ -20,6 +22,11 @@ namespace Nebula
           std::cerr << "Failed to create GLFW window" << std::endl;
       }
       glfwMakeContextCurrent(m_window);
+      if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+      {
+          std::cerr << "Failed to initialize GLAD" << std::endl;
+          return;
+      }
   }
   
   //the update function is responsible for swapping the buffers and polling events to keep the window responsive

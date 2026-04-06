@@ -1,5 +1,6 @@
 #pragma once
 #include <string_view>
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 // This class is responsible for creating and managing the application window using GLFW. 
