@@ -3,9 +3,13 @@
 
 namespace Nebula {
     OpenGL_IndexBuffer::OpenGL_IndexBuffer(uint32_t* indices, uint32_t count) : m_count(count) {
+        // Core profile: binding GL_ELEMENT_ARRAY_BUFFER requires a bound VAO. Upload index data
+        // using GL_ARRAY_BUFFER first; the buffer object is the same when later bound as EBO.
         glGenBuffers(1, &m_rendererID);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_rendererID);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(count * sizeof(uint32_t)), indices,
+                     GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     OpenGL_IndexBuffer::~OpenGL_IndexBuffer() {

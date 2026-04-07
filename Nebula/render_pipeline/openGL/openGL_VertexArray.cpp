@@ -1,6 +1,7 @@
 #include "openGL_VertexArray.h"
 #include "openGL_IndexBuffer.h"
 #include <glad/glad.h>
+#include <iostream>
 
 
 
@@ -33,7 +34,10 @@ namespace Nebula{
     }
 
     void OpenGL_VertexArray::addVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) {
-        // Add a vertex buffer
+        if (!vertexBuffer) {
+            std::cerr << "OpenGL_VertexArray::addVertexBuffer: null VertexBuffer\n";
+            return;
+        }
         bind();
         vertexBuffer->bind();
         const auto& layout = vertexBuffer->getlayout();
@@ -74,7 +78,8 @@ namespace Nebula{
                 break;
 
                 default:
-                   return;
+                    std::cerr << "OpenGL_VertexArray: unknown VertexAttributeType\n";
+                    break;
 
             }
         }
@@ -84,7 +89,10 @@ namespace Nebula{
     }
 
     void OpenGL_VertexArray::setIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) {
-        
+        if (!indexBuffer) {
+            std::cerr << "OpenGL_VertexArray::setIndexBuffer: null IndexBuffer\n";
+            return;
+        }
         bind();
         indexBuffer->bind();
         m_indexBuffer = indexBuffer;
