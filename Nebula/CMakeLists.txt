@@ -7,7 +7,6 @@ add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/glad)
 add_subdirectory(vendor/glm)
 
-# STATIC avoids macOS dylib + C++ ABI/layout surprises; Game links everything into one executable.
 add_library(Nebula STATIC src/Window.cpp 
 render_pipeline/interface/renderAPI.cpp  
 render_pipeline/interface/renderer.cpp
