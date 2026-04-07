@@ -7,7 +7,7 @@ add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/glad)
 add_subdirectory(vendor/glm)
 
-add_library(Nebula SHARED src/Window.cpp 
+add_library(Nebula STATIC src/Window.cpp 
 render_pipeline/interface/renderAPI.cpp  
 render_pipeline/interface/renderer.cpp
 render_pipeline/interface/vertex_array.cpp
