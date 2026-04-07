@@ -17,12 +17,20 @@ namespace Nebula
 
     void OpenGL_Renderer::drawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount)
     {
-        if(indexCount == 0){
-            indexCount = vertexArray->getIndexBuffer()->getCount();
+        if (!vertexArray)
+            return;
+
+        if (indexCount == 0) {
+            const auto& ibo = vertexArray->getIndexBuffer();
+            if (!ibo)
+                return;
+            indexCount = ibo->getCount();
         }
-        
+        if (indexCount == 0)
+            return;
+
         vertexArray->bind();
-        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, nullptr);
         vertexArray->unbind();
     }
 

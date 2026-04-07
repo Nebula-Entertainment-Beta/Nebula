@@ -15,7 +15,13 @@ namespace Nebula
         void update();
         bool shouldWindowClose();
         ~Window();
+
+        /// False if GLFW/GLAD setup failed — do not call Renderer GL APIs if this is false.
+        bool isValid() const { return m_window != nullptr && m_glReady; }
+
     private:
-        GLFWwindow* m_window;
+        GLFWwindow* m_window = nullptr;
+        bool m_glfwInitialized = false;
+        bool m_glReady = false;
     };  
 }
