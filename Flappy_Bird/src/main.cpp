@@ -37,7 +37,7 @@ struct Vertex2D {
 
 int main()
 {
-    Nebula::Window window("Nebula — Step 7 triangle", 800, 600);
+    Nebula::Window window("Nebula", 800, 600);
     if (!window.isValid()) {
         std::cerr << "Window or OpenGL context failed to initialize. Exiting.\n";
         return 1;
