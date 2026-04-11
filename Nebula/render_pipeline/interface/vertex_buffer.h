@@ -1,44 +1,64 @@
+/**
+ * @file vertex_buffer.h
+ * @brief Describes **vertex data** on the GPU: bytes + how attributes (position, color, UV…) are laid out.
+ *
+ * **Mental model:** A mesh is a blob of floats/ints in a buffer. The **layout** tells OpenGL
+ * “attribute 0 is 3 floats starting at byte 0, attribute 1 is 4 floats starting at byte 12…” so the
+ * vertex shader receives `vec3 a_Position`, `vec4 a_Color`, etc.
+ */
 #pragma once
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <glm/glm.hpp>
 
-namespace Nebula{
-  enum class BufferUsage {Static, Dynamic, Stream};
-  enum class VertexAttributeType{Float, Int, UInt};
+namespace Nebula {
 
-  struct VertexBufferElement{
-    uint32_t location =0;
-    uint32_t componentCount =0;
-    VertexAttributeType type = VertexAttributeType::Float;
-    size_t offsetBytes = 0;
-    bool normalized = false;
+    /** Hint for the driver: how often buffer contents change (affects performance tuning). */
+    enum class BufferUsage { Static, Dynamic, Stream };
 
-  };
+    /** Component type for `glVertexAttribPointer` / `glVertexAttribIPointer`. */
+    enum class VertexAttributeType { Float, Int, UInt };
 
-  struct VertexBufferLayout {
-    size_t strideBytes;
-    std::vector<VertexBufferElement> elements;
-  };
+    /**
+     * @brief One vertex attribute slot (shader `layout(location = N)` matches `location`).
+     */
+    struct VertexBufferElement {
+        uint32_t location = 0;
+        uint32_t componentCount = 0;
+        VertexAttributeType type = VertexAttributeType::Float;
+        size_t offsetBytes = 0;
+        bool normalized = false;
+    };
 
-  class VertexBuffer{
+    /**
+     * @brief Stride + list of elements for one interleaved vertex format.
+     */
+    struct VertexBufferLayout {
+        size_t strideBytes;
+        std::vector<VertexBufferElement> elements;
+    };
 
+    /**
+     * @brief API-agnostic vertex buffer; created via `create()` for the active backend.
+     */
+    class VertexBuffer
+    {
     public:
-      virtual ~VertexBuffer() = default;
-       virtual void bind() const = 0;
-      virtual void unbind() const = 0;
-      virtual const VertexBufferLayout& getlayout() const =0;
+        virtual ~VertexBuffer() = default;
+        virtual void bind() const = 0;
+        virtual void unbind() const = 0;
+        virtual const VertexBufferLayout& getlayout() const = 0;
 
-
-
-      static std::shared_ptr<VertexBuffer> create(
-        const void* data,
-        size_t sizeBytes,
-        BufferUsage usage,
-        const VertexBufferLayout& layout
-      );
-
-  };
+        /**
+         * @brief Uploads `sizeBytes` from `data` to the GPU and remembers `layout` for the VAO.
+         * @param data       Raw vertex bytes (often interleaved position/color/uv).
+         * @param sizeBytes  Total byte size of the array pointed to by `data`.
+         * @param usage      Hint for how often the buffer will be updated (`Static` / `Dynamic` / `Stream`).
+         * @param layout     Stride and attribute descriptions for the vertex shader inputs.
+         */
+        static std::shared_ptr<VertexBuffer> create(const void* data, size_t sizeBytes,
+                                                     BufferUsage usage,
+                                                     const VertexBufferLayout& layout);
+    };
 }

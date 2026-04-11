@@ -1,3 +1,10 @@
+/**
+ * @file openGL_IndexBuffer.h
+ * @brief OpenGL **element buffer** (`GL_ELEMENT_ARRAY_BUFFER`) for indexed drawing.
+ *
+ * @note On core profile, data is first uploaded via `GL_ARRAY_BUFFER` then bound as EBO on a VAO;
+ *       see the `.cpp` comment for why.
+ */
 #pragma once
 #include <cstdint>
 #include <memory>

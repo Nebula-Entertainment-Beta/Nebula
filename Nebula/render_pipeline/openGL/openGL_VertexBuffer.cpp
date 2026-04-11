@@ -1,3 +1,7 @@
+/**
+ * @file openGL_VertexBuffer.cpp
+ * @brief Creates and uploads vertex data with `glBufferData`.
+ */
 #include "openGL_VertexBuffer.h"
 #include <glad/glad.h>
 

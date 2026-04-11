@@ -1,6 +1,9 @@
+/**
+ * @file renderAPI.cpp
+ * @brief Global API selection and construction of the OpenGL renderer backend.
+ */
 #include "renderAPI.h"
 #include "../openGL/openGL_Renderer.h"
-
 
 namespace Nebula
 {

@@ -9,6 +9,15 @@ cd build
 make
 ```
 
+## Documentation
+Install [Doxygen](https://www.doxygen.nl/), then from the build directory:
+
+```bash
+cmake --build build --target NebulaDocs
+```
+
+Open `build/docs/html/index.html`. Conventions and details are in [docs/README.md](docs/README.md).
+
 ## Windows Setup and Run
 
 These steps assume you are using PowerShell from the project root.

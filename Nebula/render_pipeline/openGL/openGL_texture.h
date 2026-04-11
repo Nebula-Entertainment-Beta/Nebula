@@ -1,9 +1,12 @@
+/**
+ * @file openGL_texture.h
+ * @brief OpenGL 2D texture (`GL_TEXTURE_2D`, RGBA8) created from CPU-side RGBA bytes.
+ */
 #pragma once
 #include "texture.h"
 #include <memory>
 #include <cstdint>
 #include <string>
-
 
 namespace Nebula{
   class OpenGL_Texture : public Texture{

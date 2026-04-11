@@ -1,3 +1,7 @@
+/**
+ * @file openGL_VertexArray.cpp
+ * @brief Wires `glVertexAttribPointer` / `glVertexAttribIPointer` from `VertexBufferLayout`.
+ */
 #include "openGL_VertexArray.h"
 #include "openGL_IndexBuffer.h"
 #include <glad/glad.h>
@@ -10,26 +14,22 @@
 
 namespace Nebula{
     OpenGL_VertexArray::OpenGL_VertexArray() {
-        // Constructor implementation
           glGenVertexArrays(1, &m_rendererID);
           
         
     }
 
     OpenGL_VertexArray::~OpenGL_VertexArray() {
-        // Destructor implementation
           glDeleteVertexArrays(1, &m_rendererID);
 
     }
 
     void OpenGL_VertexArray::bind() const {
-        // Bind the vertex array
         glBindVertexArray(m_rendererID);
 
     }
 
     void OpenGL_VertexArray::unbind() const {
-        // Unbind the vertex array
         glBindVertexArray(0);
     }
 

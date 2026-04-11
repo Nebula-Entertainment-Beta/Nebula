@@ -1,3 +1,7 @@
+/**
+ * @file openGL_texture.cpp
+ * @brief `glTexImage2D` upload, filtering/wrapping parameters, and texture unit bind.
+ */
 #include "openGL_texture.h"
 #include <glad/glad.h>
 

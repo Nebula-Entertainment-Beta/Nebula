@@ -1,3 +1,7 @@
+/**
+ * @file openGL_VertexBuffer.h
+ * @brief OpenGL **VBO** (`GL_ARRAY_BUFFER`) storing interleaved vertex attributes.
+ */
 #pragma once
 #include <cstddef>
 #include <cstdint>

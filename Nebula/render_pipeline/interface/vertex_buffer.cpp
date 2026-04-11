@@ -1,3 +1,7 @@
+/**
+ * @file vertex_buffer.cpp
+ * @brief Dispatches `VertexBuffer::create` to the OpenGL implementation.
+ */
 #include "vertex_buffer.h"
 #include "../openGL/openGL_VertexBuffer.h"
 #include "renderAPI.h"
