@@ -18,11 +18,13 @@ add_library(Nebula STATIC
     render_pipeline/interface/vertex_buffer.cpp
     render_pipeline/interface/index_buffer.cpp
     render_pipeline/interface/shader.cpp
+    render_pipeline/interface/texture.cpp
     render_pipeline/openGL/openGL_Renderer.cpp
     render_pipeline/openGL/openGL_Shader.cpp
     render_pipeline/openGL/openGL_VertexBuffer.cpp
     render_pipeline/openGL/openGL_VertexArray.cpp
     render_pipeline/openGL/openGL_IndexBuffer.cpp
+    render_pipeline/openGL/openGL_texture.cpp
 )
 # Parent of `glm/` so #include <glm/glm.hpp> resolves to vendor/glm/glm.hpp
 target_include_directories(Nebula PUBLIC

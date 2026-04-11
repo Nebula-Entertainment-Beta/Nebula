@@ -16,7 +16,7 @@ namespace Nebula{
         int getWidth() const override;
         int getHeight() const override;
 
-        static std::shared_ptr<OpenGL_Texture> create(int width, int height, const void* rgba);
+        static std::shared_ptr<Texture> create(int width, int height, const void* rgba);
 
     private:
         uint32_t m_textureID=0;

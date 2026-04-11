@@ -6,7 +6,7 @@ namespace Nebula{
   std::shared_ptr<Texture> Texture::create(int width, int height, const void* rgba){
     switch (RenderAPI::getAPI()){
       case RendererAPIType::OpenGL:
-        return std::make_shared<OpenGL_Texture>(width, height, rgba);
+        return OpenGL_Texture::create(width, height, rgba);
       default:
         return nullptr;
     }
