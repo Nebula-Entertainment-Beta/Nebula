@@ -1,13 +1,15 @@
+/**
+ * @file Window.cpp
+ * @brief GLFW window + OpenGL 4.1 core context (forward-compatible on macOS).
+ */
 #include "Window.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string_view>
 
-
 namespace Nebula
-{ 
- //the implementation of the window class the first function is the constructor intializing a window
+{
   Window::Window(std::string_view title, int width, int height)
   {
       if (!glfwInit()) {
@@ -46,8 +48,7 @@ namespace Nebula
 
       m_glReady = true;
   }
-  
-  //the update function is responsible for swapping the buffers and polling events to keep the window responsive
+
   void Window::update()
   {
       if (!m_window)
@@ -59,7 +60,6 @@ namespace Nebula
       glfwPollEvents();
   }
 
-  //a check for if the window is closed or not
   bool Window::shouldWindowClose()
   {
       if (!m_window)
@@ -67,7 +67,6 @@ namespace Nebula
       return glfwWindowShouldClose(m_window) != 0;
   }
 
-  //the destructor to clean up the resources by destroying the window when it is no longer needed
   Window::~Window()
   {
       if (m_window) {

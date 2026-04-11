@@ -1,7 +1,10 @@
+/**
+ * @file renderer.cpp
+ * @brief Forwards calls to the concrete `RenderAPI` instance (e.g. `OpenGL_Renderer`).
+ */
 #include "renderer.h"
 #include "renderAPI.h"
 #include "vertex_array.h"
-
 
 namespace Nebula {
 

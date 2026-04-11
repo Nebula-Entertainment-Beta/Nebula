@@ -1,0 +1,42 @@
+# Nebula API documentation — configured by CMake (see root CMakeLists.txt).
+# Run: cmake -S . -B build && cmake --build build --target NebulaDocs
+# Open: build/docs/html/index.html
+
+PROJECT_NAME           = Nebula
+PROJECT_NUMBER         = @PROJECT_VERSION@
+PROJECT_BRIEF          = "C++ learning engine: windowing, OpenGL render abstractions, game-driven features."
+
+OUTPUT_DIRECTORY       = @DOXYGEN_OUTPUT_DIR@
+CREATE_SUBDIRS         = NO
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+GENERATE_MAN           = NO
+
+# Scan whole engine tree (includes Application/, Math/, render_pipeline/, …; vendor excluded below),
+# sample game sources, and docs/ (for USE_MDFILE_AS_MAINPAGE + README).
+INPUT                  = @CMAKE_SOURCE_DIR@/Nebula \
+                         @CMAKE_SOURCE_DIR@/Flappy_Bird/src \
+                         @CMAKE_SOURCE_DIR@/docs
+RECURSIVE              = YES
+FILE_PATTERNS          = *.cpp *.h *.hpp *.md
+EXCLUDE_PATTERNS       = */vendor/*
+
+USE_MDFILE_AS_MAINPAGE = @CMAKE_SOURCE_DIR@/docs/overview.md
+
+# Show everything so new files appear even before comments are written.
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+SOURCE_BROWSER         = YES
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+
+STRIP_FROM_PATH        = @CMAKE_SOURCE_DIR@
+FULL_PATH_NAMES        = YES
+
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_NO_PARAMDOC       = NO
+
+ALIASES                += "engine=\par Engine note:\n"

@@ -1,3 +1,7 @@
+/**
+ * @file openGL_IndexBuffer.cpp
+ * @brief Uploads index data and binds it for `glDrawElements`.
+ */
 #include "openGL_IndexBuffer.h"
 #include <glad/glad.h>
 

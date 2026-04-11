@@ -1,10 +1,13 @@
+/**
+ * @file openGL_Shader.cpp
+ * @brief Compiles GLSL sources, links a program, and validates success before returning a `Shader`.
+ */
 #include "openGL_Shader.h"
 #include <glad/glad.h>
 #include <iostream>
 #include <vector>
 
 namespace Nebula{
-
 
   static bool compileShader(GLuint shader, const std::string& source, const char* stageName) {
     const char* src = source.c_str();

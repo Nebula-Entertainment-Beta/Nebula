@@ -1,3 +1,7 @@
+/**
+ * @file texture.cpp
+ * @brief Routes `Texture::create` to `OpenGL_Texture` when the API is OpenGL.
+ */
 #include "texture.h"
 #include "renderAPI.h"
 #include "../openGL/openGL_texture.h"

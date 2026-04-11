@@ -1,8 +1,10 @@
+/**
+ * @file openGL_Renderer.cpp
+ * @brief Issues indexed draws and frame setup for the OpenGL backend.
+ */
 #include "openGL_Renderer.h"
 #include "../interface/vertex_array.h"
 #include "../interface/index_buffer.h"
-
-
 
 namespace Nebula
 {

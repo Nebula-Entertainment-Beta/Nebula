@@ -9,6 +9,10 @@ add_subdirectory(vendor/glm)
 
 add_library(Nebula STATIC
     src/Window.cpp
+    Math/camera2D.cpp
+    Math/camera3D.cpp
+    Math/transform2D.cpp
+    Math/transform3D.cpp
     Application/application.cpp
     Application/input.cpp
     Application/timestep.cpp
@@ -29,6 +33,7 @@ add_library(Nebula STATIC
 # Parent of `glm/` so #include <glm/glm.hpp> resolves to vendor/glm/glm.hpp
 target_include_directories(Nebula PUBLIC
     include
+    ${CMAKE_CURRENT_SOURCE_DIR}/Math
     ${CMAKE_CURRENT_SOURCE_DIR}/Application
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glfw/include

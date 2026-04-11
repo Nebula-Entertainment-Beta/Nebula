@@ -1,10 +1,13 @@
+/**
+ * @file openGL_VertexArray.h
+ * @brief OpenGL **VAO** that records vertex attribute pointers and the bound element buffer.
+ */
 #pragma once
 #include <cstdint>
 #include <memory>
 #include <vector>
 #include "vertex_array.h"
 #include "../interface/vertex_buffer.h"
-
 
 namespace Nebula {
 
