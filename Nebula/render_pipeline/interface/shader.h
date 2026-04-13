@@ -20,6 +20,9 @@ namespace Nebula {
         virtual void bind() const = 0;
         virtual void unbind() const = 0;
 
+        /** Sets an `int` uniform (e.g. `sampler2D` texture unit index). Program must be bound. */
+        virtual void setInt(const std::string& name, int value) const = 0;
+
         /**
          * @brief Compiles/links GLSL for the active backend.
          * @return nullptr if compilation or linking failed (errors go to the console).

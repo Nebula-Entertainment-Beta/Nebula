@@ -19,6 +19,7 @@ namespace Nebula {
         ~OpenGL_Shader() override;
         void bind() const override;
         void unbind() const override;
+        void setInt(const std::string& name, int value) const override;
 
         /** @brief Returns nullptr if compile/link failed (logs errors to stderr). */
         static std::shared_ptr<Shader> create(const std::string& vertexSrc,

@@ -4,6 +4,8 @@
  */
 #include "openGL_texture.h"
 #include <glad/glad.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 
 namespace Nebula {
     OpenGL_Texture::OpenGL_Texture(int width, int height, const void* rgba)
@@ -69,6 +71,20 @@ namespace Nebula {
         if (tex->m_textureID == 0) {
             return nullptr;
         }
+        return tex;
+    }
+
+    std::shared_ptr<Texture> OpenGL_Texture::createFromFile(const std::string& filepath)
+    {
+        int width = 0;
+        int height = 0;
+        int channels = 0;
+        stbi_uc* data = stbi_load(filepath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+        if (!data)
+            return nullptr;
+
+        auto tex = OpenGL_Texture::create(width, height, data);
+        stbi_image_free(data);
         return tex;
     }
 
