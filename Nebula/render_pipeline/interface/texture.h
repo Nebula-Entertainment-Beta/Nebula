@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include <string>
 
 /**
  * @file texture.h
@@ -34,6 +35,7 @@ namespace Nebula{
        * @return New texture, or nullptr if arguments are invalid or upload fails.
        */
       static std::shared_ptr<Texture> create(int width, int height, const void* rgba);
+      static std::shared_ptr<Texture> createFromFile(const std::string& filepath);
 
   };
 }

@@ -20,6 +20,7 @@ namespace Nebula{
         int getHeight() const override;
 
         static std::shared_ptr<Texture> create(int width, int height, const void* rgba);
+        static std::shared_ptr<Texture> createFromFile(const std::string& filepath);
 
     private:
         uint32_t m_textureID=0;
