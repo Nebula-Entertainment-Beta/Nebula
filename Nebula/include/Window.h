@@ -41,6 +41,17 @@ namespace Nebula
          */
         bool isValid() const { return m_window != nullptr && m_glReady; }
 
+        /**
+         * @brief Pixel size of the drawable framebuffer (may differ from window size on Hi-DPI).
+         * Use this for `glViewport` and projection aspect, not the constructor width/height alone.
+         */
+        void getFramebufferSize(int& outWidth, int& outHeight) const;
+
+        /**
+         * @brief True while key is held (`GLFW_KEY_*` from glfw3.h). Until `Input` exists, use this from `onUpdate`.
+         */
+        bool isKeyHeld(int glfwKey) const;
+
     private:
         GLFWwindow* m_window = nullptr;
         bool m_glfwInitialized = false;

@@ -12,7 +12,7 @@ Nebula is a small **C++ game engine** used by the club to learn graphics and eng
 | `Nebula/Math/` | **Cameras and transforms** (headers documented; implementations added when a game needs them) |
 | `Nebula/render_pipeline/interface/` | API-agnostic render types (`Renderer`, `VertexArray`, …) |
 | `Nebula/render_pipeline/openGL/` | OpenGL implementations of those interfaces |
-| `Flappy_Bird/` | Sample game sources (also listed in the manual as usage examples) |
+| `Nimbus/` | Game sources (also listed in the manual as usage examples) |
 
 Third-party code under `Nebula/vendor/` is **excluded** from this manual.
 
