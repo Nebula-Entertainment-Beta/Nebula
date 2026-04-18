@@ -65,16 +65,16 @@ cmake --build build --config Debug
 
 ### Run the game
 
-From the project root:
+From the project root (Visual Studio generator; adjust `Debug`/`Release` as needed):
 
 ```powershell
-.\build\App\Debug\Game.exe
+.\build\Nimbus\Debug\Nimbus.exe
 ```
 
 If you `cd build` first, then run:
 
 ```powershell
-.\App\Debug\Game.exe
+.\Nimbus\Debug\Nimbus.exe
 ```
 
 ### Full Windows quick start
@@ -84,7 +84,7 @@ git submodule update --init --recursive
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Debug
 cd build
-.\App\Debug\Game.exe
+.\Nimbus\Debug\Nimbus.exe
 ```
 
 ## Typing Conventions

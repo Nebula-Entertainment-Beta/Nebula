@@ -83,6 +83,18 @@ namespace Nebula{
           glUniform1i(loc, value);
   }
 
+  void OpenGL_Shader::setMat4(const std::string& name, const glm::mat4& matrix) const {
+      const GLint loc = glGetUniformLocation(m_rendererID, name.c_str());
+      if (loc >= 0)
+          glUniformMatrix4fv(loc, 1, GL_FALSE, &matrix[0][0]);
+  }
+
+  void OpenGL_Shader::setVec3(const std::string& name, const glm::vec3& value) const {
+      const GLint loc = glGetUniformLocation(m_rendererID, name.c_str());
+      if (loc >= 0)
+          glUniform3fv(loc, 1, &value[0]);
+  }
+
   // Static member of OpenGL_Shader — may access private m_rendererID on `impl`.
   std::shared_ptr<Shader> OpenGL_Shader::create(
       const std::string& vertexSrc,

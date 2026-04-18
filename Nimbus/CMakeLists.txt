@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 
 # No separate project() — inherits toolchain from the repo root.
 
-add_executable(FlappyBird
+add_executable(Nimbus
     src/main.cpp
-    src/flappyBird.cpp
+    src/nimbus.cpp
 )
 
-target_link_libraries(FlappyBird PRIVATE Nebula)
+target_link_libraries(Nimbus PRIVATE Nebula)

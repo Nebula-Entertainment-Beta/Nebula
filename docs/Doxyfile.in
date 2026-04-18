@@ -16,7 +16,7 @@ GENERATE_MAN           = NO
 # Scan whole engine tree (includes Application/, Math/, render_pipeline/, …; vendor excluded below),
 # sample game sources, and docs/ (for USE_MDFILE_AS_MAINPAGE + README).
 INPUT                  = @CMAKE_SOURCE_DIR@/Nebula \
-                         @CMAKE_SOURCE_DIR@/Flappy_Bird/src \
+                         @CMAKE_SOURCE_DIR@/Nimbus/src \
                          @CMAKE_SOURCE_DIR@/docs
 RECURSIVE              = YES
 FILE_PATTERNS          = *.cpp *.h *.hpp *.md

@@ -67,6 +67,23 @@ namespace Nebula
       return glfwWindowShouldClose(m_window) != 0;
   }
 
+  void Window::getFramebufferSize(int& outWidth, int& outHeight) const
+  {
+      if (!m_window) {
+          outWidth = 0;
+          outHeight = 0;
+          return;
+      }
+      glfwGetFramebufferSize(m_window, &outWidth, &outHeight);
+  }
+
+  bool Window::isKeyHeld(int glfwKey) const
+  {
+      if (!m_window)
+          return false;
+      return glfwGetKey(m_window, glfwKey) == GLFW_PRESS;
+  }
+
   Window::~Window()
   {
       if (m_window) {
