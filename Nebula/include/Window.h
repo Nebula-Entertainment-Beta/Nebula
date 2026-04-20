@@ -28,7 +28,7 @@ namespace Nebula
         Window(std::string_view title, int width, int height);
 
         /** Swaps the front/back buffer and processes input events (call once per frame). */
-        void update();
+       
 
         /** @return True when the user closed the window or the window failed. */
         bool shouldWindowClose();
@@ -46,11 +46,14 @@ namespace Nebula
          * Use this for `glViewport` and projection aspect, not the constructor width/height alone.
          */
         void getFramebufferSize(int& outWidth, int& outHeight) const;
+        GLFWwindow* getGLFWwindow() const { return m_window; } // For input handling (e.g. `Input::attachToWindow`).
 
-        /**
-         * @brief True while key is held (`GLFW_KEY_*` from glfw3.h). Until `Input` exists, use this from `onUpdate`.
-         */
-        bool isKeyHeld(int glfwKey) const;
+        // pollevents is for input handling because it updates the state of the keyboard and mouse buttons. 
+        // swapbuffers is for rendering because it displays the rendered frame on the screen.
+        void pollEvents();
+        void swapBuffers();
+
+        
 
     private:
         GLFWwindow* m_window = nullptr;

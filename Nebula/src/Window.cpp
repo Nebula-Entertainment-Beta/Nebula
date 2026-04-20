@@ -49,16 +49,7 @@ namespace Nebula
       m_glReady = true;
   }
 
-  void Window::update()
-  {
-      if (!m_window)
-      {
-          std::cerr << "Failed to update GLFW window" << std::endl;
-          return;
-      }
-      glfwSwapBuffers(m_window);
-      glfwPollEvents();
-  }
+  
 
   bool Window::shouldWindowClose()
   {
@@ -77,11 +68,22 @@ namespace Nebula
       glfwGetFramebufferSize(m_window, &outWidth, &outHeight);
   }
 
-  bool Window::isKeyHeld(int glfwKey) const
-  {
-      if (!m_window)
-          return false;
-      return glfwGetKey(m_window, glfwKey) == GLFW_PRESS;
+  void Window::pollEvents(){
+        if (!m_window)
+        {
+            std::cerr << "Failed to poll events for GLFW window" << std::endl;
+            return;
+        }
+        glfwPollEvents();
+  }
+
+  void Window::swapBuffers(){
+        if (!m_window)
+        {
+            std::cerr << "Failed to swap buffers for GLFW window" << std::endl;
+            return;
+        }
+        glfwSwapBuffers(m_window);
   }
 
   Window::~Window()
