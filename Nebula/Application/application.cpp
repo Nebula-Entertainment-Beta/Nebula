@@ -16,6 +16,9 @@ namespace Nebula{
     m_height = spec.height;
     m_title = spec.title;
     
+    m_input.attachToWindow(m_window.getGLFWwindow());
+
+    
 
     
 
@@ -28,20 +31,24 @@ namespace Nebula{
     if (!m_window.isValid()) {
       return;
     }
+    
 
     Renderer::init();
     m_rendererInitialized = true;
     m_hasRun = true;
-
+    
     float lastTime = glfwGetTime();
 
     while (!m_window.shouldWindowClose()) {
+      m_input.beginFrame();
       double newtime = glfwGetTime();
       float dt = static_cast<float>(newtime - lastTime);
       lastTime = newtime;
+      m_window.pollEvents();
       onUpdate(dt);
       onRender();
-      m_window.update();
+      m_window.swapBuffers();
+      
     }
     Renderer::Shutdown();
     m_rendererInitialized = false;
@@ -53,7 +60,9 @@ namespace Nebula{
     
     if (m_rendererInitialized) {
       Renderer::Shutdown();
+      
     }
+    m_input.detachFromWindow();
     m_rendererInitialized = false;
 
 

@@ -11,6 +11,7 @@
 #include <string>
 
 #include "Window.h"
+#include "input.h"
 
 
 namespace Nebula {
@@ -30,17 +31,20 @@ public:
     Application& operator=(const Application&) = delete;
     Application(Application&&) = delete;
     Application& operator=(Application&&) = delete;
-
+    
     void run();
     Window& getWindow() { return m_window; }
     const Window& getWindow() const { return m_window; }
 
 protected:
+    Input& getInput() { return m_input; }
+    const Input& getInput() const { return m_input; }
     virtual void onUpdate(float dt);
     virtual void onRender();
 
 private:
     Window m_window;
+    Input m_input;
     bool m_hasRun = false;
     bool m_rendererInitialized = false;
     uint32_t m_width;

@@ -1,9 +1,11 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cmath>
 #include <iostream>
 #include <vector>
 
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
 #include "application.h"
@@ -62,34 +64,63 @@ public:
         m_camera.setFOV(55.0f);
         m_camera.setNearPlane(0.1f);
         m_camera.setFarPlane(100.0f);
+
+        GLFWwindow* window = getWindow().getGLFWwindow();
+        if (window) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            if (glfwRawMouseMotionSupported()) {
+                glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+            }
+        }
     }
 
 protected:
     void onUpdate(float dt) override
     {
-        // Third-person orbit: A/D or Left/Right = yaw, W/S or Up/Down = pitch, Q/E = zoom.
-        const Nebula::Window& win = getWindow();
-        const float turn = 1.8f * dt;
-        if (win.isKeyHeld(GLFW_KEY_LEFT) || win.isKeyHeld(GLFW_KEY_A)) {
-            m_camera.setYaw(m_camera.getYaw() - turn);
+        Nebula::Input& input = getInput();
+
+        const float lookSensitivity = 0.0035f;
+        const float turnX = input.mouseDeltaX() * lookSensitivity;
+        const float turnY = input.mouseDeltaY() * lookSensitivity;
+        m_camera.setYaw(m_camera.getYaw() - turnX);
+        m_camera.setPitch(std::clamp(m_camera.getPitch() - turnY, -1.2f, 0.65f));
+
+        glm::vec3 moveDir(0.0f);
+        if (input.isKeyDown(GLFW_KEY_W)) {
+            moveDir.z += 1.0f;
         }
-        if (win.isKeyHeld(GLFW_KEY_RIGHT) || win.isKeyHeld(GLFW_KEY_D)) {
-            m_camera.setYaw(m_camera.getYaw() + turn);
+        if (input.isKeyDown(GLFW_KEY_S)) {
+            moveDir.z -= 1.0f;
         }
-        if (win.isKeyHeld(GLFW_KEY_UP) || win.isKeyHeld(GLFW_KEY_W)) {
-            m_camera.setPitch(m_camera.getPitch() + turn);
+        if (input.isKeyDown(GLFW_KEY_A)) {
+            moveDir.x -= 1.0f;
         }
-        if (win.isKeyHeld(GLFW_KEY_DOWN) || win.isKeyHeld(GLFW_KEY_S)) {
-            m_camera.setPitch(m_camera.getPitch() - turn);
+        if (input.isKeyDown(GLFW_KEY_D)) {
+            moveDir.x += 1.0f;
         }
-        const float zoomSpeed = 5.0f * dt;
+
+        if (moveDir.x != 0.0f || moveDir.z != 0.0f) {
+            const float len = std::sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
+            moveDir /= len;
+        }
+
+        const float yaw = m_camera.getYaw();
+        const glm::vec3 forward(std::sin(yaw), 0.0f, std::cos(yaw));
+        const glm::vec3 right(std::cos(yaw), 0.0f, -std::sin(yaw));
+        const glm::vec3 velocity = (forward * moveDir.z + right * moveDir.x) * (3.5f * dt);
+        glm::vec3 cubePos = m_cubeTransform.getPosition();
+        cubePos += velocity;
+        m_cubeTransform.setPosition(cubePos);
+
         float dist = m_camera.getDistance();
-        if (win.isKeyHeld(GLFW_KEY_Q)) {
+        const float zoomSpeed = 6.0f * dt;
+        if (input.isKeyDown(GLFW_KEY_Q)) {
             dist += zoomSpeed;
         }
-        if (win.isKeyHeld(GLFW_KEY_E)) {
+        if (input.isKeyDown(GLFW_KEY_E)) {
             dist -= zoomSpeed;
         }
+        dist -= input.mouseScrollDeltaY() * 0.6f;
         m_camera.setDistance(std::clamp(dist, 1.5f, 24.0f));
     }
 
