@@ -12,6 +12,7 @@
 
 #include "Window.h"
 #include "input.h"
+#include "input_Actions.h"
 
 
 namespace Nebula {
@@ -41,10 +42,13 @@ protected:
     const Input& getInput() const { return m_input; }
     virtual void onUpdate(float dt);
     virtual void onRender();
+    const ActionMapping& getActionMapping() const { return m_actionMapping; }
+    ActionMapping& getActionMapping() { return m_actionMapping; }
 
 private:
     Window m_window;
     Input m_input;
+    ActionMapping m_actionMapping;
     bool m_hasRun = false;
     bool m_rendererInitialized = false;
     uint32_t m_width;

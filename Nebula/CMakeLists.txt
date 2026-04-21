@@ -16,6 +16,8 @@ add_library(Nebula STATIC
     Application/application.cpp
     Application/input.cpp
     Application/timestep.cpp
+    Application/input_Actions.cpp
+    Application/input_Actions.h
     render_pipeline/interface/renderAPI.cpp
     render_pipeline/interface/renderer.cpp
     render_pipeline/interface/vertex_array.cpp
@@ -29,6 +31,7 @@ add_library(Nebula STATIC
     render_pipeline/openGL/openGL_VertexArray.cpp
     render_pipeline/openGL/openGL_IndexBuffer.cpp
     render_pipeline/openGL/openGL_texture.cpp
+
 )
 # Parent of `glm/` so #include <glm/glm.hpp> resolves to vendor/glm/glm.hpp
 target_include_directories(Nebula PUBLIC

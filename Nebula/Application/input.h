@@ -28,10 +28,7 @@ namespace Nebula{
       bool wasMouseButtonPressed(int MouseButton) const;
       bool wasMouseButtonReleased(int MouseButton) const;
 
-      void SetWindowUserPointer(GLFWwindow* window, Input* input){
-        glfwSetWindowUserPointer(window, input);
-      }
-
+      
       float mouseDeltaX() const{return m_mouseDeltaX;}
 
       float mouseDeltaY() const{return m_mouseDeltaY; }
@@ -42,6 +39,10 @@ namespace Nebula{
       static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
       static void cursorPosCallback(GLFWwindow* window, double x, double y);
       static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+
+      void setWindowUserPointer(GLFWwindow* window, Input* input){
+        glfwSetWindowUserPointer(window, input);
+      }
 
       GLFWwindow* m_window = nullptr;
 

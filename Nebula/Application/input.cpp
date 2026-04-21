@@ -14,7 +14,7 @@ namespace Nebula{
       glfwSetMouseButtonCallback(m_window, mouseButtonCallback);
       glfwSetCursorPosCallback(m_window, cursorPosCallback);
       glfwSetScrollCallback(m_window, scrollCallback);
-      SetWindowUserPointer(m_window, this);
+      setWindowUserPointer(m_window, this);
   }
 
   void Input::detachFromWindow()
@@ -24,7 +24,7 @@ namespace Nebula{
           glfwSetMouseButtonCallback(m_window, nullptr);
           glfwSetCursorPosCallback(m_window, nullptr);
           glfwSetScrollCallback(m_window, nullptr);
-          SetWindowUserPointer(m_window, nullptr);
+          setWindowUserPointer(m_window, nullptr);
           m_window = nullptr;
       }
   }
