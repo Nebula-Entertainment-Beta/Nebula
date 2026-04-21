@@ -45,6 +45,7 @@ namespace Nebula{
       float dt = static_cast<float>(newtime - lastTime);
       lastTime = newtime;
       m_window.pollEvents();
+      m_actionMapping.updateMappings(m_input);
       onUpdate(dt);
       onRender();
       m_window.swapBuffers();

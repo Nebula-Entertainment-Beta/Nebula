@@ -78,26 +78,37 @@ protected:
     void onUpdate(float dt) override
     {
         Nebula::Input& input = getInput();
+        Nebula::ActionMapping& mapping = getActionMapping();
+        if (mapping.wasActionPressed(Nebula::Action::Interact, input)) {
+            m_showInputDebug = !m_showInputDebug;
+        }
+        if (input.wasKeyPressed(GLFW_KEY_1)) {
+            // Preset A: normal look with moderate zoom.
+            mapping.setCameraSensitivity(1.0f, 1.0f, 1.0f, false);
+            std::cout << "[Mapping] Applied preset A\n";
+        }
+        if (input.wasKeyPressed(GLFW_KEY_2)) {
+            // Preset B: faster look, inverted Y, slightly stronger zoom.
+            mapping.setCameraSensitivity(1.35f, 1.35f, 1.25f, true);
+            std::cout << "[Mapping] Applied preset B\n";
+        }
+
+        float lookX = 0.0f;
+        float lookY = 0.0f;
+        mapping.getAxisValue(Nebula::Axis::LookX, input, lookX, lookY);
+        mapping.getAxisValue(Nebula::Axis::LookY, input, lookX, lookY);
 
         const float lookSensitivity = 0.0035f;
-        const float turnX = input.mouseDeltaX() * lookSensitivity;
-        const float turnY = input.mouseDeltaY() * lookSensitivity;
+        const float turnX = lookX * lookSensitivity;
+        const float turnY = lookY * lookSensitivity;
         m_camera.setYaw(m_camera.getYaw() - turnX);
         m_camera.setPitch(std::clamp(m_camera.getPitch() - turnY, -1.2f, 0.65f));
 
-        glm::vec3 moveDir(0.0f);
-        if (input.isKeyDown(GLFW_KEY_W)) {
-            moveDir.z += 1.0f;
-        }
-        if (input.isKeyDown(GLFW_KEY_S)) {
-            moveDir.z -= 1.0f;
-        }
-        if (input.isKeyDown(GLFW_KEY_A)) {
-            moveDir.x -= 1.0f;
-        }
-        if (input.isKeyDown(GLFW_KEY_D)) {
-            moveDir.x += 1.0f;
-        }
+        float moveX = 0.0f;
+        float moveY = 0.0f;
+        mapping.getAxisValue(Nebula::Axis::MoveX, input, moveX, moveY);
+        mapping.getAxisValue(Nebula::Axis::MoveY, input, moveX, moveY);
+        glm::vec3 moveDir(moveX, 0.0f, moveY);
 
         if (moveDir.x != 0.0f || moveDir.z != 0.0f) {
             const float len = std::sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
@@ -113,15 +124,33 @@ protected:
         m_cubeTransform.setPosition(cubePos);
 
         float dist = m_camera.getDistance();
-        const float zoomSpeed = 6.0f * dt;
-        if (input.isKeyDown(GLFW_KEY_Q)) {
-            dist += zoomSpeed;
-        }
-        if (input.isKeyDown(GLFW_KEY_E)) {
-            dist -= zoomSpeed;
-        }
-        dist -= input.mouseScrollDeltaY() * 0.6f;
+        float zoomX = 0.0f;
+        float zoomY = 0.0f;
+        mapping.getAxisValue(Nebula::Axis::Scroll, input, zoomX, zoomY);
+        dist -= zoomY * 0.6f;
         m_camera.setDistance(std::clamp(dist, 1.5f, 24.0f));
+
+        if (m_showInputDebug) {
+            m_debugPrintTimer += dt;
+            if (m_debugPrintTimer >= 0.25f) {
+                m_debugPrintTimer = 0.0f;
+                float sensX = 0.0f;
+                float sensY = 0.0f;
+                float zoomSens = 0.0f;
+                bool invertY = false;
+                mapping.getCameraSensitivity(sensX, sensY, zoomSens, invertY);
+                std::cout
+                    << "[Mapping] MoveX=" << moveX
+                    << " MoveY=" << moveY
+                    << " LookX=" << lookX
+                    << " LookY=" << lookY
+                    << " Scroll=" << zoomY
+                    << " Sens=(" << sensX << ", " << sensY << ")"
+                    << " ZoomSens=" << zoomSens
+                    << " InvertY=" << invertY
+                    << '\n';
+            }
+        }
     }
 
     void onRender() override
@@ -285,6 +314,8 @@ private:
     Nebula::Transform3D m_groundTransform;
     Nebula::Transform3D m_cubeTransform;
     Nebula::Camera3D m_camera;
+    bool m_showInputDebug = false;
+    float m_debugPrintTimer = 0.0f;
 };
 
 int main()
