@@ -1,60 +1,93 @@
 #pragma once
+
+#include <any>
 #include <cstdint>
-#include <vector>
+#include <stdexcept>
+#include <typeindex>
 #include <unordered_map>
-#include "component.h"
+#include <utility>
+#include <vector>
 
+namespace Nebula {
 
+using EntityID = uint32_t;
 
-namespace Nebula{
-
-  using EntityID = uint32_t;
-  EntityID id;
-
-  struct Entity{
+struct Entity {
     EntityID id = 0;
+};
 
-  };
-
-  template<typename ComponentType>
-  struct ComponentData{
-    ComponentType data;
-
-  };
-
-  class Scene{
-
-  public:
-   
+class Scene {
+public:
     Scene() = default;
+
     Entity createEntity();
     void destroyEntity(Entity entity);
-    
 
-    template<typename ComponentType, typename... Args>
-    ComponentType& addComponent(Entity entity, Args&&... args);
+    template <typename ComponentType, typename... Args>
+    ComponentType& addComponent(Entity entity, Args&&... args)
+    {
+        if (!isValidEntity(entity)) {
+            throw std::runtime_error("Cannot add component to invalid entity");
+        }
 
+        auto& store = m_componentStores[std::type_index(typeid(ComponentType))];
+        std::any& slot = store[entity.id];
+        slot = ComponentType(std::forward<Args>(args)...);
+        return std::any_cast<ComponentType&>(slot);
+    }
 
-    template<typename ComponentType>
-    ComponentType& getComponent(Entity entity);
+    template <typename ComponentType>
+    ComponentType& getComponent(Entity entity)
+    {
+        if (!isValidEntity(entity)) {
+            throw std::runtime_error("Cannot get component from invalid entity");
+        }
 
-    template<typename ComponentType>
-    bool hasComponent(Entity entity) const ;
+        auto typeIt = m_componentStores.find(std::type_index(typeid(ComponentType)));
+        if (typeIt == m_componentStores.end()) {
+            throw std::runtime_error("Component type not found on scene");
+        }
 
-    template<typename ComponentType>
-    void removeComponent(Entity entity);
+        auto entityIt = typeIt->second.find(entity.id);
+        if (entityIt == typeIt->second.end()) {
+            throw std::runtime_error("Component not found on entity");
+        }
 
-    //validity helpers
+        return std::any_cast<ComponentType&>(entityIt->second);
+    }
+
+    template <typename ComponentType>
+    bool hasComponent(Entity entity) const
+    {
+        if (!isValidEntity(entity)) {
+            return false;
+        }
+
+        auto typeIt = m_componentStores.find(std::type_index(typeid(ComponentType)));
+        if (typeIt == m_componentStores.end()) {
+            return false;
+        }
+
+        return typeIt->second.find(entity.id) != typeIt->second.end();
+    }
+
+    template <typename ComponentType>
+    void removeComponent(Entity entity)
+    {
+        auto typeIt = m_componentStores.find(std::type_index(typeid(ComponentType)));
+        if (typeIt == m_componentStores.end()) {
+            return;
+        }
+        typeIt->second.erase(entity.id);
+    }
+
     bool isValidEntity(Entity entity) const;
-    std::vector<Entity>& getAllEntities() const;
+    const std::vector<Entity>& getAllEntities() const;
 
-
-
-  private:
+private:
     std::vector<Entity> m_entities;
-    
-    
-   
+    EntityID m_nextEntityID = 1;
+    std::unordered_map<std::type_index, std::unordered_map<EntityID, std::any>> m_componentStores;
+};
 
-  };
-}
+} 

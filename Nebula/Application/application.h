@@ -13,6 +13,7 @@
 #include "Window.h"
 #include "input.h"
 #include "input_Actions.h"
+#include "scene.h"
 
 
 namespace Nebula {
@@ -45,6 +46,9 @@ protected:
     const ActionMapping& getActionMapping() const { return m_actionMapping; }
     ActionMapping& getActionMapping() { return m_actionMapping; }
 
+    Scene& getScene() { return m_scene; }
+    const Scene& getScene() const { return m_scene; }
+
 private:
     Window m_window;
     Input m_input;
@@ -54,6 +58,7 @@ private:
     uint32_t m_width;
     uint32_t m_height;
     std::string m_title;
+    Scene m_scene;
 
 };
 }
