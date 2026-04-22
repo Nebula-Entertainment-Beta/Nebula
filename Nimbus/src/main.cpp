@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 
 #include "application.h"
+#include "component.h"
 #include "camera3D.h"
 #include "index_buffer.h"
 #include "renderer.h"
@@ -48,22 +49,32 @@ public:
     explicit NimbusApp(const Nebula::ApplicationSpec& spec)
         : Nebula::Application(spec)
     {
-        m_groundTransform.setPosition(glm::vec3(0.0f));
-        m_groundTransform.setYaw(0.0f);
-        m_groundTransform.setScale(1.0f);
+        Nebula::Scene& scene = getScene();
 
-        m_cubeTransform.setPosition(glm::vec3(0.0f, 0.5f, 0.0f));
-        m_cubeTransform.setYaw(0.0f);
-        m_cubeTransform.setScale(1.0f);
+        m_groundEntity = scene.createEntity();
+        auto& groundTransform = scene.addComponent<Nebula::TransformComponent>(m_groundEntity);
+        groundTransform.transform.setPosition(glm::vec3(0.0f));
+        groundTransform.transform.setYaw(0.0f);
+        groundTransform.transform.setScale(1.0f);
+        scene.addComponent<Nebula::MeshRendererComponent>(m_groundEntity);
 
-        m_camera.setTarget(m_cubeTransform.getPosition());
-        m_camera.setPivotOffset(glm::vec3(0.0f, 0.35f, 0.0f));
-        m_camera.setDistance(6.0f);
-        m_camera.setYaw(0.7f);
-        m_camera.setPitch(-0.3f);
-        m_camera.setFOV(55.0f);
-        m_camera.setNearPlane(0.1f);
-        m_camera.setFarPlane(100.0f);
+        m_cubeEntity = scene.createEntity();
+        auto& cubeTransform = scene.addComponent<Nebula::TransformComponent>(m_cubeEntity);
+        cubeTransform.transform.setPosition(glm::vec3(0.0f, 0.5f, 0.0f));
+        cubeTransform.transform.setYaw(0.0f);
+        cubeTransform.transform.setScale(1.0f);
+        scene.addComponent<Nebula::MeshRendererComponent>(m_cubeEntity);
+
+        m_cameraEntity = scene.createEntity();
+        scene.addComponent<Nebula::TransformComponent>(m_cameraEntity);
+        auto& cameraComponent = scene.addComponent<Nebula::CameraComponent>(m_cameraEntity);
+        cameraComponent.pivotOffset = glm::vec3(0.0f, 0.35f, 0.0f);
+        cameraComponent.distance = 6.0f;
+        cameraComponent.yaw = 0.7f;
+        cameraComponent.pitch = -0.3f;
+        cameraComponent.fov = 55.0f;
+        cameraComponent.nearClip = 0.1f;
+        cameraComponent.farClip = 100.0f;
 
         GLFWwindow* window = getWindow().getGLFWwindow();
         if (window) {
@@ -77,6 +88,10 @@ public:
 protected:
     void onUpdate(float dt) override
     {
+        Nebula::Scene& scene = getScene();
+        auto& cubeTransform = scene.getComponent<Nebula::TransformComponent>(m_cubeEntity);
+        auto& cameraComponent = scene.getComponent<Nebula::CameraComponent>(m_cameraEntity);
+
         Nebula::Input& input = getInput();
         Nebula::ActionMapping& mapping = getActionMapping();
         if (mapping.wasActionPressed(Nebula::Action::Interact, input)) {
@@ -101,8 +116,8 @@ protected:
         const float lookSensitivity = 0.0035f;
         const float turnX = lookX * lookSensitivity;
         const float turnY = lookY * lookSensitivity;
-        m_camera.setYaw(m_camera.getYaw() - turnX);
-        m_camera.setPitch(std::clamp(m_camera.getPitch() - turnY, -1.2f, 0.65f));
+        cameraComponent.yaw -= turnX;
+        cameraComponent.pitch = std::clamp(cameraComponent.pitch - turnY, -1.2f, 0.65f);
 
         float moveX = 0.0f;
         float moveY = 0.0f;
@@ -115,20 +130,20 @@ protected:
             moveDir /= len;
         }
 
-        const float yaw = m_camera.getYaw();
+        const float yaw = cameraComponent.yaw;
         const glm::vec3 forward(std::sin(yaw), 0.0f, std::cos(yaw));
         const glm::vec3 right(std::cos(yaw), 0.0f, -std::sin(yaw));
         const glm::vec3 velocity = (forward * moveDir.z + right * moveDir.x) * (3.5f * dt);
-        glm::vec3 cubePos = m_cubeTransform.getPosition();
+        glm::vec3 cubePos = cubeTransform.transform.getPosition();
         cubePos += velocity;
-        m_cubeTransform.setPosition(cubePos);
+        cubeTransform.transform.setPosition(cubePos);
 
-        float dist = m_camera.getDistance();
+        float dist = cameraComponent.distance;
         float zoomX = 0.0f;
         float zoomY = 0.0f;
         mapping.getAxisValue(Nebula::Axis::Scroll, input, zoomX, zoomY);
         dist -= zoomY * 0.6f;
-        m_camera.setDistance(std::clamp(dist, 1.5f, 24.0f));
+        cameraComponent.distance = std::clamp(dist, 1.5f, 24.0f);
 
         if (m_showInputDebug) {
             m_debugPrintTimer += dt;
@@ -171,15 +186,29 @@ protected:
         const float aspect =
             (fbh > 0) ? (static_cast<float>(fbw) / static_cast<float>(fbh)) : (16.0f / 9.0f);
 
-        m_camera.setTarget(m_cubeTransform.getPosition());
-        m_camera.setAspectRatio(aspect);
-        const glm::mat4 vp = m_camera.getViewProjectionMatrix();
+        Nebula::Scene& scene = getScene();
+        auto& groundTransform = scene.getComponent<Nebula::TransformComponent>(m_groundEntity);
+        auto& cubeTransform = scene.getComponent<Nebula::TransformComponent>(m_cubeEntity);
+        auto& cameraComponent = scene.getComponent<Nebula::CameraComponent>(m_cameraEntity);
+
+        Nebula::Camera3D camera;
+        camera.setTarget(cubeTransform.transform.getPosition());
+        camera.setPivotOffset(cameraComponent.pivotOffset);
+        camera.setDistance(cameraComponent.distance);
+        camera.setYaw(cameraComponent.yaw);
+        camera.setPitch(cameraComponent.pitch);
+        camera.setFOV(cameraComponent.fov);
+        camera.setNearPlane(cameraComponent.nearClip);
+        camera.setFarPlane(cameraComponent.farClip);
+        camera.setAspectRatio(aspect);
+
+        const glm::mat4 vp = camera.getViewProjectionMatrix();
 
         m_shader->bind();
 
         // Ground: large XZ plane at y = 0 (red)
         {
-            const glm::mat4 mvp = vp * m_groundTransform.getModelMatrix();
+            const glm::mat4 mvp = vp * groundTransform.transform.getModelMatrix();
             m_shader->setMat4("uMVP", mvp);
             m_shader->setVec3("uColor", glm::vec3(0.85f, 0.12f, 0.1f));
             Nebula::Renderer::drawIndexed(m_groundVao, m_groundIndexCount);
@@ -187,7 +216,7 @@ protected:
 
         // Cube "character" — unit cube, blue
         {
-            const glm::mat4 mvp = vp * m_cubeTransform.getModelMatrix();
+            const glm::mat4 mvp = vp * cubeTransform.transform.getModelMatrix();
             m_shader->setMat4("uMVP", mvp);
             m_shader->setVec3("uColor", glm::vec3(0.15f, 0.45f, 0.95f));
             Nebula::Renderer::drawIndexed(m_cubeVao, m_cubeIndexCount);
@@ -311,9 +340,9 @@ private:
     std::shared_ptr<Nebula::IndexBuffer> m_groundIbo;
     std::shared_ptr<Nebula::Shader> m_shader;
 
-    Nebula::Transform3D m_groundTransform;
-    Nebula::Transform3D m_cubeTransform;
-    Nebula::Camera3D m_camera;
+    Nebula::Entity m_groundEntity{};
+    Nebula::Entity m_cubeEntity{};
+    Nebula::Entity m_cameraEntity{};
     bool m_showInputDebug = false;
     float m_debugPrintTimer = 0.0f;
 };

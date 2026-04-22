@@ -18,8 +18,8 @@ namespace Nebula{
     
     m_input.attachToWindow(m_window.getGLFWwindow());
 
-    
-
+    //create default scene data
+    m_scene = Scene();
     
 
   }

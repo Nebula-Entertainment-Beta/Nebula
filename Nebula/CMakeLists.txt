@@ -14,6 +14,7 @@ add_library(Nebula STATIC
     Math/transform2D.cpp
     Math/transform3D.cpp
     Application/application.cpp
+    Application/scene.cpp
     Application/input.cpp
     Application/timestep.cpp
     Application/input_Actions.cpp
