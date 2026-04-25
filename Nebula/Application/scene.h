@@ -7,6 +7,9 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <string>
+#include "component.h"
+
 
 namespace Nebula {
 
@@ -83,6 +86,11 @@ public:
 
     bool isValidEntity(Entity entity) const;
     const std::vector<Entity>& getAllEntities() const;
+    bool saveToFile(const std::string& path) const;
+    bool loadFromFile(const std::string& path);
+    void clear();
+
+
 
 private:
     std::vector<Entity> m_entities;
