@@ -44,4 +44,7 @@ target_include_directories(Nebula PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/render_pipeline/interface
     ${CMAKE_CURRENT_SOURCE_DIR}/render_pipeline/openGL
 )
-target_link_libraries(Nebula PRIVATE glfw glad)
+find_package(nlohmann_json CONFIG REQUIRED)
+target_link_libraries(Nebula PRIVATE glfw glad nlohmann_json::nlohmann_json)
+
+

@@ -1,0 +1,62 @@
+{
+  "entities": [
+    {
+      "MeshRendererComponent": {
+        "materialID": 0,
+        "meshID": 0
+      },
+      "TransformComponent": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": 1.0,
+        "yaw": 0.0
+      },
+      "id": 1
+    },
+    {
+      "MeshRendererComponent": {
+        "materialID": 0,
+        "meshID": 0
+      },
+      "TransformComponent": {
+        "position": [
+          -0.4217257797718048,
+          0.5,
+          -3.155284881591797
+        ],
+        "scale": 1.0,
+        "yaw": 0.0
+      },
+      "id": 2
+    },
+    {
+      "CameraComponent": {
+        "distance": 24.0,
+        "farClip": 100.0,
+        "fov": 55.0,
+        "isPrimary": true,
+        "nearClip": 0.10000000149011612,
+        "pitch": 0.6499999761581421,
+        "pivotOffset": [
+          0.0,
+          0.3499999940395355,
+          0.0
+        ],
+        "yaw": -0.46899986267089844
+      },
+      "TransformComponent": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": 1.0,
+        "yaw": 0.0
+      },
+      "id": 3
+    }
+  ]
+}
