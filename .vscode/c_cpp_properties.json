@@ -1,0 +1,28 @@
+{
+  "configurations": [
+    {
+      "name": "Mac",
+      "includePath": [
+        "${workspaceFolder}/Nebula/include",
+        "${workspaceFolder}/Nebula/Math",
+        "${workspaceFolder}/Nebula/Application",
+        "${workspaceFolder}/Nebula/vendor",
+        "${workspaceFolder}/Nebula/vendor/glfw/include",
+        "${workspaceFolder}/Nebula/vendor/glad/include",
+        "${workspaceFolder}/Nebula/render_pipeline/interface",
+        "${workspaceFolder}/Nebula/render_pipeline/openGL",
+        "/opt/homebrew/include"
+      ],
+      "defines": [],
+      "macFrameworkPath": [
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"
+      ],
+      "compilerPath": "/usr/bin/c++",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "macos-clang-arm64",
+      "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+    }
+  ],
+  "version": 4
+}

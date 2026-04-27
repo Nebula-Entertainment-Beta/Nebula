@@ -4,6 +4,58 @@
 #include <nlohmann/json.hpp>
 
 namespace Nebula {
+namespace {
+
+bool readFloatField(const nlohmann::json& obj, const char* key, float& outValue)
+{
+    if (!obj.contains(key) || !obj[key].is_number()) {
+        return false;
+    }
+    outValue = obj[key].get<float>();
+    return true;
+}
+
+bool readUIntField(const nlohmann::json& obj, const char* key, uint32_t& outValue)
+{
+    if (!obj.contains(key) || !obj[key].is_number_unsigned()) {
+        return false;
+    }
+    outValue = obj[key].get<uint32_t>();
+    return true;
+}
+
+bool readBoolField(const nlohmann::json& obj, const char* key, bool& outValue)
+{
+    if (!obj.contains(key) || !obj[key].is_boolean()) {
+        return false;
+    }
+    outValue = obj[key].get<bool>();
+    return true;
+}
+
+bool readStringField(const nlohmann::json& obj, const char* key, std::string& outValue)
+{
+    if (!obj.contains(key) || !obj[key].is_string()) {
+        return false;
+    }
+    outValue = obj[key].get<std::string>();
+    return true;
+}
+
+bool readVec3ArrayField(const nlohmann::json& obj, const char* key, glm::vec3& outValue)
+{
+    if (!obj.contains(key) || !obj[key].is_array() || obj[key].size() != 3) {
+        return false;
+    }
+    const auto& values = obj[key];
+    if (!values[0].is_number() || !values[1].is_number() || !values[2].is_number()) {
+        return false;
+    }
+    outValue = glm::vec3(values[0].get<float>(), values[1].get<float>(), values[2].get<float>());
+    return true;
+}
+
+} // namespace
 
     Entity Scene::createEntity()
     {
@@ -147,7 +199,7 @@ namespace Nebula {
         }
 
         for (const auto& entityJson : root["entities"]) {
-            if (!entityJson.contains("id")) {
+            if (!entityJson.contains("id") || !entityJson["id"].is_number_unsigned()) {
                 continue;
             }
             Entity entity;
@@ -159,21 +211,19 @@ namespace Nebula {
                 const auto& transformJson = entityJson["TransformComponent"];
                 auto& transformComponent = addComponent<TransformComponent>(entity);
 
-                if (transformJson.contains("position") && transformJson["position"].is_array()
-                    && transformJson["position"].size() == 3) {
-                    const glm::vec3 position(
-                        transformJson["position"][0].get<float>(),
-                        transformJson["position"][1].get<float>(),
-                        transformJson["position"][2].get<float>());
+                glm::vec3 position;
+                if (readVec3ArrayField(transformJson, "position", position)) {
                     transformComponent.transform.setPosition(position);
                 }
 
-                if (transformJson.contains("yaw")) {
-                    transformComponent.transform.setYaw(transformJson["yaw"].get<float>());
+                float yaw = transformComponent.transform.getYaw();
+                if (readFloatField(transformJson, "yaw", yaw)) {
+                    transformComponent.transform.setYaw(yaw);
                 }
 
-                if (transformJson.contains("scale")) {
-                    transformComponent.transform.setScale(transformJson["scale"].get<float>());
+                float scale = transformComponent.transform.getScale();
+                if (readFloatField(transformJson, "scale", scale)) {
+                    transformComponent.transform.setScale(scale);
                 }
             }
 
@@ -181,60 +231,36 @@ namespace Nebula {
                 const auto& meshRendererJson = entityJson["MeshRendererComponent"];
                 auto& meshRendererComponent = addComponent<MeshRendererComponent>(entity);
 
-                if (meshRendererJson.contains("meshID")) {
-                    meshRendererComponent.m_meshID = meshRendererJson["meshID"].get<uint32_t>();
-                }
-                if (meshRendererJson.contains("materialID")) {
-                    meshRendererComponent.m_materialID = meshRendererJson["materialID"].get<uint32_t>();
-                }
+                readUIntField(meshRendererJson, "meshID", meshRendererComponent.m_meshID);
+                readUIntField(meshRendererJson, "materialID", meshRendererComponent.m_materialID);
             }
 
             if (entityJson.contains("CameraComponent")) {
                 const auto& cameraJson = entityJson["CameraComponent"];
                 auto& cameraComponent = addComponent<CameraComponent>(entity);
 
-                if (cameraJson.contains("pivotOffset") && cameraJson["pivotOffset"].is_array()
-                    && cameraJson["pivotOffset"].size() == 3) {
-                    cameraComponent.pivotOffset = glm::vec3(
-                        cameraJson["pivotOffset"][0].get<float>(),
-                        cameraJson["pivotOffset"][1].get<float>(),
-                        cameraJson["pivotOffset"][2].get<float>());
-                }
-                if (cameraJson.contains("distance")) {
-                    cameraComponent.distance = cameraJson["distance"].get<float>();
-                }
-                if (cameraJson.contains("yaw")) {
-                    cameraComponent.yaw = cameraJson["yaw"].get<float>();
-                }
-                if (cameraJson.contains("pitch")) {
-                    cameraComponent.pitch = cameraJson["pitch"].get<float>();
-                }
-                if (cameraJson.contains("fov")) {
-                    cameraComponent.fov = cameraJson["fov"].get<float>();
-                }
-                if (cameraJson.contains("nearClip")) {
-                    cameraComponent.nearClip = cameraJson["nearClip"].get<float>();
-                }
-                if (cameraJson.contains("farClip")) {
-                    cameraComponent.farClip = cameraJson["farClip"].get<float>();
-                }
-                if (cameraJson.contains("isPrimary")) {
-                    cameraComponent.isPrimary = cameraJson["isPrimary"].get<bool>();
-                }
+                readVec3ArrayField(cameraJson, "pivotOffset", cameraComponent.pivotOffset);
+                readFloatField(cameraJson, "distance", cameraComponent.distance);
+                readFloatField(cameraJson, "yaw", cameraComponent.yaw);
+                readFloatField(cameraJson, "pitch", cameraComponent.pitch);
+                readFloatField(cameraJson, "fov", cameraComponent.fov);
+                readFloatField(cameraJson, "nearClip", cameraComponent.nearClip);
+                readFloatField(cameraJson, "farClip", cameraComponent.farClip);
+                readBoolField(cameraJson, "isPrimary", cameraComponent.isPrimary);
             }
 
             if (entityJson.contains("ScriptComponent")) {
                 const auto& scriptJson = entityJson["ScriptComponent"];
                 auto& scriptComponent = addComponent<ScriptComponent>(entity);
-                if (scriptJson.contains("scriptName")) {
-                    scriptComponent.scriptName = scriptJson["scriptName"].get<std::string>();
-                }
+                readStringField(scriptJson, "scriptName", scriptComponent.scriptName);
             }
         }
 
         m_nextEntityID = maxID + 1;
         return true;
     }
+
+    
 
 
 

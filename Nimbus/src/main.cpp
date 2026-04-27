@@ -76,93 +76,8 @@ public:
 protected:
     void onUpdate(float dt) override
     {
-        Nebula::Scene& scene = getScene();
-        auto& cubeTransform = scene.getComponent<Nebula::TransformComponent>(m_cubeEntity);
-        auto& cameraComponent = scene.getComponent<Nebula::CameraComponent>(m_cameraEntity);
-
-        Nebula::Input& input = getInput();
-        Nebula::ActionMapping& mapping = getActionMapping();
-
-        if (input.wasKeyPressed(GLFW_KEY_7)) {
-            if (saveScene()) {
-                std::cout << "[Scene] Saved to " << m_scenePath << '\n';
-            } else {
-                std::cout << "[Scene] Save failed for " << m_scenePath << '\n';
-            }
-        }
-
-        if (mapping.wasActionPressed(Nebula::Action::Interact, input)) {
-            m_showInputDebug = !m_showInputDebug;
-        }
-        if (input.wasKeyPressed(GLFW_KEY_1)) {
-            // Preset A: normal look with moderate zoom.
-            mapping.setCameraSensitivity(1.0f, 1.0f, 1.0f, false);
-            std::cout << "[Mapping] Applied preset A\n";
-        }
-        if (input.wasKeyPressed(GLFW_KEY_2)) {
-            // Preset B: faster look, inverted Y, slightly stronger zoom.
-            mapping.setCameraSensitivity(1.35f, 1.35f, 1.25f, true);
-            std::cout << "[Mapping] Applied preset B\n";
-        }
-
-        float lookX = 0.0f;
-        float lookY = 0.0f;
-        mapping.getAxisValue(Nebula::Axis::LookX, input, lookX, lookY);
-        mapping.getAxisValue(Nebula::Axis::LookY, input, lookX, lookY);
-
-        const float lookSensitivity = 0.0035f;
-        const float turnX = lookX * lookSensitivity;
-        const float turnY = lookY * lookSensitivity;
-        cameraComponent.yaw -= turnX;
-        cameraComponent.pitch = std::clamp(cameraComponent.pitch - turnY, -1.2f, 0.65f);
-
-        float moveX = 0.0f;
-        float moveY = 0.0f;
-        mapping.getAxisValue(Nebula::Axis::MoveX, input, moveX, moveY);
-        mapping.getAxisValue(Nebula::Axis::MoveY, input, moveX, moveY);
-        glm::vec3 moveDir(moveX, 0.0f, moveY);
-
-        if (moveDir.x != 0.0f || moveDir.z != 0.0f) {
-            const float len = std::sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
-            moveDir /= len;
-        }
-
-        const float yaw = cameraComponent.yaw;
-        const glm::vec3 forward(std::sin(yaw), 0.0f, std::cos(yaw));
-        const glm::vec3 right(std::cos(yaw), 0.0f, -std::sin(yaw));
-        const glm::vec3 velocity = (forward * moveDir.z + right * moveDir.x) * (3.5f * dt);
-        glm::vec3 cubePos = cubeTransform.transform.getPosition();
-        cubePos += velocity;
-        cubeTransform.transform.setPosition(cubePos);
-
-        float dist = cameraComponent.distance;
-        float zoomX = 0.0f;
-        float zoomY = 0.0f;
-        mapping.getAxisValue(Nebula::Axis::Scroll, input, zoomX, zoomY);
-        dist -= zoomY * 0.6f;
-        cameraComponent.distance = std::clamp(dist, 1.5f, 24.0f);
-
-        if (m_showInputDebug) {
-            m_debugPrintTimer += dt;
-            if (m_debugPrintTimer >= 0.25f) {
-                m_debugPrintTimer = 0.0f;
-                float sensX = 0.0f;
-                float sensY = 0.0f;
-                float zoomSens = 0.0f;
-                bool invertY = false;
-                mapping.getCameraSensitivity(sensX, sensY, zoomSens, invertY);
-                std::cout
-                    << "[Mapping] MoveX=" << moveX
-                    << " MoveY=" << moveY
-                    << " LookX=" << lookX
-                    << " LookY=" << lookY
-                    << " Scroll=" << zoomY
-                    << " Sens=(" << sensX << ", " << sensY << ")"
-                    << " ZoomSens=" << zoomSens
-                    << " InvertY=" << invertY
-                    << '\n';
-            }
-        }
+        runInputPhase(dt);
+        runSimulationPhase(dt);
     }
 
     void onRender() override
@@ -223,6 +138,100 @@ protected:
     }
 
 private:
+    void runInputPhase(float)
+    {
+        Nebula::Input& input = getInput();
+        Nebula::ActionMapping& mapping = getActionMapping();
+
+        if (input.wasKeyPressed(GLFW_KEY_7)) {
+            if (saveScene()) {
+                std::cout << "[Scene] Saved to " << m_scenePath << '\n';
+            } else {
+                std::cout << "[Scene] Save failed for " << m_scenePath << '\n';
+            }
+        }
+
+        if (mapping.wasActionPressed(Nebula::Action::Interact, input)) {
+            m_showInputDebug = !m_showInputDebug;
+        }
+        if (input.wasKeyPressed(GLFW_KEY_1)) {
+            mapping.setCameraSensitivity(1.0f, 1.0f, 1.0f, false);
+            std::cout << "[Mapping] Applied preset A\n";
+        }
+        if (input.wasKeyPressed(GLFW_KEY_2)) {
+            mapping.setCameraSensitivity(1.35f, 1.35f, 1.25f, true);
+            std::cout << "[Mapping] Applied preset B\n";
+        }
+
+        m_lookX = 0.0f;
+        m_lookY = 0.0f;
+        mapping.getAxisValue(Nebula::Axis::LookX, input, m_lookX, m_lookY);
+        mapping.getAxisValue(Nebula::Axis::LookY, input, m_lookX, m_lookY);
+
+        m_moveX = 0.0f;
+        m_moveY = 0.0f;
+        mapping.getAxisValue(Nebula::Axis::MoveX, input, m_moveX, m_moveY);
+        mapping.getAxisValue(Nebula::Axis::MoveY, input, m_moveX, m_moveY);
+
+        m_zoomX = 0.0f;
+        m_zoomY = 0.0f;
+        mapping.getAxisValue(Nebula::Axis::Scroll, input, m_zoomX, m_zoomY);
+    }
+
+    void runSimulationPhase(float dt)
+    {
+        Nebula::Scene& scene = getScene();
+        auto& cubeTransform = scene.getComponent<Nebula::TransformComponent>(m_cubeEntity);
+        auto& cameraComponent = scene.getComponent<Nebula::CameraComponent>(m_cameraEntity);
+        Nebula::ActionMapping& mapping = getActionMapping();
+
+        const float lookSensitivity = 0.0035f;
+        const float turnX = m_lookX * lookSensitivity;
+        const float turnY = m_lookY * lookSensitivity;
+        cameraComponent.yaw -= turnX;
+        cameraComponent.pitch = std::clamp(cameraComponent.pitch - turnY, -1.2f, 0.65f);
+
+        glm::vec3 moveDir(m_moveX, 0.0f, m_moveY);
+        if (moveDir.x != 0.0f || moveDir.z != 0.0f) {
+            const float len = std::sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
+            moveDir /= len;
+        }
+
+        const float yaw = cameraComponent.yaw;
+        const glm::vec3 forward(std::sin(yaw), 0.0f, std::cos(yaw));
+        const glm::vec3 right(std::cos(yaw), 0.0f, -std::sin(yaw));
+        const glm::vec3 velocity = (forward * moveDir.z + right * moveDir.x) * (3.5f * dt);
+        glm::vec3 cubePos = cubeTransform.transform.getPosition();
+        cubePos += velocity;
+        cubeTransform.transform.setPosition(cubePos);
+
+        float dist = cameraComponent.distance;
+        dist -= m_zoomY * 0.6f;
+        cameraComponent.distance = std::clamp(dist, 1.5f, 24.0f);
+
+        if (m_showInputDebug) {
+            m_debugPrintTimer += dt;
+            if (m_debugPrintTimer >= 0.25f) {
+                m_debugPrintTimer = 0.0f;
+                float sensX = 0.0f;
+                float sensY = 0.0f;
+                float zoomSens = 0.0f;
+                bool invertY = false;
+                mapping.getCameraSensitivity(sensX, sensY, zoomSens, invertY);
+                std::cout
+                    << "[Mapping] MoveX=" << m_moveX
+                    << " MoveY=" << m_moveY
+                    << " LookX=" << m_lookX
+                    << " LookY=" << m_lookY
+                    << " Scroll=" << m_zoomY
+                    << " Sens=(" << sensX << ", " << sensY << ")"
+                    << " ZoomSens=" << zoomSens
+                    << " InvertY=" << invertY
+                    << '\n';
+            }
+        }
+    }
+
     void buildDefaultScene()
     {
         Nebula::Scene& scene = getScene();
@@ -233,6 +242,7 @@ private:
         groundTransform.transform.setYaw(0.0f);
         groundTransform.transform.setScale(1.0f);
         scene.addComponent<Nebula::MeshRendererComponent>(m_groundEntity);
+        scene.addComponent<Nebula::ScriptComponent>(m_groundEntity).scriptName = "Ground";
 
         m_cubeEntity = scene.createEntity();
         auto& cubeTransform = scene.addComponent<Nebula::TransformComponent>(m_cubeEntity);
@@ -240,6 +250,7 @@ private:
         cubeTransform.transform.setYaw(0.0f);
         cubeTransform.transform.setScale(1.0f);
         scene.addComponent<Nebula::MeshRendererComponent>(m_cubeEntity);
+        scene.addComponent<Nebula::ScriptComponent>(m_cubeEntity).scriptName = "Player";
 
         m_cameraEntity = scene.createEntity();
         scene.addComponent<Nebula::TransformComponent>(m_cameraEntity);
@@ -251,6 +262,7 @@ private:
         cameraComponent.fov = 55.0f;
         cameraComponent.nearClip = 0.1f;
         cameraComponent.farClip = 100.0f;
+        scene.addComponent<Nebula::ScriptComponent>(m_cameraEntity).scriptName = "MainCamera";
     }
 
     bool resolveRuntimeEntities()
@@ -261,9 +273,25 @@ private:
         m_cameraEntity = {};
 
         std::vector<Nebula::Entity> meshEntities;
+        std::vector<Nebula::Entity> cameraEntities;
         for (const Nebula::Entity entity : scene.getAllEntities()) {
+            if (scene.hasComponent<Nebula::ScriptComponent>(entity)) {
+                const std::string& role = scene.getComponent<Nebula::ScriptComponent>(entity).scriptName;
+                if (role == "Ground"
+                    && scene.hasComponent<Nebula::TransformComponent>(entity)
+                    && scene.hasComponent<Nebula::MeshRendererComponent>(entity)) {
+                    m_groundEntity = entity;
+                } else if (role == "Player"
+                    && scene.hasComponent<Nebula::TransformComponent>(entity)
+                    && scene.hasComponent<Nebula::MeshRendererComponent>(entity)) {
+                    m_cubeEntity = entity;
+                } else if (role == "MainCamera" && scene.hasComponent<Nebula::CameraComponent>(entity)) {
+                    m_cameraEntity = entity;
+                }
+            }
+
             if (scene.hasComponent<Nebula::CameraComponent>(entity)) {
-                m_cameraEntity = entity;
+                cameraEntities.push_back(entity);
             }
             if (scene.hasComponent<Nebula::TransformComponent>(entity)
                 && scene.hasComponent<Nebula::MeshRendererComponent>(entity)) {
@@ -271,22 +299,28 @@ private:
             }
         }
 
-        if (m_cameraEntity.id == 0 || meshEntities.size() < 2) {
-            return false;
+        if (m_cameraEntity.id == 0 && !cameraEntities.empty()) {
+            m_cameraEntity = cameraEntities.front();
         }
 
-        m_cubeEntity = meshEntities.front();
-        for (const Nebula::Entity entity : meshEntities) {
-            const auto& transform = scene.getComponent<Nebula::TransformComponent>(entity);
-            const auto& cubeTransform = scene.getComponent<Nebula::TransformComponent>(m_cubeEntity);
-            if (transform.transform.getPosition().y > cubeTransform.transform.getPosition().y) {
-                m_cubeEntity = entity;
+        if (meshEntities.size() >= 2) {
+            if (m_cubeEntity.id == 0) {
+                m_cubeEntity = meshEntities.front();
+                for (const Nebula::Entity entity : meshEntities) {
+                    const auto& transform = scene.getComponent<Nebula::TransformComponent>(entity);
+                    const auto& cubeTransform = scene.getComponent<Nebula::TransformComponent>(m_cubeEntity);
+                    if (transform.transform.getPosition().y > cubeTransform.transform.getPosition().y) {
+                        m_cubeEntity = entity;
+                    }
+                }
             }
-        }
 
-        m_groundEntity = meshEntities.front();
-        if (m_groundEntity.id == m_cubeEntity.id && meshEntities.size() > 1) {
-            m_groundEntity = meshEntities[1];
+            if (m_groundEntity.id == 0) {
+                m_groundEntity = meshEntities.front();
+                if (m_groundEntity.id == m_cubeEntity.id && meshEntities.size() > 1) {
+                    m_groundEntity = meshEntities[1];
+                }
+            }
         }
 
         return m_groundEntity.id != 0 && m_cubeEntity.id != 0 && m_groundEntity.id != m_cubeEntity.id;
@@ -425,6 +459,12 @@ private:
     std::string m_scenePath = "assets/scenes/week2_scene.json";
     bool m_showInputDebug = false;
     float m_debugPrintTimer = 0.0f;
+    float m_moveX = 0.0f;
+    float m_moveY = 0.0f;
+    float m_lookX = 0.0f;
+    float m_lookY = 0.0f;
+    float m_zoomX = 0.0f;
+    float m_zoomY = 0.0f;
 };
 
 int main()
