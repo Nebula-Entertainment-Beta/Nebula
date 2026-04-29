@@ -18,6 +18,7 @@ add_library(Nebula STATIC
     Application/input.cpp
     Application/timestep.cpp
     Application/input_Actions.cpp
+    Application/script_Registry.cpp
     Application/input_Actions.h
     render_pipeline/interface/renderAPI.cpp
     render_pipeline/interface/renderer.cpp
