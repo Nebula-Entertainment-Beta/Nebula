@@ -89,12 +89,21 @@ Goals:
 
 - Attach C++ gameplay classes to entities.
 - Define clear lifecycle functions and registration path.
+- Standardize script boundaries so gameplay code uses engine services indirectly (through engine-provided context), not by opening platform/render/input libraries directly.
 
 Deliverables:
 
 - Script component references gameplay class type.
-- Runtime invokes create/update/destroy hooks.
+- Runtime invokes the full lifecycle hooks in a predictable order:
+  - `onCreate`
+  - `onEnable`
+  - `onUpdate`
+  - `onPhysicsUpdate`
+  - `onRender`
+  - `onDisable`
+  - `onDestroy`
 - Inspector-visible editable fields for script parameters (initial subset).
+- Each hook receives only the parameters/components needed for that phase through engine-owned context APIs.
 
 Cloud Kingdom impact:
 

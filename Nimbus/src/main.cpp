@@ -4,6 +4,7 @@
 #include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <unordered_map>
 #include <vector>
 
 #include <GLFW/glfw3.h>
@@ -14,7 +15,9 @@
 #include "camera3D.h"
 #include "index_buffer.h"
 #include "renderer.h"
+#include "register_Script.h"
 #include "shader.h"
+#include "script_Registry.h"
 #include "transform3D.h"
 #include "vertex_array.h"
 #include "vertex_buffer.h"
@@ -64,6 +67,10 @@ public:
             }
         }
 
+        Nimbus::registerAllGameplayScripts(m_scriptRegistry);
+        rebuildRuntimeScripts();
+        initializeRuntimeScripts();
+
         GLFWwindow* window = getWindow().getGLFWwindow();
         if (window) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -72,12 +79,17 @@ public:
             }
         }
     }
+    ~NimbusApp() override
+    {
+        shutdownRuntimeScripts();
+    }
 
 protected:
     void onUpdate(float dt) override
     {
         runInputPhase(dt);
         runSimulationPhase(dt);
+        runScriptUpdatePhase(dt);
     }
 
     void onRender() override
@@ -135,9 +147,91 @@ protected:
         }
 
         m_shader->unbind();
+        runScriptRenderPhase(0.0f);
     }
 
 private:
+    Nebula::ScriptContext makeScriptContext()
+    {
+        return Nebula::ScriptContext{ getScene(), &getInput(), &getActionMapping() };
+    }
+
+    void rebuildRuntimeScripts()
+    {
+        shutdownRuntimeScripts();
+        Nebula::Scene& scene = getScene();
+        for (const Nebula::Entity entity : scene.getAllEntities()) {
+            if (!scene.hasComponent<Nebula::ScriptComponent>(entity)) {
+                continue;
+            }
+
+            const auto& scriptComponent = scene.getComponent<Nebula::ScriptComponent>(entity);
+            Nebula::ScriptPtr script = m_scriptRegistry.createScript(scriptComponent.scriptName);
+            if (!script) {
+                continue;
+            }
+            m_runtimeScripts[entity.id] = std::move(script);
+        }
+    }
+
+    void initializeRuntimeScripts()
+    {
+        Nebula::ScriptContext ctx = makeScriptContext();
+        for (auto& [entityId, script] : m_runtimeScripts) {
+            Nebula::Entity entity{ entityId };
+            script->onCreate(ctx, entity);
+            script->onEnable(ctx, entity);
+        }
+    }
+
+    void shutdownRuntimeScripts()
+    {
+        if (m_runtimeScripts.empty()) {
+            return;
+        }
+
+        Nebula::ScriptContext ctx = makeScriptContext();
+        for (auto& [entityId, script] : m_runtimeScripts) {
+            Nebula::Entity entity{ entityId };
+            script->onDisable(ctx, entity);
+            script->onDestroy(ctx, entity);
+        }
+        m_runtimeScripts.clear();
+    }
+
+    void runScriptUpdatePhase(float dt)
+    {
+        if (m_runtimeScripts.empty()) {
+            return;
+        }
+
+        Nebula::ScriptContext ctx = makeScriptContext();
+        for (auto& [entityId, script] : m_runtimeScripts) {
+            Nebula::Entity entity{ entityId };
+            if (!ctx.scene.isValidEntity(entity)) {
+                continue;
+            }
+            script->onUpdate(ctx, entity, dt);
+            script->onPhysicsUpdate(ctx, entity, dt);
+        }
+    }
+
+    void runScriptRenderPhase(float dt)
+    {
+        if (m_runtimeScripts.empty()) {
+            return;
+        }
+
+        Nebula::ScriptContext ctx = makeScriptContext();
+        for (auto& [entityId, script] : m_runtimeScripts) {
+            Nebula::Entity entity{ entityId };
+            if (!ctx.scene.isValidEntity(entity)) {
+                continue;
+            }
+            script->onRender(ctx, entity, dt);
+        }
+    }
+
     void runInputPhase(float)
     {
         Nebula::Input& input = getInput();
@@ -456,6 +550,8 @@ private:
     Nebula::Entity m_groundEntity{};
     Nebula::Entity m_cubeEntity{};
     Nebula::Entity m_cameraEntity{};
+    Nebula::ScriptRegistry m_scriptRegistry;
+    std::unordered_map<Nebula::EntityID, Nebula::ScriptPtr> m_runtimeScripts;
     std::string m_scenePath = "assets/scenes/week2_scene.json";
     bool m_showInputDebug = false;
     float m_debugPrintTimer = 0.0f;
