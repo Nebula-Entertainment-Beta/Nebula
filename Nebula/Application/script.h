@@ -1,3 +1,12 @@
+/**
+ * @file script.h
+ * @brief Script **lifecycle** interface and per-frame context passed to gameplay hooks.
+ *
+ * **Owns:** `ScriptContext` (scene + optional input/mapping pointers), `IScript`, `ScriptPtr`.
+ *
+ * **Why:** Lets entities in JSON name a behavior (`ScriptComponent::scriptName`) while C++ classes
+ * implement `onUpdate` / `onRender` / … without the engine depending on every game type.
+ */
 #pragma once
 
 #include <memory>

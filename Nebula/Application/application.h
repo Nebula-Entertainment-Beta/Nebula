@@ -1,10 +1,12 @@
 /**
  * @file application.h
- * @brief Placeholder for a future `Application` type (game loop + window lifetime).
+ * @brief Engine **application shell**: window, input, action mapping, scene, and a default frame loop.
  *
- * **Why this exists:** Many engines hide `while (!window.shouldClose())` inside an `Application::Run()`
- * so games only implement callbacks like `OnUpdate` and `OnRender`. Nebula will grow toward that
- * pattern; for now the loop often lives in `main.cpp`.
+ * **Owns:** `Window`, `Input`, `ActionMapping`, `Scene` (not `ScriptRegistry` — games keep their own
+ * registry and wire `ScriptComponent` names at startup).
+ *
+ * Subclass and override `onUpdate` / `onRender`; call `run()` after `Window` is valid. `run()` is
+ * single-shot (`m_hasRun` prevents re-entry).
  */
 #pragma once
 
@@ -14,8 +16,6 @@
 #include "input.h"
 #include "input_Actions.h"
 #include "scene.h"
-#include "script_Registry.h"
-#include "script.h"
 
 namespace Nebula
 {

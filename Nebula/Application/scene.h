@@ -1,3 +1,13 @@
+/**
+ * @file scene.h
+ * @brief Lightweight **entity–component** container with JSON save/load for a fixed component set.
+ *
+ * **Owns:** `Scene`, `Entity` (opaque id), and per-type component maps (`std::type_index` → entity → `std::any`).
+ *
+ * **Why `std::any`:** Teaching-friendly ECS without a third-party library; only types used in
+ * serialization (`TransformComponent`, `MeshRendererComponent`, `CameraComponent`, `ScriptComponent`)
+ * need to be handled explicitly in `saveToFile` / `loadFromFile`.
+ */
 #pragma once
 #include <any>
 #include <cstdint>

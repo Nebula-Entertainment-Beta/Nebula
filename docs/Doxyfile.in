@@ -13,14 +13,13 @@ HTML_OUTPUT            = html
 GENERATE_LATEX         = NO
 GENERATE_MAN           = NO
 
-# Scan whole engine tree (includes Application/, Math/, render_pipeline/, …; vendor excluded below),
-# sample game sources, and docs/ (for USE_MDFILE_AS_MAINPAGE + README).
+# Engine sources only (`Nimbus/` and other games are not part of this manual) plus docs/ for pages.
 INPUT                  = @CMAKE_SOURCE_DIR@/Nebula \
-                         @CMAKE_SOURCE_DIR@/Nimbus/src \
                          @CMAKE_SOURCE_DIR@/docs
 RECURSIVE              = YES
-FILE_PATTERNS          = *.cpp *.h *.hpp *.md
-EXCLUDE_PATTERNS       = */vendor/*
+FILE_PATTERNS          = *.cpp *.h *.hpp *.md *.dox
+EXCLUDE_PATTERNS       = */vendor/* \
+                         */CLOUD_KINGDOM_PRIVATE_README.md
 
 USE_MDFILE_AS_MAINPAGE = @CMAKE_SOURCE_DIR@/docs/overview.md
 
@@ -35,8 +34,21 @@ REFERENCES_RELATION    = YES
 STRIP_FROM_PATH        = @CMAKE_SOURCE_DIR@
 FULL_PATH_NAMES        = YES
 
+# Navigation: file list + namespaces + tree view for large manuals.
+SHOW_FILES             = YES
+SHOW_NAMESPACES        = YES
+SHOW_INCLUDE_FILES     = YES
+SHOW_USED_FILES        = YES
+GENERATE_TREEVIEW      = YES
+SORT_MEMBERS_CTORS_1ST = YES
+SORT_BRIEF_DOCS        = YES
+BRIEF_MEMBER_DESC      = YES
+REPEAT_BRIEF           = YES
+JAVADOC_AUTOBRIEF      = YES
+
 QUIET                  = YES
 WARN_IF_UNDOCUMENTED   = NO
 WARN_NO_PARAMDOC       = NO
 
 ALIASES                += "engine=\par Engine note:\n"
+ALIASES                += "rationale=\par Why:\n"

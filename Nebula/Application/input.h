@@ -1,9 +1,10 @@
 /**
  * @file input.h
- * @brief Placeholder for keyboard, mouse, and gamepad input abstraction.
+ * @brief GLFW-backed **keyboard, mouse buttons, cursor delta, and scroll** with per-frame edge detection.
  *
- * **Goal:** Game code should ask “is jump pressed?” instead of calling GLFW directly, so input can
- * be remapped, recorded, or simulated for tests.
+ * **Owns:** Per-key and per-button held / pressed-this-frame / released-this-frame arrays; mouse deltas reset in `beginFrame`.
+ *
+ * Gamepad is **not** implemented here yet. For gameplay-level keys, prefer `ActionMapping` on top of this type.
  */
 #pragma once
 #define GLFW_INCLUDE_NONE

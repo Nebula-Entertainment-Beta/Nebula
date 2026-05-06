@@ -1,3 +1,12 @@
+/**
+ * @file component.h
+ * @brief Core **component** POD structs attached to `Scene` entities.
+ *
+ * - `TransformComponent` — wraps `Transform3D` (position, yaw, scale).
+ * - `MeshRendererComponent` — placeholder mesh/material ids for a future asset pipeline.
+ * - `CameraComponent` — third-person orbit parameters mirrored by `Camera3D` at runtime.
+ * - `ScriptComponent` — string id looked up in `ScriptRegistry` (e.g. `"Player"`).
+ */
 #pragma once
 #include <cstdint>
 #include <string>

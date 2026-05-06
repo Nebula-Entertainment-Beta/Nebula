@@ -1,0 +1,96 @@
+/**
+ * @page source_catalog Nebula source catalog
+ * @tableofcontents
+ *
+ * This manual lists **Nebula engine** files only (see **Files** in the sidebar). This page explains
+ * **what owns what**, **runtime order**, and **why** common patterns look the way they do so you
+ * can map unfamiliar C++ syntax to engine behavior.
+ *
+ * **Where to click next**
+ * - \subpage subsystem_boundaries — dependency rules (what may include what).
+ * - \subpage subsystem_application_layer — window, loop, input, scene, scripts.
+ * - \subpage subsystem_rendering — `RenderAPI`, OpenGL backend, buffers, shaders.
+ * - \subpage subsystem_math — transforms and cameras; how they tie to components.
+ *
+ * **Syntax you might not recognize (quick map)**
+ * - `virtual ... = 0` — *pure virtual*; the base class defines the contract, OpenGL types implement it.
+ * - `override` — the function replaces a virtual from a base class; catches signature typos at compile time.
+ * - `= delete` — the compiler must not generate that constructor/assignment (e.g. `Application` is non-copyable).
+ * - `std::shared_ptr` / `std::unique_ptr` — *smart pointers*; GPU objects often use `shared_ptr` so meshes and VAOs can share ownership safely.
+ * - `std::any` + `std::type_index` in `Scene` — a *type-erased component map*: one table per component type, keyed by entity id.
+ * - `template<typename ComponentType, ...>` on `Scene::addComponent` — *generics*; the compiler generates one code path per component type you use.
+ * - GLFW `glfwSetWindowUserPointer` — stores `this` on the window so static callbacks can find the `Input` instance (C APIs cannot pass `this` directly).
+ */
+
+/** @page subsystem_boundaries Boundaries and dependency direction
+ * @tableofcontents
+ *
+ * **Layers (high → low)**
+ * - **Consumer game** — your executable links `Nebula`, subclasses `Application`, owns a `ScriptRegistry` (engine type, but not a member of `Application`), registers script names, and issues draws; it is **not** part of this Doxygen project.
+ * - **Application (`Nebula/Application/`)** — owns `Window`, `Input`, `ActionMapping`, `Scene`; `run()` calls `Renderer::init` once, then each frame: `beginFrame` → time `dt` → `pollEvents` → `ActionMapping::updateMappings` → `onUpdate` → `onRender` → `swapBuffers`, and `Renderer::Shutdown` when the loop exits. `run()` is single-shot (`m_hasRun`).
+ * - **Rendering interface (`Nebula/render_pipeline/interface/`)** — abstract `Renderer`, `Shader`, `VertexArray`, …; **no** `gl*` here.
+ * - **OpenGL backend (`Nebula/render_pipeline/openGL/`)** — implements those interfaces with GLAD + OpenGL 4.1 core (matches `Window` context on macOS).
+ * - **Foundation** — `Window` + `include/`; math helpers in `Math/`.
+ *
+ * **Why split interface vs `openGL/`?** So a future backend (e.g. Vulkan) could implement the same interfaces without rewriting game code. Factories such as `Shader::create` and `VertexBuffer::create` dispatch to the active API (`RenderAPI::getAPI()`).
+ *
+ * **What is excluded from Doxygen** — `Nebula/vendor/` (GLFW, GLM, GLAD) and all non-engine trees (e.g. game projects) so the manual stays engine-only.
+ */
+
+/** @page subsystem_application_layer Application layer (loop, input, scene, scripts)
+ * @tableofcontents
+ *
+ * **Ownership**
+ * - `Application` owns a `Window`, `Input`, `ActionMapping`, and `Scene`. It connects input to the window via `Input::attachToWindow`.
+ *
+ * **Frame order** (`Application::run`)
+ * 1. `Input::beginFrame` — clears “pressed this frame” / “released this frame” edge flags and mouse deltas.
+ * 2. `glfwGetTime` — computes `dt` (seconds since last frame).
+ * 3. `Window::pollEvents` — GLFW processes OS messages; input callbacks may run here.
+ * 4. `ActionMapping::updateMappings` — turns raw keys/mouse into semantic **actions** and **axes** (move, look, scroll).
+ * 5. `onUpdate(dt)` — overridden by the game’s `Application` subclass for simulation and gameplay.
+ * 6. `onRender()` — default clears and sets viewport; subclass draws the frame.
+ * 7. `Window::swapBuffers` — presents the frame.
+ * 8. On loop exit: `Renderer::Shutdown`. Destructor also calls `Shutdown` if needed and `Input::detachFromWindow`.
+ *
+ * **Order note:** `beginFrame` clears per-frame edge flags *before* `pollEvents`, so callbacks can set new `wasKeyPressed` etc. for the same frame.
+ *
+ * **Input** — GLFW callbacks are `static`; they recover `Input*` via `glfwGetWindowUserPointer`. Edge-triggered queries (`wasKeyPressed`) exist because many gameplay checks care about *this frame’s* transition, not just “held”.
+ *
+ * **ActionMapping** — maps `Action` (e.g. Jump) and `Axis` (e.g. MoveX) to keys or mouse sources. Separates “WASD” from “move forward” so sensitivity presets and rebinding stay in one place. `warnOnce` avoids spamming stderr for the same binding mistake.
+ *
+ * **Scene / ECS-lite** — `Entity` is a numeric id. Components live in `m_componentStores[type_index][entityId]`. **Rationale:** quick to teach, no external ECS library; serialization in `saveToFile` / `loadFromFile` knows about specific component types (`TransformComponent`, `MeshRendererComponent`, …).
+ *
+ * **Scripts** — `IScript` is a small lifecycle interface (`onCreate`, `onUpdate`, …). `ScriptRegistry` maps string names (stored in `ScriptComponent::scriptName`) to factory lambdas. **Rationale:** data-driven scene files can name behaviors without hard-coding C++ types in JSON. The **game** registers ids at startup (e.g. `registry.registerScript("Player", []{ return std::make_unique<MyScript>(); })`).
+ */
+
+/** @page subsystem_rendering Rendering pipeline
+ * @tableofcontents
+ *
+ * **Static façade** — `Renderer::init` builds the concrete `RenderAPI` (`createrendererAPI` → `OpenGL_Renderer`) and calls `init()` once after a valid GL context exists (`Window::isValid()`).
+ *
+ * **Typical draw path**
+ * 1. `Renderer::setViewport` — match drawable size (`Window::getFramebufferSize` handles Hi-DPI).
+ * 2. `Renderer::clear` — color (and depth in the OpenGL backend).
+ * 3. `Shader::bind` — install program; `setMat4` / `setVec3` / `setInt` push uniforms.
+ * 4. `VertexArray::bind` — VAO remembers enabled vertex attributes and index buffer.
+ * 5. `Renderer::drawIndexed` → `OpenGL_Renderer::drawIndexed` → `glDrawElements`.
+ *
+ * **Vertex path** — `VertexBuffer` holds interleaved vertex data + `VertexBufferLayout` (stride and attributes). `IndexBuffer` supplies triangle indices. **Why VAOs?** Reduces per-frame state churn: bind once, draw many times.
+ *
+ * **Textures** — `Texture::create` / `createFromFile` dispatch to `OpenGL_Texture`. Shaders sample using a `sampler2D`; the uniform must match the texture unit passed to `bind(unit)`.
+ *
+ * **Shaders** — GLSL `#version` in your shader strings should match the GL context requested in `Window.cpp` (e.g. 410 core there).
+ */
+
+/** @page subsystem_math Math (transforms & cameras)
+ * @tableofcontents
+ *
+ * **Transform3D** — position, yaw, scale → `getModelMatrix()` for object-to-world. Used by `TransformComponent` and by scene serialization.
+ *
+ * **Camera3D** — third-person orbit: eye around a pivot, perspective projection. `CameraComponent` stores the same parameters as serializable scene state; game code typically builds a `Camera3D` each frame from that state and the current framebuffer aspect ratio.
+ *
+ * **Camera2D / Transform2D** — reserved for orthographic 2D; headers describe intent; implementations can grow when a 2D game needs them.
+ *
+ * **Why duplicate camera data (`CameraComponent` vs `Camera3D`)?** The component is *persistent scene state*; `Camera3D` is a *runtime math helper* built from that state plus live aspect ratio from the framebuffer.
+ */

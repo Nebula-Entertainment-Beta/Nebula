@@ -27,9 +27,6 @@ namespace Nebula
          */
         Window(std::string_view title, int width, int height);
 
-        /** Swaps the front/back buffer and processes input events (call once per frame). */
-       
-
         /** @return True when the user closed the window or the window failed. */
         bool shouldWindowClose();
 

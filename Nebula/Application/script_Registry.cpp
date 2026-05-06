@@ -1,5 +1,13 @@
+/**
+ * @file script_Registry.cpp
+ * @brief Global registry storage (function-local static map) and `createScript` dispatch.
+ *
+ * **Note:** Duplicate ids log and replace the factory so hot reload or double registration is visible.
+ */
 #include "script_Registry.h"
 #include <iostream>
+#include <string>
+#include <unordered_map>
 
 namespace Nebula
 {
