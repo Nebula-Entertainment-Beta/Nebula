@@ -1,6 +1,6 @@
 /**
  * @file application.cpp
- * @brief Placeholder — application bootstrap will be implemented here later.
+ * @brief `Application` constructor, `run()` loop (`Renderer::init` … `Shutdown`), and default `onRender` (viewport + clear).
  */
 #include "application.h"
 #include "renderer.h"

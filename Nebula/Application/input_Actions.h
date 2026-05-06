@@ -1,3 +1,13 @@
+/**
+ * @file input_Actions.h
+ * @brief Semantic **actions** and **axes** built on top of raw `Input` (keys, mouse delta, scroll).
+ *
+ * **Owns:** `ActionMapping`, enums `Action` / `Axis`, `AxisBinding`, and `CameraSensitivity`.
+ *
+ * **Why:** Gameplay asks for “move forward” or “look X”, not “is GLFW_KEY_W down”, so bindings,
+ * sensitivity, and future rebinding stay centralized. `updateMappings` reads `Input` each frame and
+ * fills cached axis values used by `getAxisValue` and action queries.
+ */
 #pragma once
 #include "input.h"
 #include <unordered_map>

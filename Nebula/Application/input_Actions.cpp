@@ -1,3 +1,7 @@
+/**
+ * @file input_Actions.cpp
+ * @brief Default WASD + mouse-look bindings and axis aggregation for `ActionMapping`.
+ */
 #include "input_Actions.h"
 #include <iostream>
 

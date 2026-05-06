@@ -1,3 +1,10 @@
+/**
+ * @file scene.cpp
+ * @brief Entity create/destroy, component storage, and JSON persistence via nlohmann/json.
+ *
+ * **Note:** Helpers in an anonymous namespace parse JSON fields; scene format is written for the
+ * club’s sample levels, not a full generic serializer.
+ */
 #include "scene.h"
 #include <algorithm>
 #include <fstream>

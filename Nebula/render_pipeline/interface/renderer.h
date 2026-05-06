@@ -3,7 +3,8 @@
  * @brief Simple static façade over `RenderAPI` — what most game code should call.
  *
  * Call `Renderer::init()` once after you have a valid OpenGL context (`Window::isValid()`), then
- * each frame: `clear`, draw meshes with `drawIndexed`, and `Window::update()`.
+ * each frame: `clear`, draw meshes with `drawIndexed`, and present with `Window::swapBuffers()` (event
+ * polling is separate — `Application::run` uses `pollEvents` before `onUpdate`).
  */
 #pragma once
 #include <memory>

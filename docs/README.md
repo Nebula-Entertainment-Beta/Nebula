@@ -11,7 +11,7 @@ cmake --build build --target NebulaDocs
 
 Open **`build/docs/html/index.html`** in a browser.
 
-The Doxygen input is **`Nebula/`** (engine) and **`Nimbus/src/`** (game). Paths matching **`*/vendor/*`** are excluded so GLFW/GLM/GLAD do not flood the manual.
+The Doxygen input is **`Nebula/`** (engine only) and **`docs/`** (overview + **`source_catalog.dox`**). **`*/vendor/*`** is excluded (GLFW, GLM, GLAD). Game code is intentionally **not** scanned — document games separately.
 
 ## What to write in source files
 

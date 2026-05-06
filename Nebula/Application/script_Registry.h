@@ -1,3 +1,9 @@
+/**
+ * @file script_Registry.h
+ * @brief Maps string script names to factories that produce `IScript` instances.
+ *
+ * **Why:** Registration happens at game startup (`registerScript`); `Scene` only stores names in JSON.
+ */
 #pragma once
 #include "script.h"
 #include <functional>

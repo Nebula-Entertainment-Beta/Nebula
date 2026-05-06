@@ -1,6 +1,6 @@
 /**
  * @file input.cpp
- * @brief Placeholder — input polling/wrappers will be implemented here later.
+ * @brief GLFW callbacks (`Window` user pointer → `Input`) and query methods for keys/mouse.
  */
 #include "input.h"
 #include <GLFW/glfw3.h>
