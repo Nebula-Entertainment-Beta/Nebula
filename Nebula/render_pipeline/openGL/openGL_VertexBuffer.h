@@ -7,33 +7,35 @@
 #include <cstdint>
 #include <memory>
 
-#include "../interface/vertex_buffer.h"
+#include "../include/vertex_buffer.h"
 
-namespace Nebula{
-  class OpenGL_VertexBuffer : public VertexBuffer{
-    public:
-      OpenGL_VertexBuffer(
-        const void* data,
+namespace Nebula
+{
+  class OpenGL_VertexBuffer : public VertexBuffer
+  {
+  public:
+    OpenGL_VertexBuffer(
+        const void *data,
         size_t sizeBytes,
         BufferUsage usage,
-        const VertexBufferLayout& layout
-      );
-      ~OpenGL_VertexBuffer() override;
-      void bind() const override;
-      void unbind() const override;
+        const VertexBufferLayout &layout);
+    ~OpenGL_VertexBuffer() override;
+    void bind() const override;
+    void unbind() const override;
 
-      const VertexBufferLayout& getlayout() const override {
-        return m_layout;
-      }
+    const VertexBufferLayout &getlayout() const override
+    {
+      return m_layout;
+    }
 
-      static std::shared_ptr<VertexBuffer> create(
-        const void* data,
+    static std::shared_ptr<VertexBuffer> create(
+        const void *data,
         size_t sizeBytes,
         BufferUsage usage,
-        const VertexBufferLayout& layout);
-    
-    private:
-        uint32_t m_rendererID =0;
-        VertexBufferLayout m_layout;
+        const VertexBufferLayout &layout);
+
+  private:
+    uint32_t m_rendererID = 0;
+    VertexBufferLayout m_layout;
   };
 }

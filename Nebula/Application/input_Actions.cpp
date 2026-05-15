@@ -3,6 +3,8 @@
  * @brief Default WASD + mouse-look bindings and axis aggregation for `ActionMapping`.
  */
 #include "input_Actions.h"
+#include <GLFW/glfw3.h>
+#include <algorithm>
 #include <iostream>
 
 namespace Nebula {
@@ -121,7 +123,7 @@ namespace Nebula {
 
 
         for (auto& [axis, bindings] : m_axisBindings) {
-              glm::vec3 value(0.0f);
+              std::array<float, 3> value{{0.0f, 0.0f, 0.0f}};
               for (const AxisBinding& binding : bindings) {
                   switch (binding.source) {
                       case AxisSourceType::KeyPair: {
@@ -133,20 +135,20 @@ namespace Nebula {
                               keyAxis -= 1.0f;
                           }
                           if (axis == Axis::MoveX) {
-                              value.x += keyAxis * binding.scale;
+                              value[0] += keyAxis * binding.scale;
                           } else if (axis == Axis::MoveY) {
-                              value.y += keyAxis * binding.scale;
+                              value[1] += keyAxis * binding.scale;
                           }
                           break;
                       }
                       case AxisSourceType::MouseDeltaX:
-                          value.x += input.mouseDeltaX() * binding.scale * m_cameraSensitivity.lookSensitivityX;
+                          value[0] += input.mouseDeltaX() * binding.scale * m_cameraSensitivity.lookSensitivityX;
                           break;
                       case AxisSourceType::MouseDeltaY:
-                          value.y += input.mouseDeltaY() * binding.scale * m_cameraSensitivity.lookSensitivityY * (m_cameraSensitivity.invertLookY ? -1.0f : 1.0f);
+                          value[1] += input.mouseDeltaY() * binding.scale * m_cameraSensitivity.lookSensitivityY * (m_cameraSensitivity.invertLookY ? -1.0f : 1.0f);
                           break;
                       case AxisSourceType::MouseScrollY:
-                          value.y += input.mouseScrollDeltaY() * binding.scale * m_cameraSensitivity.zoomSensitivity;
+                          value[1] += input.mouseScrollDeltaY() * binding.scale * m_cameraSensitivity.zoomSensitivity;
                           break;
                   }
               }
@@ -158,7 +160,8 @@ namespace Nebula {
           //apply scale or clamp wherever necessary
           for (auto& [axis, value] : m_axisValues) {
               if (axis == Axis::MoveX || axis == Axis::MoveY) {
-                  value = glm::clamp(value, -1.0f, 1.0f);
+                  value[0] = std::clamp(value[0], -1.0f, 1.0f);
+                  value[1] = std::clamp(value[1], -1.0f, 1.0f);
               }
           }
 
@@ -205,8 +208,8 @@ namespace Nebula {
       (void)input;
       auto it = m_axisValues.find(axis);
       if (it != m_axisValues.end()) {
-          outX += it->second.x;
-          outY += it->second.y;
+          outX += it->second[0];
+          outY += it->second[1];
       }
   }
   

@@ -8,7 +8,8 @@
  */
 #pragma once
 #include <memory>
-#include <glm/glm.hpp>
+
+#include "math_types.h"
 
 namespace Nebula
 {
@@ -47,7 +48,7 @@ namespace Nebula
         virtual void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 
         /** Fills the color (and depth) buffers before a new frame. */
-        virtual void clear(const glm::vec4& color) = 0;
+        virtual void clear(const Vec4& color) = 0;
 
     private:
         static RendererAPIType s_API;

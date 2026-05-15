@@ -3,18 +3,24 @@
  * @brief GLFW callbacks (`Window` user pointer → `Input`) and query methods for keys/mouse.
  */
 #include "input.h"
+#include "Window.h"
 #include <GLFW/glfw3.h>
+#include <algorithm>
 
 
 namespace Nebula{
-  void Input::attachToWindow(GLFWwindow* window)
+  void Input::attachToWindow(Window& window)
   {
-      m_window = window;
+      GLFWwindow* const w = window.m_window;
+      if (!w) {
+          return;
+      }
+      m_window = w;
       glfwSetKeyCallback(m_window, keyCallback);
       glfwSetMouseButtonCallback(m_window, mouseButtonCallback);
       glfwSetCursorPosCallback(m_window, cursorPosCallback);
       glfwSetScrollCallback(m_window, scrollCallback);
-      setWindowUserPointer(m_window, this);
+      glfwSetWindowUserPointer(m_window, this);
   }
 
   void Input::detachFromWindow()
@@ -24,7 +30,7 @@ namespace Nebula{
           glfwSetMouseButtonCallback(m_window, nullptr);
           glfwSetCursorPosCallback(m_window, nullptr);
           glfwSetScrollCallback(m_window, nullptr);
-          setWindowUserPointer(m_window, nullptr);
+          glfwSetWindowUserPointer(m_window, nullptr);
           m_window = nullptr;
       }
   }
@@ -103,7 +109,8 @@ namespace Nebula{
 
   // Query functions
   bool Input::isKeyDown(int key) const
-  {      if (key < 0 || key > GLFW_KEY_LAST) return false;
+  {
+      if (key < 0 || key > GLFW_KEY_LAST) return false;
       return m_keyDown[key];
   }
 

@@ -5,7 +5,8 @@
 #include "application.h"
 #include "renderer.h"
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
+
+#include "math_types.h"
 
 namespace Nebula
 {
@@ -16,7 +17,7 @@ namespace Nebula
     m_height = spec.height;
     m_title = spec.title;
 
-    m_input.attachToWindow(m_window.getGLFWwindow());
+    m_input.attachToWindow(m_window);
 
     // create default scene data
     m_scene = Scene();
@@ -82,7 +83,7 @@ namespace Nebula
     {
       Renderer::setViewport(0, 0, m_width, m_height);
     }
-    Renderer::clear(glm::vec4(0.1f, 0.1f, 0.15f, 1.0f));
+    Renderer::clear(Vec4{0.1f, 0.1f, 0.15f, 1.0f});
   }
 
 }

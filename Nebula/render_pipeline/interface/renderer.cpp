@@ -36,7 +36,7 @@ namespace Nebula {
       s_renderAPI->setViewport(x, y, width, height);
     }
   }
-  void Renderer::clear(const glm::vec4& color) {
+  void Renderer::clear(const Vec4& color) {
     if(s_renderAPI) {
       s_renderAPI->clear(color);
     }

@@ -1,5 +1,5 @@
 #pragma once
-#include "script.h"
+#include <script.h>
 class groundScript : public Nebula::IScript
 {
 public:

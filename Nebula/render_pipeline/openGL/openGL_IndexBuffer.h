@@ -8,12 +8,14 @@
 #pragma once
 #include <cstdint>
 #include <memory>
-#include "../interface/index_buffer.h"
+#include "../include/index_buffer.h"
 
-namespace Nebula {
-    class OpenGL_IndexBuffer : public IndexBuffer {
+namespace Nebula
+{
+    class OpenGL_IndexBuffer : public IndexBuffer
+    {
     public:
-        OpenGL_IndexBuffer(uint32_t* indices, uint32_t count);
+        OpenGL_IndexBuffer(uint32_t *indices, uint32_t count);
         virtual ~OpenGL_IndexBuffer();
 
         void bind() const override;
