@@ -8,7 +8,8 @@
  */
 #pragma once
 #include <memory>
-#include <glm/glm.hpp>
+
+#include "math_types.h"
 
 namespace Nebula
 {
@@ -26,7 +27,7 @@ namespace Nebula
         static void drawIndexed(const std::shared_ptr<VertexArray>& vertexArray,
                                 uint32_t indexCount = 0);
         static void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
-        static void clear(const glm::vec4& color);
+        static void clear(const Vec4& color);
 
     private:
         static std::unique_ptr<RenderAPI> s_renderAPI;

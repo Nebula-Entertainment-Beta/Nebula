@@ -6,13 +6,16 @@
 #include "../openGL/openGL_IndexBuffer.h"
 #include "renderAPI.h"
 
-namespace Nebula{
-  std::shared_ptr<IndexBuffer> IndexBuffer::create( uint32_t* indices, uint32_t count){
-    switch (RenderAPI::getAPI()){
-      case RendererAPIType::OpenGL:
-        return std::make_shared<OpenGL_IndexBuffer>(indices, count);
-      default:
-        return nullptr;
+namespace Nebula
+{
+  std::shared_ptr<IndexBuffer> IndexBuffer::create(uint32_t *indices, uint32_t count)
+  {
+    switch (RenderAPI::getAPI())
+    {
+    case RendererAPIType::OpenGL:
+      return std::make_shared<OpenGL_IndexBuffer>(indices, count);
+    default:
+      return nullptr;
     }
   }
 }

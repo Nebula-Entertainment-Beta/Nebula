@@ -19,7 +19,6 @@ add_library(Nebula STATIC
     Application/timestep.cpp
     Application/input_Actions.cpp
     Application/script_Registry.cpp
-    Application/input_Actions.h
     render_pipeline/interface/renderAPI.cpp
     render_pipeline/interface/renderer.cpp
     render_pipeline/interface/vertex_array.cpp
@@ -35,8 +34,12 @@ add_library(Nebula STATIC
     render_pipeline/openGL/openGL_texture.cpp
 
 )
-# Parent of `glm/` so #include <glm/glm.hpp> resolves to vendor/glm/glm.hpp
+# Public API: headers under `include/` only (no glm in public headers; glm is PRIVATE for engine .cpp).
 target_include_directories(Nebula PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_include_directories(Nebula PRIVATE
     include
     ${CMAKE_CURRENT_SOURCE_DIR}/Math
     ${CMAKE_CURRENT_SOURCE_DIR}/Application
@@ -44,8 +47,11 @@ target_include_directories(Nebula PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glfw/include
     ${CMAKE_CURRENT_SOURCE_DIR}/render_pipeline/interface
     ${CMAKE_CURRENT_SOURCE_DIR}/render_pipeline/openGL
+
 )
+
 find_package(nlohmann_json CONFIG REQUIRED)
-target_link_libraries(Nebula PRIVATE glfw glad nlohmann_json::nlohmann_json)
+target_link_libraries(Nebula PRIVATE glfw glad nlohmann_json::nlohmann_json glm::glm-header-only)  
+
 
 

@@ -10,7 +10,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
-#include <glm/glm.hpp>
+#include "math_types.h"
 #include "transform3D.h"
 
 
@@ -30,7 +30,7 @@ namespace Nebula{
   };
 
   struct CameraComponent{
-    glm::vec3 pivotOffset{0.0f, 0.35f, 0.0f};
+    Vec3 pivotOffset{0.0f, 0.35f, 0.0f};
     float distance = 6.0f;
     float yaw = 0.7f;
     float pitch = -0.3f;

@@ -49,7 +49,7 @@ bool readStringField(const nlohmann::json& obj, const char* key, std::string& ou
     return true;
 }
 
-bool readVec3ArrayField(const nlohmann::json& obj, const char* key, glm::vec3& outValue)
+bool readVec3ArrayField(const nlohmann::json& obj, const char* key, Vec3& outValue)
 {
     if (!obj.contains(key) || !obj[key].is_array() || obj[key].size() != 3) {
         return false;
@@ -58,7 +58,7 @@ bool readVec3ArrayField(const nlohmann::json& obj, const char* key, glm::vec3& o
     if (!values[0].is_number() || !values[1].is_number() || !values[2].is_number()) {
         return false;
     }
-    outValue = glm::vec3(values[0].get<float>(), values[1].get<float>(), values[2].get<float>());
+    outValue = Vec3{values[0].get<float>(), values[1].get<float>(), values[2].get<float>()};
     return true;
 }
 
@@ -120,7 +120,7 @@ bool readVec3ArrayField(const nlohmann::json& obj, const char* key, glm::vec3& o
                 if (entityTransformIt != transformStoreIt->second.end()) {
                     const TransformComponent& transformComponent =
                         std::any_cast<const TransformComponent&>(entityTransformIt->second);
-                    const glm::vec3 position = transformComponent.transform.getPosition();
+                    const Vec3 position = transformComponent.transform.getPosition();
                     entityJson["TransformComponent"] = {
                         { "position", { position.x, position.y, position.z } },
                         { "yaw", transformComponent.transform.getYaw() },
@@ -218,7 +218,7 @@ bool readVec3ArrayField(const nlohmann::json& obj, const char* key, glm::vec3& o
                 const auto& transformJson = entityJson["TransformComponent"];
                 auto& transformComponent = addComponent<TransformComponent>(entity);
 
-                glm::vec3 position;
+                Vec3 position;
                 if (readVec3ArrayField(transformJson, "position", position)) {
                     transformComponent.transform.setPosition(position);
                 }

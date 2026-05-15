@@ -3,8 +3,8 @@
  * @brief Issues indexed draws and frame setup for the OpenGL backend.
  */
 #include "openGL_Renderer.h"
-#include "../interface/vertex_array.h"
-#include "../interface/index_buffer.h"
+#include "../include/vertex_array.h"
+#include "../include/index_buffer.h"
 
 namespace Nebula
 {
@@ -15,17 +15,16 @@ namespace Nebula
         glDepthFunc(GL_LEQUAL);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        
-
     }
 
-    void OpenGL_Renderer::drawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount)
+    void OpenGL_Renderer::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray, uint32_t indexCount)
     {
         if (!vertexArray)
             return;
 
-        if (indexCount == 0) {
-            const auto& ibo = vertexArray->getIndexBuffer();
+        if (indexCount == 0)
+        {
+            const auto &ibo = vertexArray->getIndexBuffer();
             if (!ibo)
                 return;
             indexCount = ibo->getCount();
@@ -43,21 +42,17 @@ namespace Nebula
         // Cleanup code for OpenGL
         glDisable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
-
     }
 
     void OpenGL_Renderer::setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
     {
         glViewport(x, y, width, height);
-        
     }
 
-    void OpenGL_Renderer::clear(const glm::vec4& color)
+    void OpenGL_Renderer::clear(const Vec4 &color)
     {
-        glClearColor(color.r, color.g, color.b, color.a);
+        glClearColor(color.x, color.y, color.z, color.w);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    
-  
 }

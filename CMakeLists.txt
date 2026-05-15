@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(Nebula)
 add_subdirectory(Nimbus)
+file(COPY "${CMAKE_SOURCE_DIR}/assets" DESTINATION "${CMAKE_BINARY_DIR}")
+
 
 # Optional API docs (Doxygen). Open build/docs/html/index.html after building NebulaDocs.
 option(NEBULA_BUILD_DOCS "Add NebulaDocs target (requires Doxygen)" ON)

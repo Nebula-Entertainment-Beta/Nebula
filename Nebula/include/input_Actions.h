@@ -10,9 +10,9 @@
  */
 #pragma once
 #include "input.h"
+#include <array>
 #include <unordered_map>
 #include <vector>
-#include <glm/glm.hpp>
 #include <unordered_set>
 
 namespace Nebula {
@@ -105,7 +105,7 @@ namespace Nebula {
       std::unordered_map<Action, std::vector<int>> m_actionBindings;
       std::unordered_map<Axis, std::vector<AxisBinding>> m_axisBindings;
       std::unordered_map<Action, bool> m_actionStates;
-      std::unordered_map<Axis, glm::vec3> m_axisValues;
+      std::unordered_map<Axis, std::array<float, 3>> m_axisValues;
       CameraSensitivity m_cameraSensitivity;
       std::unordered_set<std::string> m_warnedMessages;
 
