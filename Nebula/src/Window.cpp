@@ -2,12 +2,14 @@
  * @file Window.cpp
  * @brief GLFW window + OpenGL 4.1 core context (forward-compatible on macOS).
  */
+#include <glad/glad.h>
 #include "Window.h"
 #include "detail/window_native.h"
-#include <glad/glad.h>
+#include "detail/openGL_GraphicsContext.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string_view>
+#include <cassert>
 
 namespace Nebula
 {
@@ -17,6 +19,7 @@ namespace Nebula
         GLFWwindow *m_window = nullptr;
         bool m_glfwInitialized = false;
         bool m_glReady = false;
+        std::unique_ptr<detail::OpenGLGraphicsContext> m_graphicsContext;
     };
 
     Window::Window(std::string_view title, int width, int height)
@@ -58,7 +61,7 @@ namespace Nebula
             m_impl->m_glfwInitialized = false;
             return;
         }
-
+        m_impl->m_graphicsContext = std::make_unique<detail::OpenGLGraphicsContext>(m_impl->m_window);
         m_impl->m_glReady = true;
     }
 
@@ -79,13 +82,16 @@ namespace Nebula
 
     void Window::getFramebufferSize(int &outWidth, int &outHeight) const
     {
-        if (!m_impl || !m_impl->m_window)
+        if (m_impl && m_impl->m_graphicsContext)
+        {
+            m_impl->m_graphicsContext->getFramebufferSize(outWidth, outHeight);
+        }
+
+        else
         {
             outWidth = 0;
             outHeight = 0;
-            return;
         }
-        glfwGetFramebufferSize(m_impl->m_window, &outWidth, &outHeight);
     }
 
     void Window::pollEvents()
@@ -100,12 +106,12 @@ namespace Nebula
 
     void Window::swapBuffers()
     {
-        if (!m_impl || !m_impl->m_window)
+
+        if (m_impl && m_impl->m_graphicsContext)
         {
-            std::cerr << "Failed to swap buffers for GLFW window" << std::endl;
-            return;
+
+            m_impl->m_graphicsContext->swap();
         }
-        glfwSwapBuffers(m_impl->m_window);
     }
 
     Window::~Window()
@@ -162,6 +168,18 @@ namespace Nebula
 #else
         (void)enabled;
 #endif
+    }
+
+    const graphicsContext &Window::getGraphicsContext() const
+    {
+        assert(m_impl != nullptr && m_impl->m_graphicsContext != nullptr);
+        return *m_impl->m_graphicsContext;
+    }
+
+    graphicsContext &Window::getGraphicsContext()
+    {
+        assert(m_impl != nullptr && m_impl->m_graphicsContext != nullptr);
+        return *m_impl->m_graphicsContext;
     }
 
 } // namespace Nebula

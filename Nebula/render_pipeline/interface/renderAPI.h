@@ -10,17 +10,11 @@
 #include <memory>
 
 #include "math_types.h"
+#include "renderer_api_type.h"
 
 namespace Nebula
 {
     class VertexArray;
-
-    /** Which graphics API the factories (`VertexBuffer::create`, etc.) should use. */
-    enum class RendererAPIType {
-        None = 0,
-        OpenGL,
-        Vulkan, ///< Not implemented yet — reserved for future work.
-    };
 
     /**
      * @brief Per-backend operations: init state, clear the framebuffer, issue indexed draws.
@@ -41,20 +35,20 @@ namespace Nebula
          * @param vertexArray Mesh + layout + optional index buffer.
          * @param indexCount  Number of indices to draw; `0` means “use full index buffer”.
          */
-        virtual void drawIndexed(const std::shared_ptr<VertexArray>& vertexArray,
+        virtual void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
                                  uint32_t indexCount = 0) = 0;
 
         /** Maps normalized device coordinates to pixel region (usually full window). */
         virtual void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 
         /** Fills the color (and depth) buffers before a new frame. */
-        virtual void clear(const Vec4& color) = 0;
+        virtual void clear(const Vec4 &color) = 0;
 
     private:
         static RendererAPIType s_API;
     };
 
     /** @brief Constructs the active `RenderAPI` implementation (OpenGL by default). */
-    std::unique_ptr<RenderAPI> createrendererAPI();
+    std::unique_ptr<RenderAPI> createRendererAPI(RendererAPIType api);
 
 }
