@@ -10,6 +10,8 @@ add_subdirectory(vendor/glm)
 add_library(Nebula STATIC
     src/Window.cpp
     src/detail/openGL_GraphicsContext.cpp 
+    src/imageDecoder.cpp 
+    src/assetProvider.cpp 
     Math/camera2D.cpp
     Math/camera3D.cpp
     Math/transform2D.cpp
@@ -23,6 +25,7 @@ add_library(Nebula STATIC
     Application/clock.cpp
     render_pipeline/interface/renderAPI.cpp
     render_pipeline/interface/renderer.cpp
+    render_pipeline/interface/texture.cpp
     render_pipeline/openGL/openGL_Renderer.cpp
     render_pipeline/openGL/openGL_Shader.cpp
     render_pipeline/openGL/openGL_VertexBuffer.cpp

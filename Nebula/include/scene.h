@@ -18,6 +18,7 @@
 #include <vector>
 #include <string>
 #include "component.h"
+#include "assetProvider.h"
 
 namespace Nebula
 {
@@ -104,8 +105,8 @@ namespace Nebula
 
         bool isValidEntity(Entity entity) const;
         const std::vector<Entity> &getAllEntities() const;
-        bool saveToFile(const std::string &path) const;
-        bool loadFromFile(const std::string &path);
+        bool saveToFile(const IAssetProvider &assets, std::string_view logicalPath) const;
+        bool loadFromFile(const IAssetProvider &assets, std::string_view logicalPath);
         void clear();
 
     private:
