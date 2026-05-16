@@ -7,21 +7,31 @@
  * if `isValid()` is true — otherwise setup failed (no GPU context).
  */
 #pragma once
+#include <memory>
 #include <string_view>
-
-struct GLFWwindow;
 
 namespace Nebula
 {
-    class Input;
+    class Window;
+
+    namespace detail
+    {
+        void *nativeWindowHandleForInput(const Window &window);
+    }
+
+    enum class CursorMode
+    {
+        Normal,
+        Hidden,
+        Disabled,
+    };
+    struct WindowImpl;
 
     /**
-     * @brief Owns a `GLFWwindow` and the OpenGL context created for it.
+     * @brief Owns a native window and an OpenGL context (GLFW + GLAD in the implementation).
      */
     class Window
     {
-        friend class Input;
-
     public:
         /**
          * @brief Opens a window, creates the GL context, and loads GLAD.
@@ -37,27 +47,28 @@ namespace Nebula
         ~Window();
 
         /**
-         * @brief False if GLFW/GLAD setup failed — do not call `Renderer` or other GL APIs.
-         * @details Use this guard in `main` before `Renderer::init()`.
-         */
-        bool isValid() const { return m_window != nullptr && m_glReady; }
-
-        /**
          * @brief Pixel size of the drawable framebuffer (may differ from window size on Hi-DPI).
          * Use this for `glViewport` and projection aspect, not the constructor width/height alone.
          */
-        void getFramebufferSize(int& outWidth, int& outHeight) const;
+        void getFramebufferSize(int &outWidth, int &outHeight) const;
 
-        // pollevents is for input handling because it updates the state of the keyboard and mouse buttons. 
+        /**
+         * @brief False if GLFW/GLAD setup failed — do not call `Renderer` or other GL APIs.
+         * @details Use this guard in `main` before `Renderer::init()`.
+         */
+        bool isValid() const;
+
+        // pollevents is for input handling because it updates the state of the keyboard and mouse buttons.
         // swapbuffers is for rendering because it displays the rendered frame on the screen.
         void pollEvents();
         void swapBuffers();
 
-        
+        void setCursorMode(CursorMode mode);
+        void setRawMouseMotion(bool enabled);
 
     private:
-        GLFWwindow* m_window = nullptr;
-        bool m_glfwInitialized = false;
-        bool m_glReady = false;
+        friend void *detail::nativeWindowHandleForInput(const Window &window);
+
+        std::unique_ptr<WindowImpl> m_impl;
     };
 }

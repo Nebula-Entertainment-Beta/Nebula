@@ -6,37 +6,48 @@
  *
  * Gamepad is **not** implemented here yet. For gameplay-level keys, prefer `ActionMapping` on top of this type.
  *
- * GLFW is not included here so games only need Nebula's public `include/` directory.
- * Slot counts match GLFW 3.x (`GLFW_KEY_LAST` = 348, `GLFW_MOUSE_BUTTON_LAST` = 7).
+ * No GLFW types appear in this header — games only need Nebula's public `include/` directory.
+ * Keyboard layout uses `Tasto` / `TastoDelMouse` from `inputTypes.h` (dense indices `0 .. Count-1`).
  */
 #pragma once
+
+#include "inputTypes.h"
+
 #include <array>
 #include <cstdint>
-
-struct GLFWwindow;
 
 namespace Nebula
 {
   class Window;
 
-  inline constexpr int kInputKeySlotCount = 349;         // GLFW_KEY_LAST + 1
-  inline constexpr int kInputMouseButtonSlotCount = 8;   // GLFW_MOUSE_BUTTON_LAST + 1
+  namespace InputDetail
+  {
+    void onKey(void *windowHandle, int key, int scancode, int action, int mods);
+    void onMouseButton(void *windowHandle, int button, int action, int mods);
+    void onCursorPos(void *windowHandle, double x, double y);
+    void onScroll(void *windowHandle, double xoffset, double yoffset);
+  }
 
   class Input
   {
+    friend void InputDetail::onKey(void *windowHandle, int key, int scancode, int action, int mods);
+    friend void InputDetail::onMouseButton(void *windowHandle, int button, int action, int mods);
+    friend void InputDetail::onCursorPos(void *windowHandle, double x, double y);
+    friend void InputDetail::onScroll(void *windowHandle, double xoffset, double yoffset);
+
   public:
     Input() = default;
 
-    void attachToWindow(Window &window);
-    void detachFromWindow();
+    void attach(Window &window);
+    void detach();
     void beginFrame();
 
-    bool isKeyDown(int key) const;
-    bool wasKeyPressed(int key) const;
-    bool wasKeyReleased(int key) const;
-    bool isMouseButtonDown(int MouseButton) const;
-    bool wasMouseButtonPressed(int MouseButton) const;
-    bool wasMouseButtonReleased(int MouseButton) const;
+    bool isKeyDown(Tasto key) const;
+    bool wasKeyPressed(Tasto key) const;
+    bool wasKeyReleased(Tasto key) const;
+    bool isMouseButtonDown(TastoDelMouse button) const;
+    bool wasMouseButtonPressed(TastoDelMouse button) const;
+    bool wasMouseButtonReleased(TastoDelMouse button) const;
 
     float mouseDeltaX() const { return m_mouseDeltaX; }
 
@@ -44,20 +55,15 @@ namespace Nebula
     float mouseScrollDeltaY() const { return m_mouseScrollDeltaY; }
 
   private:
-    static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
-    static void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
-    static void cursorPosCallback(GLFWwindow *window, double x, double y);
-    static void scrollCallback(GLFWwindow *window, double xoffset, double yoffset);
+    void *m_nativeWindow = nullptr;
 
-    GLFWwindow *m_window = nullptr;
+    std::array<bool, tastoSlotCount()> m_keyDown{};
+    std::array<bool, tastoSlotCount()> m_keyPressed{};
+    std::array<bool, tastoSlotCount()> m_keyReleased{};
 
-    std::array<bool, kInputKeySlotCount> m_keyDown{};
-    std::array<bool, kInputKeySlotCount> m_keyPressed{};
-    std::array<bool, kInputKeySlotCount> m_keyReleased{};
-
-    std::array<bool, kInputMouseButtonSlotCount> m_mouseButtonDown{};
-    std::array<bool, kInputMouseButtonSlotCount> m_mouseButtonPressed{};
-    std::array<bool, kInputMouseButtonSlotCount> m_mouseButtonReleased{};
+    std::array<bool, tastoDelMouseSlotCount()> m_mouseButtonDown{};
+    std::array<bool, tastoDelMouseSlotCount()> m_mouseButtonPressed{};
+    std::array<bool, tastoDelMouseSlotCount()> m_mouseButtonReleased{};
 
     float m_mouseDeltaX = 0.0f;
     float m_mouseDeltaY = 0.0f;

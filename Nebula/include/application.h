@@ -16,6 +16,7 @@
 #include "input.h"
 #include "input_Actions.h"
 #include "scene.h"
+#include "clock.h"
 
 namespace Nebula
 {
@@ -63,5 +64,6 @@ namespace Nebula
         uint32_t m_height;
         std::string m_title;
         Scene m_scene;
-        };
+        clock m_clock;
+    };
 }
