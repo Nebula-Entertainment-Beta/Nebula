@@ -14,6 +14,7 @@
 
 #include "Window.h"
 #include "input.h"
+#include "assetProvider.h"
 #include "input_Actions.h"
 #include "renderer.h"
 #include "scene.h"
@@ -58,6 +59,9 @@ namespace Nebula
         Scene &getScene() { return m_scene; }
         const Scene &getScene() const { return m_scene; }
 
+        IAssetProvider &getAssets() { return m_assets; }
+        const IAssetProvider &getAssets() const { return m_assets; }
+
     private:
         Window m_window;
         Input m_input;
@@ -71,5 +75,6 @@ namespace Nebula
         Scene m_scene;
         clock m_clock;
         Renderer m_renderer;
+        FileAssetProvider m_assets;
     };
 }

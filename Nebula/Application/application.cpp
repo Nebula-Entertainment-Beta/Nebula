@@ -11,7 +11,7 @@
 namespace Nebula
 {
 
-  Application::Application(const ApplicationSpec &spec) : m_window(spec.title, spec.width, spec.height)
+  Application::Application(const ApplicationSpec &spec) : m_window(spec.title, spec.width, spec.height), m_assets()
   {
     m_width = spec.width;
     m_height = spec.height;

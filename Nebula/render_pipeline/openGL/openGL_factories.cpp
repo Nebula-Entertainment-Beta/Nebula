@@ -29,18 +29,7 @@ namespace Nebula
     }
   }
 
-  std::shared_ptr<Texture> Texture::createFromFile(const std::string &filepath)
-  {
-    switch (RenderAPI::getAPI())
-    {
-    case RendererAPIType::OpenGL:
-      return OpenGL_Texture::createFromFile(filepath);
-    default:
-      return nullptr;
-    }
-  }
-
-  std::shared_ptr<VertexArray> VertexArray::create()
+    std::shared_ptr<VertexArray> VertexArray::create()
   {
 
     switch (RenderAPI::getAPI())

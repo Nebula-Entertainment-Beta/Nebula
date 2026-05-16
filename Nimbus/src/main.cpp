@@ -2,7 +2,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cmath>
-#include <filesystem>
 #include <iostream>
 #include <unordered_map>
 #include <vector>
@@ -54,7 +53,7 @@ public:
         : Nebula::Application(spec)
     {
         Nebula::Scene &scene = getScene();
-        const bool loaded = scene.loadFromFile(m_scenePath);
+        const bool loaded = scene.loadFromFile(getAssets(), m_scenePath);
         if (loaded && resolveRuntimeEntities())
         {
             std::cout << "[Scene] Loaded from " << m_scenePath << '\n';
@@ -438,17 +437,7 @@ private:
 
     bool saveScene() const
     {
-        const std::filesystem::path scenePath(m_scenePath);
-        if (!scenePath.parent_path().empty())
-        {
-            std::error_code ec;
-            std::filesystem::create_directories(scenePath.parent_path(), ec);
-            if (ec)
-            {
-                return false;
-            }
-        }
-        return getScene().saveToFile(m_scenePath);
+        return getScene().saveToFile(getAssets(), m_scenePath);
     }
 
     static Nebula::VertexBufferLayout layoutPositionOnly()
@@ -577,7 +566,7 @@ private:
     Nebula::Entity m_cameraEntity{};
     Nebula::ScriptRegistry m_scriptRegistry;
     std::unordered_map<Nebula::EntityID, Nebula::ScriptPtr> m_runtimeScripts;
-    std::string m_scenePath = "assets/scenes/week2_scene.json";
+    std::string m_scenePath = "scenes/week2_scene.json";
     bool m_showInputDebug = false;
     float m_debugPrintTimer = 0.0f;
     float m_moveX = 0.0f;
