@@ -4,6 +4,7 @@
  */
 #include "application.h"
 #include "renderer.h"
+#include "detail/openGL_GraphicsContext.h"
 
 #include "math_types.h"
 
@@ -15,6 +16,7 @@ namespace Nebula
     m_width = spec.width;
     m_height = spec.height;
     m_title = spec.title;
+    m_rendererAPI = spec.rendererAPI;
 
     m_input.attach(m_window);
 
@@ -32,8 +34,9 @@ namespace Nebula
     {
       return;
     }
-
-    Renderer::init();
+    auto &ctx = m_window.getGraphicsContext();
+    ctx.makeCurrent();
+    m_renderer.init(ctx, m_rendererAPI);
     m_rendererInitialized = true;
     m_hasRun = true;
 
@@ -49,9 +52,9 @@ namespace Nebula
       m_actionMapping.updateMappings(m_input);
       onUpdate(dt);
       onRender();
-      m_window.swapBuffers();
+      ctx.swap();
     }
-    Renderer::Shutdown();
+    m_renderer.Shutdown();
     m_rendererInitialized = false;
   }
 
@@ -60,7 +63,7 @@ namespace Nebula
 
     if (m_rendererInitialized)
     {
-      Renderer::Shutdown();
+      m_renderer.Shutdown();
     }
     m_input.detach();
     m_rendererInitialized = false;
@@ -76,13 +79,13 @@ namespace Nebula
     m_window.getFramebufferSize(fbw, fbh);
     if (fbw > 0 && fbh > 0)
     {
-      Renderer::setViewport(0, 0, static_cast<uint32_t>(fbw), static_cast<uint32_t>(fbh));
+      m_renderer.setViewport(0, 0, static_cast<uint32_t>(fbw), static_cast<uint32_t>(fbh));
     }
     else
     {
-      Renderer::setViewport(0, 0, m_width, m_height);
+      m_renderer.setViewport(0, 0, m_width, m_height);
     }
-    Renderer::clear(Vec4{0.1f, 0.1f, 0.15f, 1.0f});
+    m_renderer.clear(Vec4{0.1f, 0.1f, 0.15f, 1.0f});
   }
 
 }

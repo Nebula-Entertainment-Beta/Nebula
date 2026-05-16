@@ -9,6 +9,7 @@
 #pragma once
 #include <memory>
 #include <string_view>
+#include "graphicsContext.h"
 
 namespace Nebula
 {
@@ -65,6 +66,8 @@ namespace Nebula
 
         void setCursorMode(CursorMode mode);
         void setRawMouseMotion(bool enabled);
+        graphicsContext &getGraphicsContext();
+        const graphicsContext &getGraphicsContext() const;
 
     private:
         friend void *detail::nativeWindowHandleForInput(const Window &window);

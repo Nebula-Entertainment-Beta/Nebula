@@ -15,6 +15,7 @@
 #include "Window.h"
 #include "input.h"
 #include "input_Actions.h"
+#include "renderer.h"
 #include "scene.h"
 #include "clock.h"
 
@@ -26,6 +27,7 @@ namespace Nebula
         std::string title = "Nebula";
         int width = 1280;
         int height = 720;
+        RendererAPIType rendererAPI = RendererAPIType::OpenGL;
     };
 
     class Application
@@ -42,6 +44,8 @@ namespace Nebula
         void run();
         Window &getWindow() { return m_window; }
         const Window &getWindow() const { return m_window; }
+        Renderer &getRenderer() { return m_renderer; }
+        const Renderer &getRenderer() const { return m_renderer; }
 
     protected:
         Input &getInput() { return m_input; }
@@ -63,7 +67,9 @@ namespace Nebula
         uint32_t m_width;
         uint32_t m_height;
         std::string m_title;
+        RendererAPIType m_rendererAPI = RendererAPIType::OpenGL;
         Scene m_scene;
         clock m_clock;
+        Renderer m_renderer;
     };
 }

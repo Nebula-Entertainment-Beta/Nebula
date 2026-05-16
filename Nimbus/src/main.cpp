@@ -135,7 +135,7 @@ protected:
             const Nebula::Mat4 mvp = vp * groundTransform.transform.getModelMatrix();
             m_shader->setMat4("uMVP", mvp);
             m_shader->setVec3("uColor", Nebula::Vec3{0.85f, 0.12f, 0.1f});
-            Nebula::Renderer::drawIndexed(m_groundVao, m_groundIndexCount);
+            getRenderer().drawIndexed(m_groundVao, m_groundIndexCount);
         }
 
         // Cube "character" — unit cube, blue
@@ -143,7 +143,7 @@ protected:
             const Nebula::Mat4 mvp = vp * cubeTransform.transform.getModelMatrix();
             m_shader->setMat4("uMVP", mvp);
             m_shader->setVec3("uColor", Nebula::Vec3{0.15f, 0.45f, 0.95f});
-            Nebula::Renderer::drawIndexed(m_cubeVao, m_cubeIndexCount);
+            getRenderer().drawIndexed(m_groundVao, m_groundIndexCount);
         }
 
         m_shader->unbind();
