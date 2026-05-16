@@ -4,7 +4,6 @@
  */
 #include "application.h"
 #include "renderer.h"
-#include <GLFW/glfw3.h>
 
 #include "math_types.h"
 
@@ -17,7 +16,7 @@ namespace Nebula
     m_height = spec.height;
     m_title = spec.title;
 
-    m_input.attachToWindow(m_window);
+    m_input.attach(m_window);
 
     // create default scene data
     m_scene = Scene();
@@ -38,12 +37,12 @@ namespace Nebula
     m_rendererInitialized = true;
     m_hasRun = true;
 
-    float lastTime = glfwGetTime();
+    float lastTime = m_clock.nowSeconds();
 
     while (!m_window.shouldWindowClose())
     {
       m_input.beginFrame();
-      double newtime = glfwGetTime();
+      double newtime = m_clock.nowSeconds();
       float dt = static_cast<float>(newtime - lastTime);
       lastTime = newtime;
       m_window.pollEvents();
@@ -63,7 +62,7 @@ namespace Nebula
     {
       Renderer::Shutdown();
     }
-    m_input.detachFromWindow();
+    m_input.detach();
     m_rendererInitialized = false;
   }
 

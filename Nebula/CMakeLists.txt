@@ -19,6 +19,7 @@ add_library(Nebula STATIC
     Application/timestep.cpp
     Application/input_Actions.cpp
     Application/script_Registry.cpp
+    Application/clock.cpp
     render_pipeline/interface/renderAPI.cpp
     render_pipeline/interface/renderer.cpp
     render_pipeline/interface/vertex_array.cpp
@@ -33,6 +34,7 @@ add_library(Nebula STATIC
     render_pipeline/openGL/openGL_IndexBuffer.cpp
     render_pipeline/openGL/openGL_texture.cpp
 
+
 )
 # Public API: headers under `include/` only (no glm in public headers; glm is PRIVATE for engine .cpp).
 target_include_directories(Nebula PUBLIC
@@ -41,6 +43,7 @@ target_include_directories(Nebula PUBLIC
 
 target_include_directories(Nebula PRIVATE
     include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/Math
     ${CMAKE_CURRENT_SOURCE_DIR}/Application
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor
