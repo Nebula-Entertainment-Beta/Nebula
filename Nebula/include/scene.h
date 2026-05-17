@@ -18,7 +18,6 @@
 #include <vector>
 #include <string>
 #include "component.h"
-#include "assetProvider.h"
 
 namespace Nebula
 {
@@ -32,6 +31,8 @@ namespace Nebula
 
     class Scene
     {
+        friend class SceneSerializer;
+
     public:
         Scene() = default;
 
@@ -105,8 +106,6 @@ namespace Nebula
 
         bool isValidEntity(Entity entity) const;
         const std::vector<Entity> &getAllEntities() const;
-        bool saveToFile(const IAssetProvider &assets, std::string_view logicalPath) const;
-        bool loadFromFile(const IAssetProvider &assets, std::string_view logicalPath);
         void clear();
 
     private:

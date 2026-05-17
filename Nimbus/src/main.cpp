@@ -5,7 +5,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-
+#include <sceneSerializer.h>
 #include <application.h>
 #include <component.h>
 #include <camera3D.h>
@@ -53,7 +53,7 @@ public:
         : Nebula::Application(spec)
     {
         Nebula::Scene &scene = getScene();
-        const bool loaded = scene.loadFromFile(getAssets(), m_scenePath);
+        const bool loaded = Nebula::SceneSerializer::load(scene, getAssets(), m_scenePath);
         if (loaded && resolveRuntimeEntities())
         {
             std::cout << "[Scene] Loaded from " << m_scenePath << '\n';
@@ -437,7 +437,7 @@ private:
 
     bool saveScene() const
     {
-        return getScene().saveToFile(getAssets(), m_scenePath);
+        return Nebula::SceneSerializer::save(getScene(), getAssets(), m_scenePath);
     }
 
     static Nebula::VertexBufferLayout layoutPositionOnly()
