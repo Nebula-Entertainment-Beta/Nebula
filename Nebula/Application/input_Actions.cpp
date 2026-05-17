@@ -27,6 +27,7 @@ namespace Nebula
         m_actionBindings[Action::Sprint] = {};
         m_actionBindings[Action::Hit] = {};
         m_actionBindings[Action::Interact] = {};
+        m_actionBindings[Action::SaveScene] = {}; // temporary
 
         m_axisBindings[Axis::MoveX] = {};
         m_axisBindings[Axis::MoveY] = {};
@@ -42,6 +43,7 @@ namespace Nebula
         bindAction(Action::MoveLeft, Tasto::a);
         bindAction(Action::MoveRight, Tasto::d);
         bindAction(Action::Interact, Tasto::tab);
+        bindAction(Action::SaveScene, Tasto::num5);
         bindAxis(Axis::MoveX,
                  AxisBinding{AxisSourceType::KeyPair, Tasto::d, Tasto::a, 1.0f});
         bindAxis(Axis::MoveY,
@@ -77,7 +79,8 @@ namespace Nebula
 
     void ActionMapping::updateMappings(const Input &input)
     {
-        auto sameKeyPair = [](const AxisBinding &binding) {
+        auto sameKeyPair = [](const AxisBinding &binding)
+        {
             return binding.source == AxisSourceType::KeyPair && binding.positiveKey &&
                    binding.negativeKey && *binding.positiveKey == *binding.negativeKey;
         };
@@ -163,7 +166,8 @@ namespace Nebula
             {
                 switch (binding.source)
                 {
-                case AxisSourceType::KeyPair: {
+                case AxisSourceType::KeyPair:
+                {
                     float keyAxis = 0.0f;
                     if (binding.positiveKey.has_value() && input.isKeyDown(*binding.positiveKey))
                     {
@@ -189,8 +193,8 @@ namespace Nebula
                     break;
                 case AxisSourceType::MouseDeltaY:
                     value[1] += input.mouseDeltaY() * binding.scale *
-                                  m_cameraSensitivity.lookSensitivityY *
-                                  (m_cameraSensitivity.invertLookY ? -1.0f : 1.0f);
+                                m_cameraSensitivity.lookSensitivityY *
+                                (m_cameraSensitivity.invertLookY ? -1.0f : 1.0f);
                     break;
                 case AxisSourceType::MouseScrollY:
                     value[1] +=

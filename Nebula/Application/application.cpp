@@ -4,6 +4,7 @@
  */
 #include "application.h"
 #include "renderer.h"
+#include "renderSystem.h"
 #include "detail/openGL_GraphicsContext.h"
 
 #include "math_types.h"
@@ -11,7 +12,7 @@
 namespace Nebula
 {
 
-  Application::Application(const ApplicationSpec &spec) : m_window(spec.title, spec.width, spec.height), m_assets()
+  Application::Application(const ApplicationSpec &spec) : m_window(spec.title, spec.width, spec.height), m_assets(), m_world(m_scene, m_assets, m_input, m_actionMapping, m_scriptRegistry, m_frameInput)
   {
     m_width = spec.width;
     m_height = spec.height;
@@ -37,10 +38,15 @@ namespace Nebula
     auto &ctx = m_window.getGraphicsContext();
     ctx.makeCurrent();
     m_renderer.init(ctx, m_rendererAPI);
+    m_assetManager.loadBuiltins(m_assets);
     m_rendererInitialized = true;
     m_hasRun = true;
 
     float lastTime = m_clock.nowSeconds();
+
+    registerEngineSystems();
+    registerGameSystems();
+    onStartup();
 
     while (!m_window.shouldWindowClose())
     {
@@ -50,10 +56,17 @@ namespace Nebula
       lastTime = newtime;
       m_window.pollEvents();
       m_actionMapping.updateMappings(m_input);
-      onUpdate(dt);
-      onRender();
+      m_scheduler.run(SystemPhase::PreUpdate, dt);
+      m_scheduler.run(SystemPhase::Update, dt);
+      m_scheduler.runFixed(SystemPhase::FixedUpdate, 1.f / 60.f, dt);
+      m_scheduler.run(SystemPhase::PostUpdate, dt);
+      m_scheduler.run(SystemPhase::Render, dt);
+
       ctx.swap();
     }
+
+    ScriptContext shutdownCtx = makeScriptContext();
+    m_scriptSystem.shutdownAll(shutdownCtx);
     m_renderer.Shutdown();
     m_rendererInitialized = false;
   }
@@ -63,10 +76,24 @@ namespace Nebula
 
     if (m_rendererInitialized)
     {
+      ScriptContext contx = makeScriptContext();
+
+      m_scriptSystem.shutdownAll(contx);
       m_renderer.Shutdown();
     }
     m_input.detach();
     m_rendererInitialized = false;
+  }
+
+  void Application::registerGameSystems()
+  {
+  }
+
+  void Application::onStartup()
+  {
+    ScriptContext ctx = makeScriptContext();
+    m_scriptSystem.rebuildFromScene(m_scene, m_scriptRegistry, ctx);
+    m_scriptSystem.initializeAll(ctx);
   }
 
   void Application::onUpdate(float dt)
@@ -86,6 +113,56 @@ namespace Nebula
       m_renderer.setViewport(0, 0, m_width, m_height);
     }
     m_renderer.clear(Vec4{0.1f, 0.1f, 0.15f, 1.0f});
+  }
+
+  ScriptContext Application::makeScriptContext()
+  {
+    return ScriptContext{m_scene, &m_input, &m_actionMapping};
+  }
+
+  void buildFrameInput(World &world)
+  {
+    FrameInput &f = world.frameInput();
+    f.clear();
+
+    Input &input = world.input();
+    ActionMapping &map = world.actions();
+
+    if (map.wasActionPressed(Action::Interact, input))
+      f.toggleInputDebug = true;
+
+    if (map.wasActionPressed(Action::SaveScene, input))
+      f.saveScene = true;
+
+    map.getAxisValue(Axis::LookX, input, f.lookX, f.lookY);
+    map.getAxisValue(Axis::LookY, input, f.lookX, f.lookY);
+    map.getAxisValue(Axis::MoveX, input, f.moveX, f.moveY);
+    map.getAxisValue(Axis::MoveY, input, f.moveX, f.moveY);
+    map.getAxisValue(Axis::Scroll, input, f.zoomX, f.zoomY);
+  }
+
+  void Application::registerEngineSystems()
+  {
+    m_scheduler.add(SystemPhase::PreUpdate, [this](float)
+                    { buildFrameInput(m_world); });
+
+    m_scheduler.add(SystemPhase::Update, [this](float dt)
+                    {
+    ScriptContext ctx = makeScriptContext();
+    m_scriptSystem.updateAll(ctx, dt); });
+
+    m_scheduler.add(SystemPhase::FixedUpdate, [this](float fdt)
+                    {
+                      ScriptContext ctx = makeScriptContext();
+                      m_scriptSystem.physicsUpdateAll(ctx, fdt); });
+
+    m_scheduler.add(SystemPhase::Render, [this](float dt)
+                    {
+                      onRender();
+                      renderScene(RenderSystemContext{
+                          m_scene, m_assetManager, m_renderer, m_window});
+                      ScriptContext ctx = makeScriptContext();
+                      m_scriptSystem.renderAll(ctx, dt); });
   }
 
 }
