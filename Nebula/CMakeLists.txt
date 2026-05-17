@@ -24,6 +24,12 @@ add_library(Nebula STATIC
     Application/input_Actions.cpp
     Application/script_Registry.cpp
     Application/clock.cpp
+    Application/world.cpp 
+    Application/scriptSystem.cpp
+    Application/systemScheduler.cpp
+    Application/assetManager.cpp
+    Application/builtinMeshes.cpp
+    Application/renderSystem.cpp
     render_pipeline/interface/renderAPI.cpp
     render_pipeline/interface/renderer.cpp
     render_pipeline/interface/texture.cpp

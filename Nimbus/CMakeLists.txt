@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.15)
 add_executable(Nimbus
     src/main.cpp
     src/nimbus.cpp
+    src/playerController.cpp
     src/register_Script.cpp
 )
 

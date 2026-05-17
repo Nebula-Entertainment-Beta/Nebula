@@ -1,12 +1,13 @@
 /**
  * @file application.h
- * @brief Engine **application shell**: window, input, action mapping, scene, and a default frame loop.
+ * @brief Engine **application shell**: window, input, scene, scripts, and a phased frame loop.
  *
- * **Owns:** `Window`, `Input`, `ActionMapping`, `Scene` (not `ScriptRegistry` — games keep their own
- * registry and wire `ScriptComponent` names at startup).
+ * **Owns:** `Window`, `Input`, `ActionMapping`, `Scene`, `ScriptRegistry`, `ScriptSystem`,
+ * `SystemScheduler`, and `World` (aggregates scene/assets/input/actions/scripts/frame input).
  *
- * Subclass and override `onUpdate` / `onRender`; call `run()` after `Window` is valid. `run()` is
- * single-shot (`m_hasRun` prevents re-entry).
+ * Subclass `onStartup` (register script factories), `registerGameSystems` (gameplay systems),
+ * and `onRender` (drawing). `run()` drives PreUpdate → Update → FixedUpdate → PostUpdate → Render.
+ * Single-shot (`m_hasRun` prevents re-entry).
  */
 #pragma once
 
@@ -14,11 +15,18 @@
 
 #include "Window.h"
 #include "input.h"
+#include "scriptSystem.h"
+#include "frameCommands.h"
+#include "script_Registry.h"
+#include "assetManager.h"
+#include "systemScheduler.h"
 #include "assetProvider.h"
 #include "input_Actions.h"
+#include "script.h"
 #include "renderer.h"
 #include "scene.h"
 #include "clock.h"
+#include "world.h"
 
 namespace Nebula
 {
@@ -53,6 +61,7 @@ namespace Nebula
         const Input &getInput() const { return m_input; }
         virtual void onUpdate(float dt);
         virtual void onRender();
+        virtual void onStartup();
         const ActionMapping &getActionMapping() const { return m_actionMapping; }
         ActionMapping &getActionMapping() { return m_actionMapping; }
 
@@ -61,6 +70,19 @@ namespace Nebula
 
         IAssetProvider &getAssets() { return m_assets; }
         const IAssetProvider &getAssets() const { return m_assets; }
+
+        World &getWorld() { return m_world; }
+        const World &getWorld() const { return m_world; }
+
+        ScriptRegistry &getScriptRegistry() { return m_scriptRegistry; }
+        ScriptContext makeScriptContext();
+        SystemScheduler &getScheduler() { return m_scheduler; }
+
+        void registerEngineSystems();
+        virtual void registerGameSystems(); // games overrides
+
+        AssetManager &getAssetManager() { return m_assetManager; }
+        const AssetManager &getAssetManager() const { return m_assetManager; }
 
     private:
         Window m_window;
@@ -75,6 +97,12 @@ namespace Nebula
         Scene m_scene;
         clock m_clock;
         Renderer m_renderer;
+        AssetManager m_assetManager;
         FileAssetProvider m_assets;
+        ScriptRegistry m_scriptRegistry;
+        FrameInput m_frameInput{};
+        ScriptSystem m_scriptSystem;
+        SystemScheduler m_scheduler;
+        World m_world;
     };
 }

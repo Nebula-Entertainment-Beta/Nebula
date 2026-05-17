@@ -28,7 +28,8 @@ namespace Nebula
         Jump,
         Sprint,
         Hit,
-        Interact
+        Interact,
+        SaveScene
     };
 
     enum class Axis
