@@ -5,14 +5,11 @@
 #include <iostream>
 #include <vector>
 
-#include <application.h>
-#include <camera3D.h>
-#include <component.h>
-#include <renderer.h>
-#include <sceneSerializer.h>
-#include <systemScheduler.h>
-#include <transform3D.h>
+#include <Nebula.h>
 
+#include <variant>
+
+#include "nimbus_config.h"
 #include "playerController.h"
 #include "register_Script.h"
 
@@ -53,17 +50,26 @@ protected:
     void registerGameSystems() override
     {
         getScheduler().add(Nebula::SystemPhase::Update, [this](float dt)
-                           { Nimbus::runPlayerController(getWorld(), m_cubeEntity, m_cameraEntity, m_showInputDebug, m_debugPrintTimer, dt); });
+                           { Nimbus::runPlayerController(
+                                 getWorld(), getEventBus(),
+                                 m_cubeEntity, m_cameraEntity,
+                                 m_showInputDebug, m_debugPrintTimer, dt); });
 
         getScheduler().add(Nebula::SystemPhase::PostUpdate, [this](float)
                            {
-                               if (!getWorld().frameInput().saveScene)
+                               bool saveRequested = false;
+                               for (const Nebula::GameEvent &ev : getEventBus().events())
                                {
-                                   return;
+                                   if (std::holds_alternative<Nebula::SaveSceneRequestedEvent>(ev))
+                                       saveRequested = true;
                                }
+                               if (!saveRequested)
+                                   return;
+
                                if (saveScene())
                                {
                                    std::cout << "[Scene] Saved to " << m_scenePath << '\n';
+                                   getEventBus().push(Nebula::SceneSavedEvent{m_scenePath});
                                }
                                else
                                {
@@ -82,26 +88,29 @@ private:
         Nebula::Scene &scene = getScene();
 
         m_groundEntity = scene.createEntity();
+        scene.addComponent<Nebula::TagComponent>(m_groundEntity).tag = Nimbus::kGroundTag;
         auto &groundTransform = scene.addComponent<Nebula::TransformComponent>(m_groundEntity);
         groundTransform.transform.setPosition(Nebula::Vec3{0.0f, 0.0f, 0.0f});
         groundTransform.transform.setYaw(0.0f);
         groundTransform.transform.setScale(1.0f);
         auto &groundMesh = scene.addComponent<Nebula::MeshRendererComponent>(m_groundEntity);
-        groundMesh.m_meshID = Nebula::kBuiltinMeshGround;
-        groundMesh.m_materialID = Nebula::kBuiltinMaterialGround;
+        groundMesh.m_meshPath = "builtin/meshes/ground";
+        groundMesh.m_materialPath = "builtin/materials/ground";
         scene.addComponent<Nebula::ScriptComponent>(m_groundEntity).scriptName = "Ground";
 
         m_cubeEntity = scene.createEntity();
+        scene.addComponent<Nebula::TagComponent>(m_cubeEntity).tag = Nimbus::kPlayerTag;
         auto &cubeTransform = scene.addComponent<Nebula::TransformComponent>(m_cubeEntity);
         cubeTransform.transform.setPosition(Nebula::Vec3{0.0f, 0.5f, 0.0f});
         cubeTransform.transform.setYaw(0.0f);
         cubeTransform.transform.setScale(1.0f);
         auto &cubeMesh = scene.addComponent<Nebula::MeshRendererComponent>(m_cubeEntity);
-        cubeMesh.m_meshID = Nebula::kBuiltinMeshCube;
-        cubeMesh.m_materialID = Nebula::kBuiltinMaterialCube;
+        cubeMesh.m_meshPath = "builtin/meshes/cube";
+        cubeMesh.m_materialPath = "builtin/materials/cube";
         scene.addComponent<Nebula::ScriptComponent>(m_cubeEntity).scriptName = "Player";
 
         m_cameraEntity = scene.createEntity();
+        scene.addComponent<Nebula::TagComponent>(m_cameraEntity).tag = Nimbus::kMainCameraTag;
         scene.addComponent<Nebula::TransformComponent>(m_cameraEntity);
         auto &cameraComponent = scene.addComponent<Nebula::CameraComponent>(m_cameraEntity);
         cameraComponent.pivotOffset = Nebula::Vec3{0.0f, 0.35f, 0.0f};
@@ -117,78 +126,27 @@ private:
     bool resolveRuntimeEntities()
     {
         Nebula::Scene &scene = getScene();
-        m_groundEntity = {};
-        m_cubeEntity = {};
-        m_cameraEntity = {};
+        m_groundEntity = Nebula::findByTag(scene, Nimbus::kGroundTag);
+        m_cubeEntity = Nebula::findByTag(scene, Nimbus::kPlayerTag);
+        m_cameraEntity = Nebula::findByTag(scene, Nimbus::kMainCameraTag);
 
-        std::vector<Nebula::Entity> meshEntities;
-        std::vector<Nebula::Entity> cameraEntities;
-        for (const Nebula::Entity entity : scene.getAllEntities())
+        if (m_cameraEntity.id == 0)
         {
-            if (scene.hasComponent<Nebula::ScriptComponent>(entity))
+            const std::vector<Nebula::Entity> cameras =
+                Nebula::findAllWith<Nebula::CameraComponent>(scene);
+            if (!cameras.empty())
             {
-                const std::string &role = scene.getComponent<Nebula::ScriptComponent>(entity).scriptName;
-                if (role == "Ground" && scene.hasComponent<Nebula::TransformComponent>(entity) && scene.hasComponent<Nebula::MeshRendererComponent>(entity))
-                {
-                    m_groundEntity = entity;
-                }
-                else if (role == "Player" && scene.hasComponent<Nebula::TransformComponent>(entity) && scene.hasComponent<Nebula::MeshRendererComponent>(entity))
-                {
-                    m_cubeEntity = entity;
-                }
-                else if (role == "MainCamera" && scene.hasComponent<Nebula::CameraComponent>(entity))
-                {
-                    m_cameraEntity = entity;
-                }
-            }
-
-            if (scene.hasComponent<Nebula::CameraComponent>(entity))
-            {
-                cameraEntities.push_back(entity);
-            }
-            if (scene.hasComponent<Nebula::TransformComponent>(entity) && scene.hasComponent<Nebula::MeshRendererComponent>(entity))
-            {
-                meshEntities.push_back(entity);
+                m_cameraEntity = cameras.front();
             }
         }
 
-        if (m_cameraEntity.id == 0 && !cameraEntities.empty())
-        {
-            m_cameraEntity = cameraEntities.front();
-        }
-
-        if (meshEntities.size() >= 2)
-        {
-            if (m_cubeEntity.id == 0)
-            {
-                m_cubeEntity = meshEntities.front();
-                for (const Nebula::Entity entity : meshEntities)
-                {
-                    const auto &transform = scene.getComponent<Nebula::TransformComponent>(entity);
-                    const auto &cubeTransform = scene.getComponent<Nebula::TransformComponent>(m_cubeEntity);
-                    if (transform.transform.getPosition().y > cubeTransform.transform.getPosition().y)
-                    {
-                        m_cubeEntity = entity;
-                    }
-                }
-            }
-
-            if (m_groundEntity.id == 0)
-            {
-                m_groundEntity = meshEntities.front();
-                if (m_groundEntity.id == m_cubeEntity.id && meshEntities.size() > 1)
-                {
-                    m_groundEntity = meshEntities[1];
-                }
-            }
-        }
-
-        return m_groundEntity.id != 0 && m_cubeEntity.id != 0 && m_groundEntity.id != m_cubeEntity.id;
+        return m_groundEntity.id != 0 && m_cubeEntity.id != 0 && m_groundEntity != m_cubeEntity &&
+               m_cameraEntity.id != 0;
     }
 
     bool saveScene() const
     {
-        return Nebula::SceneSerializer::save(getScene(), getAssets(), m_scenePath);
+        return Nebula::SceneSerializer::save(getScene(), getAssetManager(), getAssets(), m_scenePath);
     }
 
     Nebula::Entity m_groundEntity{};

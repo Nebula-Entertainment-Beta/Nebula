@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include "assetProvider.h"
+#include "renderResources.h"
 
 /**
  * @file texture.h
@@ -30,14 +31,8 @@ namespace Nebula
     virtual int getWidth() const = 0;
     virtual int getHeight() const = 0;
 
-    /**
-     * @brief Factory for the active render API (e.g. OpenGL).
-     * @param width  Pixel width; must be > 0.
-     * @param height Pixel height; must be > 0.
-     * @param rgba   RGBA8 data, `width * height * 4` bytes.
-     * @return New texture, or nullptr if arguments are invalid or upload fails.
-     */
-    static std::shared_ptr<Texture> create(int width, int height, const void *rgba);
-    static std::shared_ptr<Texture> createFromFile(const IAssetProvider &assets, std::string_view logicalPath);
+    static std::shared_ptr<Texture> createFromFile(IRenderResourceFactory &factory,
+                                                   const IAssetProvider &assets,
+                                                   std::string_view logicalPath);
   };
 }

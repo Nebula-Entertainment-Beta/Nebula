@@ -1,8 +1,30 @@
 /**
  * @file Nebula.h
- * @brief Entry include for projects that link against the Nebula static library.
+ * @brief Default single include for games built on Nebula.
  *
- * Today you still include specific headers (for example `Window.h`, `renderer.h`) from your game.
- * As the public API stabilizes, this file may re-export the headers most games need in one place.
+ * Covers: app loop, ECS, scene load/save, scripts, events, input, public math types.
+ * For custom low-level rendering, include specific headers (e.g. renderer.h) or a future NebulaRender.h.
  */
 #pragma once
+
+// --- Core loop (pulls window, input, world, scheduler, scripts, renderer init, …) ---
+#include "application.h"
+
+// --- ECS & scene I/O (not all re-exported by application.h) ---
+#include "component.h"
+#include "tag_component.h"
+#include "scene_query.h"
+#include "sceneSerializer.h"
+
+// --- Math / transforms (public API; no glm in include/) ---
+#include "math_types.h"
+#include "transform3D.h"
+#include "camera3D.h"
+
+// --- Events (payload types; eventBus.h comes via application.h) ---
+#include "eventTypes.h"
+
+// NebulaRender.h — only for tools / custom render code
+#include "renderer.h"
+#include "mesh.h"
+#include "material.h"

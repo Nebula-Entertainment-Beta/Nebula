@@ -2,6 +2,7 @@
 #include "assetManager.h"
 #include "mesh.h"
 #include "material.h"
+#include "texture.h"
 #include "component.h"
 #include "scene.h"
 #include "camera3D.h"
@@ -95,7 +96,21 @@ namespace Nebula
       const Mat4 mvp = vp * transform.transform.getModelMatrix();
       material->shader->setMat4("uMVP", mvp);
       material->shader->setVec3("uColor", material->color);
+      if (material->albedoTexture)
+      {
+        material->shader->setInt("uUseTexture", 1);
+        material->shader->setInt("uAlbedoMap", 0);
+        material->albedoTexture->bind(0);
+      }
+      else
+      {
+        material->shader->setInt("uUseTexture", 0);
+      }
       ctx.renderer.drawIndexed(mesh->vao, mesh->indexCount);
+      if (material->albedoTexture)
+      {
+        material->albedoTexture->unbind(0);
+      }
       material->shader->unbind();
     }
   }

@@ -39,9 +39,7 @@ namespace Nebula {
         std::vector<VertexBufferElement> elements;
     };
 
-    /**
-     * @brief API-agnostic vertex buffer; created via `create()` for the active backend.
-     */
+    /** API-agnostic vertex buffer; create via `IRenderResourceFactory`. */
     class VertexBuffer
     {
     public:
@@ -49,16 +47,5 @@ namespace Nebula {
         virtual void bind() const = 0;
         virtual void unbind() const = 0;
         virtual const VertexBufferLayout& getlayout() const = 0;
-
-        /**
-         * @brief Uploads `sizeBytes` from `data` to the GPU and remembers `layout` for the VAO.
-         * @param data       Raw vertex bytes (often interleaved position/color/uv).
-         * @param sizeBytes  Total byte size of the array pointed to by `data`.
-         * @param usage      Hint for how often the buffer will be updated (`Static` / `Dynamic` / `Stream`).
-         * @param layout     Stride and attribute descriptions for the vertex shader inputs.
-         */
-        static std::shared_ptr<VertexBuffer> create(const void* data, size_t sizeBytes,
-                                                     BufferUsage usage,
-                                                     const VertexBufferLayout& layout);
     };
 }

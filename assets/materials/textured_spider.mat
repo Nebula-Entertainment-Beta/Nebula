@@ -1,0 +1,6 @@
+{
+  "vert": "shaders/textured_color.vert",
+  "frag": "shaders/textured_color.frag",
+  "albedo": [1.0, 1.0, 1.0],
+  "albedoTexture": "textures/spider1.png"
+}

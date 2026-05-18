@@ -2,7 +2,7 @@
  * @file renderAPI.h
  * @brief Low-level graphics backend interface (OpenGL today; room for Vulkan later).
  *
- * **Beginner angle:** `Renderer` is the friendly static front door; `RenderAPI` is the interface
+ * **Beginner angle:** `Renderer` is the friendly front door; `RenderAPI` is the interface
  * each backend implements. Drawing always goes: prepare geometry (`VertexArray`), then
  * `drawIndexed`, which ends up calling OpenGL’s `glDrawElements` under the hood.
  */
@@ -10,7 +10,6 @@
 #include <memory>
 
 #include "math_types.h"
-#include "renderer_api_type.h"
 
 namespace Nebula
 {
@@ -22,8 +21,6 @@ namespace Nebula
     class RenderAPI
     {
     public:
-        static RendererAPIType getAPI();
-        static void setAPI(RendererAPIType api);
         virtual ~RenderAPI() = default;
 
         /** One-time GL state (depth test, blending, etc.). */
@@ -43,12 +40,5 @@ namespace Nebula
 
         /** Fills the color (and depth) buffers before a new frame. */
         virtual void clear(const Vec4 &color) = 0;
-
-    private:
-        static RendererAPIType s_API;
     };
-
-    /** @brief Constructs the active `RenderAPI` implementation (OpenGL by default). */
-    std::unique_ptr<RenderAPI> createRendererAPI(RendererAPIType api);
-
 }

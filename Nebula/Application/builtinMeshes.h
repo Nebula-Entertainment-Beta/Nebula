@@ -1,8 +1,9 @@
 #pragma once
-#include "mesh.h"
+
+#include "mesh_asset.h"
 
 namespace Nebula
 {
-  bool buildBuiltinCubeMesh(Mesh &out);
-  bool buildBuiltinGroundMesh(Mesh &out);
+  bool buildBuiltinCubeMeshAsset(MeshAsset &out);
+  bool buildBuiltinGroundMeshAsset(MeshAsset &out);
 }

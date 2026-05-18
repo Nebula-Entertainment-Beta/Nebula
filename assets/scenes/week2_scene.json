@@ -1,6 +1,10 @@
 {
+  "version": 2,
   "entities": [
     {
+      "TagComponent": {
+        "tag": "Ground"
+      },
       "MeshRendererComponent": {
         "materialID": 0,
         "meshID": 1
@@ -13,6 +17,9 @@
       "id": 1
     },
     {
+      "TagComponent": {
+        "tag": "Player"
+      },
       "MeshRendererComponent": {
         "materialID": 1,
         "meshID": 0
@@ -25,6 +32,9 @@
       "id": 2
     },
     {
+      "TagComponent": {
+        "tag": "MainCamera"
+      },
       "CameraComponent": {
         "distance": 24.0,
         "farClip": 100.0,

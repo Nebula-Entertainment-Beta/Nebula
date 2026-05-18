@@ -2,14 +2,17 @@
 
 #include "frameCommands.h"
 #include "input_Actions.h"
+#include "eventBus.h"
 
 #include <cmath>
 #include <iostream>
+#include <variant>
 
 namespace Nimbus
 {
 
   void runPlayerController(Nebula::World &world,
+                           Nebula::EventBus &events,
                            Nebula::Entity cubeEntity,
                            Nebula::Entity cameraEntity,
                            bool &showInputDebug,
@@ -32,11 +35,11 @@ namespace Nimbus
     auto &cameraComponent = scene.getComponent<Nebula::CameraComponent>(cameraEntity);
     Nebula::ActionMapping &mapping = world.actions();
 
-    if (f.toggleInputDebug)
+    for (const Nebula::GameEvent &ev : events.events())
     {
-      showInputDebug = !showInputDebug;
+      if (std::holds_alternative<Nebula::InteractPressedEvent>(ev))
+        showInputDebug = !showInputDebug;
     }
-
     const float lookSensitivity = 0.0035f;
     const float turnX = f.lookX * lookSensitivity;
     const float turnY = f.lookY * lookSensitivity;

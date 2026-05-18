@@ -1,117 +1,67 @@
 /**
  * @file scene.h
- * @brief Lightweight **entity–component** container with JSON save/load for a fixed component set.
+ * @brief Lightweight entity–component scene; storage is sparse-set ECS (`Registry`).
  *
- * **Owns:** `Scene`, `Entity` (opaque id), and per-type component maps (`std::type_index` → entity → `std::any`).
- *
- * **Why `std::any`:** Teaching-friendly ECS without a third-party library; only types used in
- * serialization (`TransformComponent`, `MeshRendererComponent`, `CameraComponent`, `ScriptComponent`)
- * need to be handled explicitly in `saveToFile` / `loadFromFile`.
+ * **Owns:** `Scene` delegates entity/component operations to `Registry`.
+ * Component types are listed in `component_registry.h` (storage, JSON, editor).
  */
 #pragma once
-#include <any>
-#include <cstdint>
-#include <stdexcept>
-#include <typeindex>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-#include <string>
 #include "component.h"
+#include "ecs/entity.h"
+#include "ecs/registry.h"
 
 namespace Nebula
 {
 
-    using EntityID = uint32_t;
+  class Scene
+  {
+    friend class SceneSerializer;
 
-    struct Entity
+  public:
+    Scene() = default;
+
+    Entity createEntity() { return m_registry.createEntity(); }
+    void destroyEntity(Entity entity) { m_registry.destroyEntity(entity); }
+
+    template <typename ComponentType, typename... Args>
+    ComponentType &addComponent(Entity entity, Args &&...args)
     {
-        EntityID id = 0;
-    };
+      return m_registry.emplace<ComponentType>(entity, std::forward<Args>(args)...);
+    }
 
-    class Scene
+    template <typename ComponentType>
+    ComponentType &getComponent(Entity entity)
     {
-        friend class SceneSerializer;
+      return m_registry.get<ComponentType>(entity);
+    }
 
-    public:
-        Scene() = default;
+    template <typename ComponentType>
+    const ComponentType &getComponent(Entity entity) const
+    {
+      return m_registry.get<ComponentType>(entity);
+    }
 
-        Entity createEntity();
-        void destroyEntity(Entity entity);
+    template <typename ComponentType>
+    bool hasComponent(Entity entity) const
+    {
+      return m_registry.has<ComponentType>(entity);
+    }
 
-        template <typename ComponentType, typename... Args>
-        ComponentType &addComponent(Entity entity, Args &&...args)
-        {
-            if (!isValidEntity(entity))
-            {
-                throw std::runtime_error("Cannot add component to invalid entity");
-            }
+    template <typename ComponentType>
+    void removeComponent(Entity entity)
+    {
+      m_registry.removeComponent<ComponentType>(entity);
+    }
 
-            auto &store = m_componentStores[std::type_index(typeid(ComponentType))];
-            std::any &slot = store[entity.id];
-            slot = ComponentType(std::forward<Args>(args)...);
-            return std::any_cast<ComponentType &>(slot);
-        }
+    bool isValidEntity(Entity entity) const { return m_registry.isValid(entity); }
+    const std::vector<Entity> &getAllEntities() const { return m_registry.entities(); }
+    void clear() { m_registry.clear(); }
 
-        template <typename ComponentType>
-        ComponentType &getComponent(Entity entity)
-        {
-            if (!isValidEntity(entity))
-            {
-                throw std::runtime_error("Cannot get component from invalid entity");
-            }
+    Registry &registry() { return m_registry; }
+    const Registry &registry() const { return m_registry; }
 
-            auto typeIt = m_componentStores.find(std::type_index(typeid(ComponentType)));
-            if (typeIt == m_componentStores.end())
-            {
-                throw std::runtime_error("Component type not found on scene");
-            }
+  private:
+    Registry m_registry;
+  };
 
-            auto entityIt = typeIt->second.find(entity.id);
-            if (entityIt == typeIt->second.end())
-            {
-                throw std::runtime_error("Component not found on entity");
-            }
-
-            return std::any_cast<ComponentType &>(entityIt->second);
-        }
-
-        template <typename ComponentType>
-        bool hasComponent(Entity entity) const
-        {
-            if (!isValidEntity(entity))
-            {
-                return false;
-            }
-
-            auto typeIt = m_componentStores.find(std::type_index(typeid(ComponentType)));
-            if (typeIt == m_componentStores.end())
-            {
-                return false;
-            }
-
-            return typeIt->second.find(entity.id) != typeIt->second.end();
-        }
-
-        template <typename ComponentType>
-        void removeComponent(Entity entity)
-        {
-            auto typeIt = m_componentStores.find(std::type_index(typeid(ComponentType)));
-            if (typeIt == m_componentStores.end())
-            {
-                return;
-            }
-            typeIt->second.erase(entity.id);
-        }
-
-        bool isValidEntity(Entity entity) const;
-        const std::vector<Entity> &getAllEntities() const;
-        void clear();
-
-    private:
-        std::vector<Entity> m_entities;
-        EntityID m_nextEntityID = 1;
-        std::unordered_map<std::type_index, std::unordered_map<EntityID, std::any>> m_componentStores;
-    };
-
-}
+} // namespace Nebula

@@ -1,15 +1,15 @@
 /**
  * @file Window.h
- * @brief Creates an OS window and an OpenGL context using GLFW.
+ * @brief Creates an OS window (GLFW) and a graphics context for the chosen API.
  *
- * **Big picture:** Your game needs a drawable surface. GLFW talks to the operating system to open
- * a window; GLAD loads OpenGL function pointers after a context exists. Only call rendering code
- * if `isValid()` is true — otherwise setup failed (no GPU context).
+ * **Big picture:** Your game needs a drawable surface. GLFW opens the window; a factory in
+ * `src/detail/` creates OpenGL or (later) Vulkan contexts. Only call rendering code if `isValid()`
+ * is true — otherwise setup failed.
  */
 #pragma once
 #include <memory>
-#include <string_view>
 #include "graphicsContext.h"
+#include "window_spec.h"
 
 namespace Nebula
 {
@@ -28,19 +28,12 @@ namespace Nebula
     };
     struct WindowImpl;
 
-    /**
-     * @brief Owns a native window and an OpenGL context (GLFW + GLAD in the implementation).
-     */
+    /** @brief Owns a native window and a `graphicsContext` for the API in `WindowSpec`. */
     class Window
     {
     public:
-        /**
-         * @brief Opens a window, creates the GL context, and loads GLAD.
-         * @param title  Window title bar text.
-         * @param width  Initial width in pixels.
-         * @param height Initial height in pixels.
-         */
-        Window(std::string_view title, int width, int height);
+        /** @brief Opens a window and creates the graphics context described by `spec`. */
+        explicit Window(const WindowSpec &spec);
 
         /** @return True when the user closed the window or the window failed. */
         bool shouldWindowClose();
@@ -54,8 +47,8 @@ namespace Nebula
         void getFramebufferSize(int &outWidth, int &outHeight) const;
 
         /**
-         * @brief False if GLFW/GLAD setup failed — do not call `Renderer` or other GL APIs.
-         * @details Use this guard in `main` before `Renderer::init()`.
+         * @brief False if GLFW or graphics-context setup failed — do not call `Renderer::init`.
+         * @details Use this guard in `main` before `Application::run()`.
          */
         bool isValid() const;
 

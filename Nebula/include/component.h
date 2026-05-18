@@ -1,6 +1,6 @@
 /**
  * @file component.h
- * @brief Core **component** POD structs attached to `Scene` entities.
+ * @brief Core **component** POD structs attached to scene entities (`Registry` storage).
  *
  * - `TransformComponent` — wraps `Transform3D` (position, yaw, scale).
  * - `MeshRendererComponent` — placeholder mesh/material ids for a future asset pipeline.
@@ -12,8 +12,7 @@
 #include <string>
 #include "math_types.h"
 #include "transform3D.h"
-#include "mesh.h"
-#include "material.h"
+#include "assetHandles.h"
 
 namespace Nebula
 {
@@ -43,8 +42,10 @@ namespace Nebula
 
   struct MeshRendererComponent
   {
-    MeshHandle m_meshID = kBuiltinMeshCube; // after #include "Mesh.h"
-    MaterialHandle m_materialID = kBuiltinMaterialCube;
+    std::string m_meshPath;
+    std::string m_materialPath;
+    MeshHandle m_meshID = kInvalidMesh;
+    MaterialHandle m_materialID = kInvalidMaterial;
   };
 
 }

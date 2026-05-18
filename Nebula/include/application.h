@@ -23,13 +23,20 @@
 #include "assetProvider.h"
 #include "input_Actions.h"
 #include "script.h"
+#include "inputQuery.h"
+#include "sceneAccess.h"
+#include "eventBus.h"
 #include "renderer.h"
 #include "scene.h"
 #include "clock.h"
 #include "world.h"
 
+#include <memory>
+
 namespace Nebula
 {
+
+    class IPhysicsWorld;
 
     struct ApplicationSpec
     {
@@ -84,6 +91,17 @@ namespace Nebula
         AssetManager &getAssetManager() { return m_assetManager; }
         const AssetManager &getAssetManager() const { return m_assetManager; }
 
+        /** Resolves `MeshRendererComponent` paths to GPU handles (requires initialized renderer). */
+        void resolveSceneAssets()
+        {
+          if (m_rendererInitialized)
+          {
+            m_assetManager.resolveSceneAssets(m_scene, m_renderer.resources());
+          }
+        }
+
+        EventBus &getEventBus() { return m_eventBus; }
+
     private:
         Window m_window;
         Input m_input;
@@ -103,6 +121,12 @@ namespace Nebula
         FrameInput m_frameInput{};
         ScriptSystem m_scriptSystem;
         SystemScheduler m_scheduler;
+        EventBus m_eventBus;
+        int m_lastFbWidth = 0;
+        int m_lastFbHeight = 0;
+        SceneAccess m_sceneAccess{m_scene};
+        FrameInputQuery m_inputQuery{m_frameInput};
         World m_world;
+        std::unique_ptr<IPhysicsWorld> m_physicsWorld;
     };
 }

@@ -7,5 +7,6 @@ namespace Nebula
     {
         None = 0,
         OpenGL,
+        Vulkan,
     };
 }
