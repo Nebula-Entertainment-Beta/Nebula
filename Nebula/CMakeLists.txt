@@ -9,7 +9,9 @@ add_subdirectory(vendor/glm)
 
 add_library(Nebula STATIC
     src/Window.cpp
-    src/detail/openGL_GraphicsContext.cpp 
+    src/detail/graphics_context_factory.cpp
+    src/detail/openGL_GraphicsContext.cpp
+    src/detail/vulkan_GraphicsContext.cpp
     src/imageDecoder.cpp 
     src/assetProvider.cpp 
     Math/camera2D.cpp
@@ -19,6 +21,7 @@ add_library(Nebula STATIC
     Application/application.cpp
     Application/sceneSerializer.cpp
     Application/scene.cpp
+    Application/registry.cpp
     Application/input.cpp
     Application/timestep.cpp
     Application/input_Actions.cpp
@@ -27,10 +30,18 @@ add_library(Nebula STATIC
     Application/world.cpp 
     Application/scriptSystem.cpp
     Application/systemScheduler.cpp
+    Application/asset_id.cpp
+    Application/asset_database.cpp
     Application/assetManager.cpp
     Application/builtinMeshes.cpp
+    Application/mesh_asset.cpp
+    Application/mesh_importer.cpp
+    Application/mesh_upload.cpp
     Application/renderSystem.cpp
-    render_pipeline/interface/renderAPI.cpp
+    Application/eventBus.cpp
+    Application/null_physics_world.cpp
+    Application/physics_system.cpp
+    Application/scene_query.cpp
     render_pipeline/interface/renderer.cpp
     render_pipeline/interface/texture.cpp
     render_pipeline/openGL/openGL_Renderer.cpp
@@ -39,8 +50,10 @@ add_library(Nebula STATIC
     render_pipeline/openGL/openGL_VertexArray.cpp
     render_pipeline/openGL/openGL_IndexBuffer.cpp
     render_pipeline/openGL/openGL_texture.cpp
-    render_pipeline/openGL/openGL_factories.cpp
-
+    render_pipeline/openGL/openGL_resource_factory.cpp
+    render_pipeline/openGL/openGL_renderapiFactory.cpp
+    render_pipeline/interface/render_backend_factory.cpp
+    render_pipeline/vulkan/vulkan_renderapiFactory.cpp
 
 )
 # Public API: headers under `include/` only (no glm in public headers; glm is PRIVATE for engine .cpp).
@@ -57,6 +70,7 @@ target_include_directories(Nebula PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glfw/include
     ${CMAKE_CURRENT_SOURCE_DIR}/render_pipeline/interface
     ${CMAKE_CURRENT_SOURCE_DIR}/render_pipeline/openGL
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_pipeline/vulkan
 
 )
 

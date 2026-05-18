@@ -2,7 +2,7 @@
  * @file script.h
  * @brief Script **lifecycle** interface and per-frame context passed to gameplay hooks.
  *
- * **Owns:** `ScriptContext` (scene + optional input/mapping pointers), `IScript`, `ScriptPtr`.
+ * **Owns:** `ScriptContext` (`ISceneAccess` + optional `IInputQuery`), `IScript`, `ScriptPtr`.
  *
  * **Why:** Lets entities in JSON name a behavior (`ScriptComponent::scriptName`) while C++ classes
  * implement `onUpdate` / `onRender` / … without the engine depending on every game type.
@@ -11,18 +11,16 @@
 
 #include <memory>
 #include "scene.h"
+#include "inputQuery.h"
+#include "sceneAccess.h"
 
 namespace Nebula
 {
-  class Input;
-  class ActionMapping;
 
   struct ScriptContext
   {
-
-    Scene &scene;
-    Input *input = nullptr;
-    ActionMapping *actions = nullptr;
+    ISceneAccess &scene;
+    IInputQuery *input = nullptr; // nullptr = transform-only scripts
   };
 
   class IScript

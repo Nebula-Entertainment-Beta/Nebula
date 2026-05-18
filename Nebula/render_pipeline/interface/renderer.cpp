@@ -3,7 +3,7 @@
  * @brief Forwards calls to the concrete `RenderAPI` instance (e.g. `OpenGL_Renderer`).
  */
 #include "renderer.h"
-#include "renderAPI.h"
+#include "renderBackend.h"
 #include "vertex_array.h"
 
 namespace Nebula
@@ -11,6 +11,7 @@ namespace Nebula
   struct Renderer::Impl
   {
     std::unique_ptr<RenderAPI> api;
+    std::unique_ptr<IRenderResourceFactory> resources;
     graphicsContext *ctx = nullptr;
   };
 
@@ -27,6 +28,7 @@ namespace Nebula
     }
     m_impl->api->Shutdown();
     m_impl->api.reset();
+    m_impl->resources.reset();
   }
 
   void Renderer::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray, uint32_t indexCount)
@@ -51,6 +53,16 @@ namespace Nebula
     }
   }
 
+  IRenderResourceFactory &Renderer::resources()
+  {
+    return *m_impl->resources;
+  }
+
+  const IRenderResourceFactory &Renderer::resources() const
+  {
+    return *m_impl->resources;
+  }
+
   void Renderer::init(graphicsContext &ctx, RendererAPIType api)
   {
     m_impl = std::make_unique<Impl>();
@@ -61,7 +73,9 @@ namespace Nebula
     ctx.makeCurrent();
     m_impl->ctx = &ctx;
 
-    m_impl->api = createRendererAPI(api);
+    RenderBackend backend = createRenderBackend(api);
+    m_impl->api = std::move(backend.api);
+    m_impl->resources = std::move(backend.resources);
 
     if (m_impl->api)
     {

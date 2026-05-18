@@ -1,14 +1,12 @@
 /**
  * @file Window.cpp
- * @brief GLFW window + OpenGL 4.1 core context (forward-compatible on macOS).
+ * @brief GLFW platform window; graphics API context comes from `detail::createGraphicsContext`.
  */
-#include <glad/glad.h>
 #include "Window.h"
+#include "detail/graphics_context_factory.h"
 #include "detail/window_native.h"
-#include "detail/openGL_GraphicsContext.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <string_view>
 #include <cassert>
 
 namespace Nebula
@@ -19,10 +17,10 @@ namespace Nebula
         GLFWwindow *m_window = nullptr;
         bool m_glfwInitialized = false;
         bool m_glReady = false;
-        std::unique_ptr<detail::OpenGLGraphicsContext> m_graphicsContext;
+        std::unique_ptr<graphicsContext> m_graphicsContext;
     };
 
-    Window::Window(std::string_view title, int width, int height)
+    Window::Window(const WindowSpec &spec)
         : m_impl(std::make_unique<WindowImpl>())
     {
         if (!glfwInit())
@@ -32,15 +30,10 @@ namespace Nebula
         }
         m_impl->m_glfwInitialized = true;
 
-        // Request a context that matches generated GLAD (gl=4.1). Required for core + macOS.
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+        detail::configureGlfwWindowHints(spec.api);
 
-        m_impl->m_window = glfwCreateWindow(width, height, title.data(), nullptr, nullptr);
+        m_impl->m_window =
+            glfwCreateWindow(spec.width, spec.height, spec.title.c_str(), nullptr, nullptr);
         if (!m_impl->m_window)
         {
             std::cerr << "Failed to create GLFW window" << std::endl;
@@ -49,20 +42,9 @@ namespace Nebula
             return;
         }
 
-        glfwMakeContextCurrent(m_impl->m_window);
-
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        {
-            std::cerr << "Failed to initialize GLAD (OpenGL loader). "
-                         "GPU/driver may not support the requested context.\n";
-            glfwDestroyWindow(m_impl->m_window);
-            m_impl->m_window = nullptr;
-            glfwTerminate();
-            m_impl->m_glfwInitialized = false;
-            return;
-        }
-        m_impl->m_graphicsContext = std::make_unique<detail::OpenGLGraphicsContext>(m_impl->m_window);
-        m_impl->m_glReady = true;
+        m_impl->m_graphicsContext = detail::createGraphicsContext(m_impl->m_window, spec.api);
+        m_impl->m_glReady =
+            m_impl->m_graphicsContext != nullptr && m_impl->m_graphicsContext->isValid();
     }
 
     namespace detail

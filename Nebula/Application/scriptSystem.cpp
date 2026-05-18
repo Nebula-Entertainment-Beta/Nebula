@@ -7,69 +7,74 @@ namespace Nebula
   void ScriptSystem::rebuildFromScene(Scene &scene, ScriptRegistry &registry, ScriptContext &ctx)
   {
     shutdownAll(ctx);
-    for (Entity e : scene.getAllEntities())
+    for (const Entity entity : scene.getAllEntities())
     {
-      if (!scene.hasComponent<ScriptComponent>(e))
+      if (!scene.hasComponent<ScriptComponent>(entity))
+      {
         continue;
-      const auto &sc = scene.getComponent<ScriptComponent>(e);
+      }
+      const auto &sc = scene.getComponent<ScriptComponent>(entity);
       ScriptPtr script = registry.createScript(sc.scriptName);
       if (script)
-        m_instances[e.id] = std::move(script);
+      {
+        m_instances[entity] = std::move(script);
+      }
     }
   }
 
   void ScriptSystem::initializeAll(ScriptContext &ctx)
   {
-    for (auto &[id, script] : m_instances)
+    for (auto &[entity, script] : m_instances)
     {
-      Entity e{id};
-      script->onCreate(ctx, e);
-      script->onEnable(ctx, e);
+      script->onCreate(ctx, entity);
+      script->onEnable(ctx, entity);
     }
   }
 
   void ScriptSystem::updateAll(ScriptContext &ctx, float dt)
   {
-    for (auto &[id, script] : m_instances)
+    for (auto &[entity, script] : m_instances)
     {
-      Entity e{id};
-      if (!ctx.scene.isValidEntity(e))
+      if (!ctx.scene.isValidEntity(entity))
+      {
         continue;
-      script->onUpdate(ctx, e, dt);
+      }
+      script->onUpdate(ctx, entity, dt);
     }
   }
 
   void ScriptSystem::physicsUpdateAll(ScriptContext &ctx, float fixedDt)
   {
-    for (auto &[id, script] : m_instances)
+    for (auto &[entity, script] : m_instances)
     {
-      Entity e{id};
-      if (!ctx.scene.isValidEntity(e))
+      if (!ctx.scene.isValidEntity(entity))
+      {
         continue;
-      script->onPhysicsUpdate(ctx, e, fixedDt);
+      }
+      script->onPhysicsUpdate(ctx, entity, fixedDt);
     }
   }
 
   void ScriptSystem::renderAll(ScriptContext &ctx, float dt)
   {
-    for (auto &[id, script] : m_instances)
+    for (auto &[entity, script] : m_instances)
     {
-      Entity e{id};
-      if (!ctx.scene.isValidEntity(e))
+      if (!ctx.scene.isValidEntity(entity))
+      {
         continue;
-      script->onRender(ctx, e, dt);
+      }
+      script->onRender(ctx, entity, dt);
     }
   }
 
   void ScriptSystem::shutdownAll(ScriptContext &ctx)
   {
-    for (auto &[id, script] : m_instances)
+    for (auto &[entity, script] : m_instances)
     {
-      Entity e{id};
-      script->onDisable(ctx, e);
-      script->onDestroy(ctx, e);
+      script->onDisable(ctx, entity);
+      script->onDestroy(ctx, entity);
     }
     m_instances.clear();
   }
 
-}
+} // namespace Nebula

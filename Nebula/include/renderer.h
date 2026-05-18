@@ -10,6 +10,7 @@
 #include <memory>
 #include "graphicsContext.h"
 #include "math_types.h"
+#include "renderResources.h"
 #include "renderer_api_type.h"
 
 namespace Nebula
@@ -17,7 +18,7 @@ namespace Nebula
     class VertexArray;
 
     /**
-     * @brief Static wrapper around the active graphics backend.
+     * @brief Owns the active graphics backend and its GPU resource factory.
      */
     class Renderer
     {
@@ -35,6 +36,9 @@ namespace Nebula
         void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
         void clear(const Vec4 &color);
         void init(graphicsContext &ctx, RendererAPIType api);
+
+        IRenderResourceFactory &resources();
+        const IRenderResourceFactory &resources() const;
 
     private:
         struct Impl;

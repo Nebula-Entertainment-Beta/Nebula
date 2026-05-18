@@ -5,14 +5,18 @@
 #include "application.h"
 #include "renderer.h"
 #include "renderSystem.h"
-#include "detail/openGL_GraphicsContext.h"
+#include "physics/iphysics_world.h"
+#include "physics/physics_system.h"
 
 #include "math_types.h"
 
 namespace Nebula
 {
 
-  Application::Application(const ApplicationSpec &spec) : m_window(spec.title, spec.width, spec.height), m_assets(), m_world(m_scene, m_assets, m_input, m_actionMapping, m_scriptRegistry, m_frameInput)
+  Application::Application(const ApplicationSpec &spec)
+      : m_window(WindowSpec{spec.title, spec.width, spec.height, spec.rendererAPI}),
+        m_assets(), m_assetManager(m_assets),
+        m_world(m_scene, m_assets, m_input, m_actionMapping, m_scriptRegistry, m_frameInput)
   {
     m_width = spec.width;
     m_height = spec.height;
@@ -23,6 +27,7 @@ namespace Nebula
 
     // create default scene data
     m_scene = Scene();
+    m_physicsWorld = createNullPhysicsWorld();
   }
 
   void Application::run()
@@ -38,7 +43,8 @@ namespace Nebula
     auto &ctx = m_window.getGraphicsContext();
     ctx.makeCurrent();
     m_renderer.init(ctx, m_rendererAPI);
-    m_assetManager.loadBuiltins(m_assets);
+    m_assetManager.loadBuiltins(m_renderer.resources());
+    m_assetManager.resolveScene(m_scene, m_renderer.resources());
     m_rendererInitialized = true;
     m_hasRun = true;
 
@@ -106,6 +112,12 @@ namespace Nebula
     m_window.getFramebufferSize(fbw, fbh);
     if (fbw > 0 && fbh > 0)
     {
+      if (fbw != m_lastFbWidth || fbh != m_lastFbHeight)
+      {
+        m_lastFbWidth = fbw;
+        m_lastFbHeight = fbh;
+        m_eventBus.push(WindowResizedEvent{fbw, fbh});
+      }
       m_renderer.setViewport(0, 0, static_cast<uint32_t>(fbw), static_cast<uint32_t>(fbh));
     }
     else
@@ -117,10 +129,10 @@ namespace Nebula
 
   ScriptContext Application::makeScriptContext()
   {
-    return ScriptContext{m_scene, &m_input, &m_actionMapping};
+    return ScriptContext{m_sceneAccess, &m_inputQuery};
   }
 
-  void buildFrameInput(World &world)
+  void buildFrameInput(World &world, EventBus &bus)
   {
     FrameInput &f = world.frameInput();
     f.clear();
@@ -129,10 +141,13 @@ namespace Nebula
     ActionMapping &map = world.actions();
 
     if (map.wasActionPressed(Action::Interact, input))
-      f.toggleInputDebug = true;
+    {
+
+      bus.push(InteractPressedEvent{});
+    }
 
     if (map.wasActionPressed(Action::SaveScene, input))
-      f.saveScene = true;
+      bus.push(SaveSceneRequestedEvent{});
 
     map.getAxisValue(Axis::LookX, input, f.lookX, f.lookY);
     map.getAxisValue(Axis::LookY, input, f.lookX, f.lookY);
@@ -144,7 +159,9 @@ namespace Nebula
   void Application::registerEngineSystems()
   {
     m_scheduler.add(SystemPhase::PreUpdate, [this](float)
-                    { buildFrameInput(m_world); });
+                    {
+                      m_eventBus.clear();
+                      buildFrameInput(m_world, m_eventBus); });
 
     m_scheduler.add(SystemPhase::Update, [this](float dt)
                     {
@@ -152,9 +169,13 @@ namespace Nebula
     m_scriptSystem.updateAll(ctx, dt); });
 
     m_scheduler.add(SystemPhase::FixedUpdate, [this](float fdt)
+                    { runPhysicsFixedUpdate(m_scene, *m_physicsWorld, fdt); });
+
+    m_scheduler.add(SystemPhase::FixedUpdate, [this](float fdt)
                     {
                       ScriptContext ctx = makeScriptContext();
-                      m_scriptSystem.physicsUpdateAll(ctx, fdt); });
+                      m_scriptSystem.physicsUpdateAll(ctx, fdt);
+                    });
 
     m_scheduler.add(SystemPhase::Render, [this](float dt)
                     {
