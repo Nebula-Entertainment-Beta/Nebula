@@ -29,7 +29,8 @@ namespace Nebula
         ComponentStorage<ScriptComponent>,
         ComponentStorage<TagComponent>,
         ComponentStorage<RigidBodyComponent>,
-        ComponentStorage<ColliderComponent>>;
+        ComponentStorage<ColliderComponent>,
+        ComponentStorage<followTargetComponent>>;
 
     template <typename T>
     struct ComponentTypeIndex;

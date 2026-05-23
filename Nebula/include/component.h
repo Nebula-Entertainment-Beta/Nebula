@@ -13,6 +13,7 @@
 #include "math_types.h"
 #include "transform3D.h"
 #include "assetHandles.h"
+#include "ecs/entity.h"
 
 namespace Nebula
 {
@@ -33,11 +34,20 @@ namespace Nebula
     float nearClip = 0.1f;
     float farClip = 100.0f;
     bool isPrimary = true;
+    Entity targetEntity{};
+    std::string targetTag;
+  };
+
+  struct followTargetComponent
+  {
+    Entity targetEntity{};
+    std::string targetTag;
   };
 
   struct ScriptComponent
   {
     std::string scriptName;
+    std::string paramsJson = "{}";
   };
 
   struct MeshRendererComponent

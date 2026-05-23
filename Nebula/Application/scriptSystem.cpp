@@ -1,12 +1,17 @@
 #include "scriptSystem.h"
 #include "script_Registry.h"
+#include <iostream>
+#include "component.h"
 
 namespace Nebula
 {
 
   void ScriptSystem::rebuildFromScene(Scene &scene, ScriptRegistry &registry, ScriptContext &ctx)
   {
+
     shutdownAll(ctx);
+
+    int bindFailures = 0;
     for (const Entity entity : scene.getAllEntities())
     {
       if (!scene.hasComponent<ScriptComponent>(entity))
@@ -19,6 +24,29 @@ namespace Nebula
       {
         m_instances[entity] = std::move(script);
       }
+      else
+      {
+        bindFailures++;
+        std::cerr << "[ScriptSystem] Failed to bind script \""
+                  << sc.scriptName
+                  << "\" on entity id=" << entity.id;
+
+        if (scene.hasComponent<TagComponent>(entity))
+        {
+          const auto &tag = scene.getComponent<TagComponent>(entity);
+          if (!tag.tag.empty())
+          {
+            std::cerr << " tag=\"" << tag.tag << '"';
+          }
+        }
+
+        std::cerr << " — not registered in ScriptRegistry\n";
+      }
+    }
+    if (bindFailures > 0)
+    {
+      std::cerr << "[ScriptSystem] " << bindFailures
+                << " script(s) failed to bind\n";
     }
   }
 
