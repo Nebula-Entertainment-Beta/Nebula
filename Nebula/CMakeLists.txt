@@ -26,6 +26,8 @@ add_library(Nebula STATIC
     Application/timestep.cpp
     Application/input_Actions.cpp
     Application/script_Registry.cpp
+    Application/scriptFields.cpp
+    Application/scriptParams.cpp
     Application/clock.cpp
     Application/world.cpp 
     Application/scriptSystem.cpp

@@ -10,8 +10,9 @@
 #include <variant>
 
 #include "nimbus_config.h"
-#include "playerController.h"
+
 #include "register_Script.h"
+#include "scriptFields.h"
 
 class NimbusApp final : public Nebula::Application
 {
@@ -43,38 +44,9 @@ public:
 protected:
     void onStartup() override
     {
-        Nimbus::registerAllGameplayScripts(getScriptRegistry());
+        Nebula::ScriptFieldRegistry fieldRegistry;
+        Nimbus::registerAllGameplayScripts(getScriptRegistry(), fieldRegistry);
         Nebula::Application::onStartup();
-    }
-
-    void registerGameSystems() override
-    {
-        getScheduler().add(Nebula::SystemPhase::Update, [this](float dt)
-                           { Nimbus::runPlayerController(
-                                 getWorld(), getEventBus(),
-                                 m_cubeEntity, m_cameraEntity,
-                                 m_showInputDebug, m_debugPrintTimer, dt); });
-
-        getScheduler().add(Nebula::SystemPhase::PostUpdate, [this](float)
-                           {
-                               bool saveRequested = false;
-                               for (const Nebula::GameEvent &ev : getEventBus().events())
-                               {
-                                   if (std::holds_alternative<Nebula::SaveSceneRequestedEvent>(ev))
-                                       saveRequested = true;
-                               }
-                               if (!saveRequested)
-                                   return;
-
-                               if (saveScene())
-                               {
-                                   std::cout << "[Scene] Saved to " << m_scenePath << '\n';
-                                   getEventBus().push(Nebula::SceneSavedEvent{m_scenePath});
-                               }
-                               else
-                               {
-                                   std::cerr << "[Scene] Failed to save to " << m_scenePath << '\n';
-                               } });
     }
 
     void onRender() override
@@ -120,6 +92,8 @@ private:
         cameraComponent.fov = 55.0f;
         cameraComponent.nearClip = 0.1f;
         cameraComponent.farClip = 100.0f;
+        cameraComponent.targetTag = Nimbus::kPlayerTag;
+        cameraComponent.targetEntity = m_cubeEntity;
         scene.addComponent<Nebula::ScriptComponent>(m_cameraEntity).scriptName = "MainCamera";
     }
 
@@ -140,6 +114,19 @@ private:
             }
         }
 
+        if (m_cameraEntity.id != 0 && scene.hasComponent<Nebula::CameraComponent>(m_cameraEntity))
+        {
+            auto &cameraComponent = scene.getComponent<Nebula::CameraComponent>(m_cameraEntity);
+            if (cameraComponent.targetTag.empty() && m_cubeEntity.id != 0)
+            {
+                cameraComponent.targetTag = Nimbus::kPlayerTag;
+            }
+            if (!scene.isValidEntity(cameraComponent.targetEntity) && m_cubeEntity.id != 0)
+            {
+                cameraComponent.targetEntity = m_cubeEntity;
+            }
+        }
+
         return m_groundEntity.id != 0 && m_cubeEntity.id != 0 && m_groundEntity != m_cubeEntity &&
                m_cameraEntity.id != 0;
     }
@@ -154,8 +141,6 @@ private:
     Nebula::Entity m_cameraEntity{};
 
     std::string m_scenePath = "scenes/week2_scene.json";
-    bool m_showInputDebug = false;
-    float m_debugPrintTimer = 0.0f;
 };
 
 int main()

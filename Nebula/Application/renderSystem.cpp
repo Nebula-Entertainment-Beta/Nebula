@@ -8,6 +8,7 @@
 #include "camera3D.h"
 #include "renderer.h"
 #include "Window.h"
+#include "scene_query.h"
 
 #include <cmath>
 
@@ -31,24 +32,72 @@ namespace Nebula
       return fallback;
     }
 
-    Vec3 findCameraTarget(Scene &scene)
+    Vec3 fallbackTarget(Scene &scene, Entity cameraEntity)
     {
       for (const Entity entity : scene.getAllEntities())
       {
-        if (!scene.hasComponent<ScriptComponent>(entity))
+        if (entity == cameraEntity)
           continue;
-        if (scene.getComponent<ScriptComponent>(entity).scriptName != "Player")
+        if (scene.hasComponent<CameraComponent>(entity))
           continue;
-        if (scene.hasComponent<TransformComponent>(entity))
-          return scene.getComponent<TransformComponent>(entity).transform.getPosition();
-      }
-      for (const Entity entity : scene.getAllEntities())
-      {
         if (scene.hasComponent<TransformComponent>(entity) &&
             scene.hasComponent<MeshRendererComponent>(entity))
+        {
           return scene.getComponent<TransformComponent>(entity).transform.getPosition();
+        }
       }
       return Vec3{0.0f, 0.0f, 0.0f};
+    }
+
+    Vec3 findCameraTarget(Scene &scene, Entity cameraEntity)
+    {
+      if (!scene.isValidEntity(cameraEntity) ||
+          !scene.hasComponent<CameraComponent>(cameraEntity))
+      {
+        return fallbackTarget(scene, cameraEntity);
+      }
+
+      const CameraComponent &cam = scene.getComponent<CameraComponent>(cameraEntity);
+
+      // --- B: from camera data (entity reference) ---
+      if (scene.isValidEntity(cam.targetEntity) &&
+          scene.hasComponent<TransformComponent>(cam.targetEntity))
+      {
+        return scene.getComponent<TransformComponent>(cam.targetEntity)
+            .transform.getPosition();
+      }
+
+      // --- C: FollowTarget component on the camera entity ---
+      if (scene.hasComponent<followTargetComponent>(cameraEntity))
+      {
+        const followTargetComponent &ft = scene.getComponent<followTargetComponent>(cameraEntity);
+        if (scene.isValidEntity(ft.targetEntity) &&
+            scene.hasComponent<TransformComponent>(ft.targetEntity))
+        {
+          return scene.getComponent<TransformComponent>(ft.targetEntity)
+              .transform.getPosition();
+        }
+        if (!ft.targetTag.empty())
+        {
+          const Entity tagged = findByTag(scene, ft.targetTag);
+          if (scene.isValidEntity(tagged) && scene.hasComponent<TransformComponent>(tagged))
+          {
+            return scene.getComponent<TransformComponent>(tagged).transform.getPosition();
+          }
+        }
+      }
+
+      // --- A: tag on camera data ---
+      if (!cam.targetTag.empty())
+      {
+        const Entity tagged = findByTag(scene, cam.targetTag);
+        if (scene.isValidEntity(tagged) && scene.hasComponent<TransformComponent>(tagged))
+        {
+          return scene.getComponent<TransformComponent>(tagged).transform.getPosition();
+        }
+      }
+
+      return fallbackTarget(scene, cameraEntity);
     }
   } // namespace
 
@@ -66,7 +115,7 @@ namespace Nebula
 
     const auto &cameraComponent = ctx.scene.getComponent<CameraComponent>(cameraEntity);
     Camera3D camera;
-    camera.setTarget(findCameraTarget(ctx.scene));
+    camera.setTarget(findCameraTarget(ctx.scene, cameraEntity));
     camera.setPivotOffset(cameraComponent.pivotOffset);
     camera.setDistance(cameraComponent.distance);
     camera.setYaw(cameraComponent.yaw);

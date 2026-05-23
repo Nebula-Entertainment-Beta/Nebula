@@ -6,6 +6,7 @@
 #include "physics/physics_component.h"
 #include <nlohmann/json.hpp>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace Nebula
@@ -67,6 +68,26 @@ namespace Nebula
       return true;
     }
 
+    nlohmann::json parseScriptParamsJson(std::string_view paramsJson)
+    {
+      if (paramsJson.empty())
+      {
+        return nlohmann::json::object();
+      }
+      try
+      {
+        nlohmann::json parsed = nlohmann::json::parse(paramsJson);
+        if (parsed.is_object())
+        {
+          return parsed;
+        }
+      }
+      catch (const nlohmann::json::exception &)
+      {
+      }
+      return nlohmann::json::object();
+    }
+
     void writeTransformComponent(nlohmann::json &entityJson, const TransformComponent &component)
     {
       const Vec3 position = component.transform.getPosition();
@@ -105,7 +126,7 @@ namespace Nebula
 
     void writeCameraComponent(nlohmann::json &entityJson, const CameraComponent &component)
     {
-      entityJson["CameraComponent"] = {
+      nlohmann::json cameraJson = {
           {"pivotOffset", {component.pivotOffset.x, component.pivotOffset.y, component.pivotOffset.z}},
           {"distance", component.distance},
           {"yaw", component.yaw},
@@ -114,11 +135,22 @@ namespace Nebula
           {"nearClip", component.nearClip},
           {"farClip", component.farClip},
           {"isPrimary", component.isPrimary}};
+      if (!component.targetTag.empty())
+      {
+        cameraJson["targetTag"] = component.targetTag;
+      }
+      if (component.targetEntity.id != 0)
+      {
+        cameraJson["targetEntityId"] = component.targetEntity.id;
+      }
+      entityJson["CameraComponent"] = std::move(cameraJson);
     }
 
     void writeScriptComponent(nlohmann::json &entityJson, const ScriptComponent &component)
     {
-      entityJson["ScriptComponent"] = {{"scriptName", component.scriptName}};
+      entityJson["ScriptComponent"] = {
+          {"scriptName", component.scriptName},
+          {"paramsJson", parseScriptParamsJson(component.paramsJson)}};
     }
 
     void writeTagComponent(nlohmann::json &entityJson, const TagComponent &component)
@@ -235,6 +267,19 @@ namespace Nebula
       readFloatField(cameraJson, "nearClip", cameraComponent.nearClip);
       readFloatField(cameraJson, "farClip", cameraComponent.farClip);
       readBoolField(cameraJson, "isPrimary", cameraComponent.isPrimary);
+      readStringField(cameraJson, "targetTag", cameraComponent.targetTag);
+      if (cameraJson.contains("targetEntityId") && cameraJson["targetEntityId"].is_number_unsigned())
+      {
+        const EntityID targetId = cameraJson["targetEntityId"].get<EntityID>();
+        for (const Entity candidate : scene.getAllEntities())
+        {
+          if (candidate.id == targetId)
+          {
+            cameraComponent.targetEntity = candidate;
+            break;
+          }
+        }
+      }
     }
 
     void loadScriptComponent(Scene &scene, Entity entity, const nlohmann::json &entityJson)
@@ -247,6 +292,19 @@ namespace Nebula
       const auto &scriptJson = entityJson["ScriptComponent"];
       auto &scriptComponent = scene.addComponent<ScriptComponent>(entity);
       readStringField(scriptJson, "scriptName", scriptComponent.scriptName);
+
+      if (scriptJson.contains("paramsJson"))
+      {
+        const auto &paramsJson = scriptJson["paramsJson"];
+        if (paramsJson.is_object())
+        {
+          scriptComponent.paramsJson = paramsJson.dump();
+        }
+        else if (paramsJson.is_string())
+        {
+          scriptComponent.paramsJson = paramsJson.get<std::string>();
+        }
+      }
     }
 
     void loadTagComponent(Scene &scene, Entity entity, const nlohmann::json &entityJson)
