@@ -165,17 +165,26 @@ namespace Nebula
 
     m_scheduler.add(SystemPhase::Update, [this](float dt)
                     {
-    ScriptContext ctx = makeScriptContext();
-    m_scriptSystem.updateAll(ctx, dt); });
+                      if(m_isPlaying)
+                      {
+                        ScriptContext ctx = makeScriptContext();
+                        m_scriptSystem.updateAll(ctx, dt);
+                      } });
 
     m_scheduler.add(SystemPhase::FixedUpdate, [this](float fdt)
-                    { runPhysicsFixedUpdate(m_scene, *m_physicsWorld, fdt); });
+                    { 
+                      if(m_isPlaying)
+                      {
+                        runPhysicsFixedUpdate(m_scene, *m_physicsWorld, fdt);
+                      } });
 
     m_scheduler.add(SystemPhase::FixedUpdate, [this](float fdt)
                     {
-                      ScriptContext ctx = makeScriptContext();
-                      m_scriptSystem.physicsUpdateAll(ctx, fdt);
-                    });
+                      if(m_isPlaying)
+                      {
+                        ScriptContext ctx = makeScriptContext();
+                        m_scriptSystem.physicsUpdateAll(ctx, fdt);
+                      } });
 
     m_scheduler.add(SystemPhase::Render, [this](float dt)
                     {

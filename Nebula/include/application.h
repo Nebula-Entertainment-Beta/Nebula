@@ -27,6 +27,7 @@
 #include "sceneAccess.h"
 #include "eventBus.h"
 #include "renderer.h"
+#include "scriptFields.h"
 #include "scene.h"
 #include "clock.h"
 #include "world.h"
@@ -94,19 +95,26 @@ namespace Nebula
         /** Resolves `MeshRendererComponent` paths to GPU handles (requires initialized renderer). */
         void resolveSceneAssets()
         {
-          if (m_rendererInitialized)
-          {
-            m_assetManager.resolveSceneAssets(m_scene, m_renderer.resources());
-          }
+            if (m_rendererInitialized)
+            {
+                m_assetManager.resolveSceneAssets(m_scene, m_renderer.resources());
+            }
         }
 
         EventBus &getEventBus() { return m_eventBus; }
+
+        ScriptFieldRegistry &getScriptFieldRegistry() { return m_fieldRegistry; }
+        const ScriptFieldRegistry &getScriptFieldRegistry() const { return m_fieldRegistry; }
+
+        bool isPlaying() const { return m_isPlaying; }
+        void setPlaying(bool playing) { m_isPlaying = playing; }
 
     private:
         Window m_window;
         Input m_input;
         ActionMapping m_actionMapping;
         bool m_hasRun = false;
+        bool m_isPlaying = false;
         bool m_rendererInitialized = false;
         uint32_t m_width;
         uint32_t m_height;
@@ -122,6 +130,7 @@ namespace Nebula
         ScriptSystem m_scriptSystem;
         SystemScheduler m_scheduler;
         EventBus m_eventBus;
+        ScriptFieldRegistry m_fieldRegistry;
         int m_lastFbWidth = 0;
         int m_lastFbHeight = 0;
         SceneAccess m_sceneAccess{m_scene};
