@@ -10,14 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build ripgrep nlohmann-json3-dev
+          sudo apt-get install -y \
+            cmake ninja-build ripgrep nlohmann-json3-dev \
+            xorg-dev libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
 
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DNEBULA_BUILD_DOCS=OFF \
+            -DGLFW_BUILD_DOCS=OFF
 
       - name: Build
         run: cmake --build build
