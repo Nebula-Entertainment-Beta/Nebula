@@ -6,6 +6,8 @@
 
 #include "application.h"
 #include "editorState.h"
+#include "sceneViewPanel.h"
+#include "render/sceneViewFrameBuffer.h"
 
 namespace Editor
 {
@@ -19,6 +21,7 @@ namespace Editor
     explicit EditorApplication(const Nebula::ApplicationSpec &spec);
     EditorApplication(const Nebula::ApplicationSpec &spec, ScriptRegistrar registerScripts);
     ~EditorApplication() override;
+    bool renderSceneToMainFramebuffer() const override { return false; }
 
   protected:
     void onStartup() override;
@@ -28,6 +31,8 @@ namespace Editor
     EditorState m_state;
     ScriptRegistrar m_registerScripts;
     bool m_dockLayoutBuilt = false;
+    SceneViewPanel m_sceneViewPanel;
+    SceneViewFrameBuffer m_sceneViewFrameBuffer;
 
     void drawDockspace();
     void drawEditorPanels();

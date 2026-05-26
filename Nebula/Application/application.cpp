@@ -189,10 +189,9 @@ namespace Nebula
     m_scheduler.add(SystemPhase::Render, [this](float dt)
                     {
                       onRender();
-                      renderScene(RenderSystemContext{
-                          m_scene, m_assetManager, m_renderer, m_window});
-                      ScriptContext ctx = makeScriptContext();
-                      m_scriptSystem.renderAll(ctx, dt); });
+                      if (renderSceneToMainFramebuffer()) {
+                            renderScene(RenderSystemContext{ m_scene, m_assetManager, m_renderer, m_window });
+                      } });
   }
 
 }
