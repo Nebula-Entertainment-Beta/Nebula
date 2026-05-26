@@ -54,7 +54,19 @@ namespace Editor
   void EditorApplication::drawEditorPanels()
   {
     ImGui::Begin("Hierarchy");
-    ImGui::TextUnformatted("Entity list (Task 4+)");
+    const auto &entities = getScene().getAllEntities();
+    ImGui::Text("Entities: %d", (int)entities.size());
+    ImGui::Separator();
+    for (const Nebula::Entity e : entities)
+    {
+      const bool selected = (m_state.selectedEntity == e);
+      char label[64];
+      std::snprintf(label, sizeof(label), "Entity %u", e.id);
+      if (ImGui::Selectable(label, selected))
+      {
+        m_state.selectedEntity = e;
+      }
+    }
     ImGui::End();
 
     ImGui::Begin("Console");
@@ -72,9 +84,7 @@ namespace Editor
     }
     ImGui::End();
 
-    ImGui::Begin("Scene View");
-    ImGui::TextUnformatted("Scene viewport (Task 4+)");
-    ImGui::End();
+    m_sceneViewPanel.drawSceneViewPanel(m_state, m_sceneViewFrameBuffer, getScene(), getAssetManager(), getRenderer(), getWindow());
   }
 
   void EditorApplication::setupDefaultDockLayout(ImGuiID dockspaceId)

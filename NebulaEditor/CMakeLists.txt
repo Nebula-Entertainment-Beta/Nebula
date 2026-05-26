@@ -21,10 +21,14 @@ add_executable(NebulaEditor
   src/main.cpp
   src/editorApplication.cpp
   src/imGuiLayer.cpp
+  src/panels/sceneViewPanel.cpp 
+  src/render/sceneViewFrameBuffer.cpp 
+
 )
 
 target_include_directories(NebulaEditor PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/panels
   ${CMAKE_SOURCE_DIR}/Nimbus/src
 )
 

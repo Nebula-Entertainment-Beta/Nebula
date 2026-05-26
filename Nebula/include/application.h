@@ -109,6 +109,8 @@ namespace Nebula
         bool isPlaying() const { return m_isPlaying; }
         void setPlaying(bool playing) { m_isPlaying = playing; }
 
+        virtual bool renderSceneToMainFramebuffer() const { return true; }
+
     private:
         Window m_window;
         Input m_input;

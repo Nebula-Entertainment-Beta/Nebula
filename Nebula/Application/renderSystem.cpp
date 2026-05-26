@@ -108,7 +108,17 @@ namespace Nebula
       return;
 
     int fbw = 0, fbh = 0;
-    ctx.window.getFramebufferSize(fbw, fbh);
+    if (ctx.viewportWidth != 0 && ctx.viewportHeight != 0)
+    {
+      fbw = static_cast<int>(ctx.viewportWidth);
+      fbh = static_cast<int>(ctx.viewportHeight);
+      ctx.renderer.setViewport(static_cast<int>(ctx.viewportX), static_cast<int>(ctx.viewportY), ctx.viewportWidth, ctx.viewportHeight);
+    }
+    else
+    {
+
+      ctx.window.getFramebufferSize(fbw, fbh);
+    }
     const float aspect = (fbh > 0)
                              ? (static_cast<float>(fbw) / static_cast<float>(fbh))
                              : (16.0f / 9.0f);
