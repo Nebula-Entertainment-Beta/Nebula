@@ -8,6 +8,11 @@ This document describes **layer boundaries** and what game code (Nimbus) may dep
 flowchart TB
   subgraph game [Nimbus — game]
     G[main.cpp scripts systems]
+    NE[NimbusEditor host main]
+  end
+  subgraph editor [NebulaEditor — tools]
+    EL[NebulaEditorLib panels]
+    EM[main.cpp generic NebulaEditor]
   end
   subgraph public [Nebula/include — public API]
     P[Nebula.h application.h scene.h ...]
@@ -27,6 +32,9 @@ flowchart TB
     VK[vulkan_* stubs]
   end
   G --> P
+  NE --> EL
+  EM --> EL
+  EL --> P
   P --> A
   A --> W
   A --> R
@@ -40,6 +48,8 @@ flowchart TB
 | Layer | Path | May include |
 |-------|------|-------------|
 | Game | `Nimbus/` | `Nebula/include` only (via `Nebula.h` or listed public headers) |
+| Editor | `NebulaEditor/` | `Nebula` only — **no** game projects (`Nimbus/`, game scripts) |
+| Game editor host | `Nimbus/*_editor_main.cpp` | `NebulaEditorLib` + that game's scripts/assets registration |
 | Public API | `Nebula/include/` | Other public headers; no GLFW/GLAD/OpenGL |
 | Application | `Nebula/Application/` | Public API + internal engine headers |
 | Window / platform | `Nebula/src/` | GLFW; graphics factory picks OpenGL or Vulkan impl |
@@ -57,6 +67,14 @@ Game projects under `Nimbus/` must **not**:
 - Construct GPU resources with backend static factories (`VertexArray::create`)
 
 Use `Application`, `Scene`, `Nebula.h`, and engine services instead.
+
+## Editor rules
+
+`NebulaEditor/` is a **game-agnostic** tool layer:
+
+- Builds `NebulaEditorLib` (UI, panels, play mode) and a minimal `NebulaEditor` executable with empty script/scene hooks.
+- Must **not** include or link any game folder (`Nimbus/`, future games).
+- Each game that wants editor support adds its own small executable (e.g. `NimbusEditor`) that links `NebulaEditorLib` and passes `ScriptRegistrar` / `NewSceneBuilder` callbacks in `main`.
 
 ## Render interface rules
 

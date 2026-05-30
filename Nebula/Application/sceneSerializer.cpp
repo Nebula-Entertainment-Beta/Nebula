@@ -363,16 +363,16 @@ namespace Nebula
       readVec3ArrayField(colliderJson, "halfExtents", colliderComponent.halfExtents);
     }
 
-#define NEBULA_SAVE_COMPONENT(Type)                                              \
-  if (scene.hasComponent<Type>(entity))                                          \
-  {                                                                              \
-    write##Type(entityJson, scene.getComponent<Type>(entity));                   \
+#define NEBULA_SAVE_COMPONENT(Type)                            \
+  if (scene.hasComponent<Type>(entity))                        \
+  {                                                            \
+    write##Type(entityJson, scene.getComponent<Type>(entity)); \
   }
 
-#define NEBULA_SAVE_MESH_RENDERER(Type)                                          \
-  if (scene.hasComponent<Type>(entity))                                          \
-  {                                                                              \
-    write##Type(entityJson, scene.getComponent<Type>(entity), assetManager);     \
+#define NEBULA_SAVE_MESH_RENDERER(Type)                                      \
+  if (scene.hasComponent<Type>(entity))                                      \
+  {                                                                          \
+    write##Type(entityJson, scene.getComponent<Type>(entity), assetManager); \
   }
 
   } // namespace
@@ -460,7 +460,77 @@ namespace Nebula
     return true;
   }
 
-#undef NEBULA_SAVE_COMPONENT
-#undef NEBULA_SAVE_MESH_RENDERER
+  void SceneSerializer::saveToString(std::string &output, const Scene &scene, const AssetManager &assetManager)
+  {
+    nlohmann::json root;
+    root["version"] = kCurrentVersion;
+    root["entities"] = nlohmann::json::array();
+
+    for (const Entity &entity : scene.getAllEntities())
+    {
+      nlohmann::json entityJson;
+      entityJson["id"] = entity.id;
+
+      NEBULA_SAVE_COMPONENT(TransformComponent)
+      NEBULA_SAVE_MESH_RENDERER(MeshRendererComponent)
+      NEBULA_SAVE_COMPONENT(CameraComponent)
+      NEBULA_SAVE_COMPONENT(ScriptComponent)
+      NEBULA_SAVE_COMPONENT(TagComponent)
+      NEBULA_SAVE_COMPONENT(RigidBodyComponent)
+      NEBULA_SAVE_COMPONENT(ColliderComponent)
+
+      root["entities"].push_back(entityJson);
+    }
+
+    output = root.dump(2);
+  }
+
+  void SceneSerializer::loadFromString(Scene &scene, const std::string &input, const IAssetProvider &assets)
+  {
+    (void)assets;
+    nlohmann::json root;
+    try
+    {
+      root = nlohmann::json::parse(input);
+    }
+    catch (...)
+    {
+      return;
+    }
+    const int version = root.value("version", 0);
+
+    if (version < 0 || version > kCurrentVersion)
+    {
+      return;
+    }
+
+    scene.clear();
+    EntityID maxID = 0;
+    if (!root.contains("entities") || !root["entities"].is_array())
+    {
+      return;
+    }
+
+    for (const auto &entityJson : root["entities"])
+    {
+      if (!entityJson.contains("id") || !entityJson["id"].is_number_unsigned())
+      {
+        continue;
+      }
+      const EntityID id = entityJson["id"].get<EntityID>();
+      const Entity entity = scene.registry().createEntityWithId(id);
+      maxID = std::max(maxID, id);
+
+      loadTransformComponent(scene, entity, entityJson);
+      loadMeshRendererComponent(scene, entity, entityJson);
+      loadCameraComponent(scene, entity, entityJson);
+      loadScriptComponent(scene, entity, entityJson);
+      loadTagComponent(scene, entity, entityJson);
+      loadRigidBodyComponent(scene, entity, entityJson);
+      loadColliderComponent(scene, entity, entityJson);
+    }
+
+    scene.registry().setNextEntityId(maxID + 1);
+  }
 
 } // namespace Nebula

@@ -109,6 +109,9 @@ namespace Nebula
         bool isPlaying() const { return m_isPlaying; }
         void setPlaying(bool playing) { m_isPlaying = playing; }
 
+        ScriptSystem &getScriptSystem() { return m_scriptSystem; }
+        void rebuildScripts();
+
         virtual bool renderSceneToMainFramebuffer() const { return true; }
 
     private:

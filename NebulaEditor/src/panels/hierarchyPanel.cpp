@@ -1,20 +1,20 @@
 
 #include "hierarchyPanel.h"
 #include <imgui.h>
-#include <imgui_internal.h>
 
 namespace Editor
 {
 
+  void HierarchyPanel::setEntityActions(std::function<void()> createEntity, std::function<void()> deleteEntity)
+  {
+    m_createEntity = std::move(createEntity);
+    m_deleteEntity = std::move(deleteEntity);
+  }
+
   void HierarchyPanel::drawHierarchyPanel(Nebula::Scene &scene, EditorState &state)
   {
-
     ImGui::Begin("Hierarchy");
-    if (ImGui::Button("Create Entity"))
-    {
-      state.selectedEntity = scene.createEntity();
-      state.sceneDirty = true;
-    }
+
     for (Nebula::Entity entity : scene.getAllEntities())
     {
       std::string label = "Entity " + std::to_string(entity.id);
@@ -28,15 +28,30 @@ namespace Editor
         state.selectedEntity = entity;
       }
     }
-    if (ImGui::Button("Delete Entity"))
+
+    if (ImGui::BeginPopupContextWindow("HierarchyContext"))
     {
-      if (state.selectedEntity != Nebula::Entity())
+      if (m_createEntity && ImGui::MenuItem("Create Entity"))
       {
-        scene.destroyEntity(state.selectedEntity);
-        state.selectedEntity = Nebula::Entity();
-        state.sceneDirty = true;
+        m_createEntity();
       }
+      const bool canDelete =
+          state.selectedEntity != Nebula::Entity() && scene.isValidEntity(state.selectedEntity);
+      if (!canDelete)
+      {
+        ImGui::BeginDisabled();
+      }
+      if (m_deleteEntity && ImGui::MenuItem("Delete Entity"))
+      {
+        m_deleteEntity();
+      }
+      if (!canDelete)
+      {
+        ImGui::EndDisabled();
+      }
+      ImGui::EndPopup();
     }
+
     ImGui::End();
   }
 }

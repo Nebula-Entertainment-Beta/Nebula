@@ -95,11 +95,16 @@ namespace Nebula
   {
   }
 
-  void Application::onStartup()
+  void Application::rebuildScripts()
   {
     ScriptContext ctx = makeScriptContext();
     m_scriptSystem.rebuildFromScene(m_scene, m_scriptRegistry, ctx);
     m_scriptSystem.initializeAll(ctx);
+  }
+
+  void Application::onStartup()
+  {
+    rebuildScripts();
   }
 
   void Application::onUpdate(float dt)
