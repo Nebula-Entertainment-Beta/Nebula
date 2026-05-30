@@ -17,25 +17,27 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PUBLIC glfw glad)
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-add_executable(NebulaEditor
-  src/main.cpp
+# Reusable editor library: Nebula only (any game links this + supplies main/callbacks).
+add_library(NebulaEditorLib STATIC
   src/editorApplication.cpp
   src/imGuiLayer.cpp
   src/editorLog.cpp
-  src/panels/sceneViewPanel.cpp 
+  src/panels/sceneViewPanel.cpp
   src/panels/hierarchyPanel.cpp
   src/panels/inspectorPanel.cpp
-  src/panels/consolePanel.cpp 
-  src/render/sceneViewFrameBuffer.cpp 
-  
-
+  src/panels/consolePanel.cpp
+  src/render/sceneViewFrameBuffer.cpp
 )
 
-target_include_directories(NebulaEditor PRIVATE
+target_include_directories(NebulaEditorLib PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${CMAKE_CURRENT_SOURCE_DIR}/src/panels
-  ${CMAKE_SOURCE_DIR}/Nimbus/src
 )
 
-target_link_libraries(NebulaEditor PRIVATE Nebula NimbusScripts imgui)
+target_link_libraries(NebulaEditorLib PUBLIC Nebula imgui)
+target_compile_definitions(NebulaEditorLib PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
+
+# Generic editor binary (no game project). For gameplay content use a game-specific target.
+add_executable(NebulaEditor src/main.cpp)
+target_link_libraries(NebulaEditor PRIVATE NebulaEditorLib)
 target_compile_definitions(NebulaEditor PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD)

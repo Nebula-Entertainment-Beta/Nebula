@@ -1,5 +1,3 @@
-
-#include "register_Script.h"
 #include "editorApplication.h"
 
 int main()
@@ -7,8 +5,9 @@ int main()
   Nebula::ApplicationSpec spec;
   spec.title = "Nebula Editor";
 
-  Editor::EditorApplication app(spec, [](auto &registry, auto &fields)
-                                { Nimbus::registerAllGameplayScripts(registry, fields); });
+  // Game-agnostic entry: no scripts or default scene. Each game ships its own
+  // editor host executable that links NebulaEditorLib and supplies callbacks.
+  Editor::EditorApplication app(spec);
 
   if (!app.getWindow().isValid())
     return 1;

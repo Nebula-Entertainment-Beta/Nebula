@@ -11,6 +11,8 @@
 #include "inspectorPanel.h"
 #include "consolePanel.h"
 #include "editorLog.h"
+#include "editorPlayMode.h"
+#include "sceneSerializer.h"
 #include "render/sceneViewFrameBuffer.h"
 
 namespace Editor
@@ -19,13 +21,21 @@ namespace Editor
       Nebula::ScriptRegistry &,
       Nebula::ScriptFieldRegistry &)>;
 
+  /** Game-specific default scene content; supplied by the host executable at startup. */
+  using NewSceneBuilder = std::function<void(Nebula::Scene &)>;
+
   class EditorApplication : public Nebula::Application
   {
   public:
     explicit EditorApplication(const Nebula::ApplicationSpec &spec);
-    EditorApplication(const Nebula::ApplicationSpec &spec, ScriptRegistrar registerScripts);
+    EditorApplication(const Nebula::ApplicationSpec &spec, ScriptRegistrar registerScripts,
+                      NewSceneBuilder buildNewScene = nullptr);
     ~EditorApplication() override;
     bool renderSceneToMainFramebuffer() const override { return false; }
+    bool loadScene(const std::string_view path);
+    bool saveScene();
+    void newScene();
+    void registerGameSystems() override;
 
   protected:
     void onStartup() override;
@@ -34,6 +44,7 @@ namespace Editor
   private:
     EditorState m_state;
     ScriptRegistrar m_registerScripts;
+    NewSceneBuilder m_buildNewScene;
     bool m_dockLayoutBuilt = false;
     SceneViewPanel m_sceneViewPanel;
     SceneViewFrameBuffer m_sceneViewFrameBuffer;
@@ -41,14 +52,17 @@ namespace Editor
     InspectorPanel m_inspector;
     ConsolePanel m_console;
     EditorLog m_editorLog;
+    EditorPlayMode m_playmode;
+    Nebula::SceneSerializer m_sceneSerializer;
 
     void drawDockspace();
     void drawEditorPanels();
     void drawPlayStopToolbar();
-    void newScene();
-    void saveScene();
+    void enterPlayMode();
+    void exitPlayMode();
     void openSceneDialog();
     void createEmptyEntity();
+    void deleteSelectedEntity();
     void setupDefaultDockLayout(ImGuiID dockspaceId);
   };
 }

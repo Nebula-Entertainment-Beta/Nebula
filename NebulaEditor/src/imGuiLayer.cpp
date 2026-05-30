@@ -34,6 +34,7 @@ namespace NebulaEditor
     ImGui::StyleColorsDark();
 
     GLFWwindow *glfwWindow = nativeGlfwWindow(window);
+    // true: chain GLFW callbacks so ImGui receives clicks; engine Input keeps the chained handlers.
     ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
     ImGui_ImplOpenGL3_Init("#version 410"); // matches your GL 4.1 context; 330 also works
 

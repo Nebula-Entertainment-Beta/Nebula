@@ -1,7 +1,10 @@
 #include "editorApplication.h"
 
 #include "imGuiLayer.h"
+#include "eventBus.h"
+#include "eventTypes.h"
 #include "sceneSerializer.h"
+#include "systemScheduler.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -11,13 +14,19 @@ namespace Editor
   EditorApplication::EditorApplication(const Nebula::ApplicationSpec &spec)
       : Nebula::Application(spec)
   {
+    m_hierarchy.setEntityActions([this]() { createEmptyEntity(); },
+                                 [this]() { deleteSelectedEntity(); });
   }
 
   EditorApplication::EditorApplication(const Nebula::ApplicationSpec &spec,
-                                       ScriptRegistrar registerScripts)
+                                       ScriptRegistrar registerScripts,
+                                       NewSceneBuilder buildNewScene)
       : Nebula::Application(spec),
-        m_registerScripts(std::move(registerScripts))
+        m_registerScripts(std::move(registerScripts)),
+        m_buildNewScene(std::move(buildNewScene))
   {
+    m_hierarchy.setEntityActions([this]() { createEmptyEntity(); },
+                                 [this]() { deleteSelectedEntity(); });
   }
 
   EditorApplication::~EditorApplication()
@@ -62,7 +71,8 @@ namespace Editor
     m_hierarchy.drawHierarchyPanel(getScene(), m_state);
     m_console.drawConsolePanel(m_editorLog);
     m_inspector.drawInspectorPanel(m_state, getScene(), m_state.selectedEntity, getScriptFieldRegistry());
-    m_sceneViewPanel.drawSceneViewPanel(m_state, m_sceneViewFrameBuffer, getScene(), getAssetManager(), getRenderer(), getWindow());
+    m_sceneViewPanel.drawSceneViewPanel(m_state, m_sceneViewFrameBuffer, getScene(), getAssetManager(),
+                                        getRenderer(), getWindow());
   }
 
   void EditorApplication::setupDefaultDockLayout(ImGuiID dockspaceId)
@@ -96,16 +106,13 @@ namespace Editor
     {
       if (!isPlaying())
       {
-        if (ImGui::MenuItem("Play"))
-        {
-          setPlaying(true);
-          m_editorLog.info("Play");
-        }
+        if (ImGui::Button("Play"))
+          enterPlayMode();
       }
-      else if (ImGui::MenuItem("Stop"))
+      else
       {
-        setPlaying(false);
-        m_editorLog.info("Stop");
+        if (ImGui::Button("Stop"))
+          exitPlayMode();
       }
       ImGui::EndMenu();
     }
@@ -148,34 +155,23 @@ namespace Editor
     }
   }
 
-  void EditorApplication::newScene()
+  void EditorApplication::enterPlayMode()
   {
-    getScene().clear();
-    m_state.selectedEntity = {};
-    m_state.sceneDirty = false;
-
-    resolveSceneAssets();
-    Nebula::Application::onStartup();
-    m_editorLog.info("New scene created");
+    m_sceneSerializer.saveToString(m_playmode.snapshot(), getScene(), getAssetManager());
+    setPlaying(true);
+    rebuildScripts();
+    m_editorLog.info("Play");
   }
 
-  void EditorApplication::saveScene()
+  void EditorApplication::exitPlayMode()
   {
-    const bool ok = Nebula::SceneSerializer::save(
-        getScene(),
-        getAssetManager(),
-        getAssets(),
-        m_state.scenePath);
-
-    if (ok)
-    {
-      m_state.sceneDirty = false;
-      m_editorLog.info("Scene saved: " + m_state.scenePath);
-    }
-    else
-    {
-      m_editorLog.info("Failed to save scene: " + m_state.scenePath);
-    }
+    setPlaying(false);
+    Nebula::ScriptContext ctx = makeScriptContext();
+    getScriptSystem().shutdownAll(ctx);
+    m_sceneSerializer.loadFromString(getScene(), m_playmode.snapshot(), getAssets());
+    resolveSceneAssets();
+    rebuildScripts();
+    m_editorLog.info("Stop");
   }
 
   void EditorApplication::openSceneDialog()
@@ -197,6 +193,23 @@ namespace Editor
     Nebula::Application::onStartup();
   }
 
+  void EditorApplication::newScene()
+  {
+    getScene().clear();
+    m_state.selectedEntity = {};
+
+    if (m_buildNewScene)
+    {
+      m_buildNewScene(getScene());
+    }
+
+    m_state.sceneDirty = true;
+    resolveSceneAssets();
+    Nebula::Application::onStartup();
+
+    m_editorLog.info("New scene created");
+  }
+
   void EditorApplication::createEmptyEntity()
   {
     Nebula::Scene &scene = getScene();
@@ -205,6 +218,60 @@ namespace Editor
 
     m_state.selectedEntity = entity;
     m_state.sceneDirty = true;
+  }
+
+  void EditorApplication::deleteSelectedEntity()
+  {
+    if (m_state.selectedEntity == Nebula::Entity())
+    {
+      return;
+    }
+    Nebula::Scene &scene = getScene();
+    if (!scene.isValidEntity(m_state.selectedEntity))
+    {
+      m_state.selectedEntity = {};
+      return;
+    }
+    scene.destroyEntity(m_state.selectedEntity);
+    m_state.selectedEntity = {};
+    m_state.sceneDirty = true;
+  }
+
+  bool EditorApplication::saveScene()
+  {
+    if (!Nebula::SceneSerializer::save(getScene(), getAssetManager(), getAssets(), m_state.scenePath))
+      return false;
+    m_state.sceneDirty = false;
+    getEventBus().push(Nebula::SceneSavedEvent{m_state.scenePath});
+    m_editorLog.info("Saved " + m_state.scenePath);
+    return true;
+  }
+
+  bool EditorApplication::loadScene(std::string_view path)
+  {
+    getScene().clear();
+    if (!Nebula::SceneSerializer::load(getScene(), getAssets(), path))
+      return false;
+    getAssetManager().resolveScene(getScene(), getRenderer().resources());
+    m_state.scenePath = std::string(path);
+    m_state.selectedEntity = {};
+    m_state.sceneDirty = false;
+    return true;
+  }
+
+  void EditorApplication::registerGameSystems()
+  {
+    getScheduler().add(Nebula::SystemPhase::PreUpdate, [this](float)
+                       {
+                         for (const Nebula::GameEvent &event : getEventBus().events())
+                         {
+                           if (std::holds_alternative<Nebula::SaveSceneRequestedEvent>(event))
+                           {
+                             saveScene();
+                             break;
+                           }
+                         }
+                       });
   }
 
 } // namespace Editor

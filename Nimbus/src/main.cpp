@@ -12,6 +12,7 @@
 #include "nimbus_config.h"
 
 #include "register_Script.h"
+#include "sceneDefaults.h"
 #include "scriptFields.h"
 
 class NimbusApp final : public Nebula::Application
@@ -29,7 +30,7 @@ public:
         else
         {
             scene.clear();
-            buildDefaultScene();
+            Nimbus::buildDefaultScene(scene);
             if (saveScene())
             {
                 std::cout << "[Scene] Created default scene at " << m_scenePath << '\n';
@@ -55,48 +56,6 @@ protected:
     }
 
 private:
-    void buildDefaultScene()
-    {
-        Nebula::Scene &scene = getScene();
-
-        m_groundEntity = scene.createEntity();
-        scene.addComponent<Nebula::TagComponent>(m_groundEntity).tag = Nimbus::kGroundTag;
-        auto &groundTransform = scene.addComponent<Nebula::TransformComponent>(m_groundEntity);
-        groundTransform.transform.setPosition(Nebula::Vec3{0.0f, 0.0f, 0.0f});
-        groundTransform.transform.setYaw(0.0f);
-        groundTransform.transform.setScale(1.0f);
-        auto &groundMesh = scene.addComponent<Nebula::MeshRendererComponent>(m_groundEntity);
-        groundMesh.m_meshPath = "builtin/meshes/ground";
-        groundMesh.m_materialPath = "builtin/materials/ground";
-        scene.addComponent<Nebula::ScriptComponent>(m_groundEntity).scriptName = "Ground";
-
-        m_cubeEntity = scene.createEntity();
-        scene.addComponent<Nebula::TagComponent>(m_cubeEntity).tag = Nimbus::kPlayerTag;
-        auto &cubeTransform = scene.addComponent<Nebula::TransformComponent>(m_cubeEntity);
-        cubeTransform.transform.setPosition(Nebula::Vec3{0.0f, 0.5f, 0.0f});
-        cubeTransform.transform.setYaw(0.0f);
-        cubeTransform.transform.setScale(1.0f);
-        auto &cubeMesh = scene.addComponent<Nebula::MeshRendererComponent>(m_cubeEntity);
-        cubeMesh.m_meshPath = "builtin/meshes/cube";
-        cubeMesh.m_materialPath = "builtin/materials/cube";
-        scene.addComponent<Nebula::ScriptComponent>(m_cubeEntity).scriptName = "Player";
-
-        m_cameraEntity = scene.createEntity();
-        scene.addComponent<Nebula::TagComponent>(m_cameraEntity).tag = Nimbus::kMainCameraTag;
-        scene.addComponent<Nebula::TransformComponent>(m_cameraEntity);
-        auto &cameraComponent = scene.addComponent<Nebula::CameraComponent>(m_cameraEntity);
-        cameraComponent.pivotOffset = Nebula::Vec3{0.0f, 0.35f, 0.0f};
-        cameraComponent.distance = 6.0f;
-        cameraComponent.yaw = 0.7f;
-        cameraComponent.pitch = -0.3f;
-        cameraComponent.fov = 55.0f;
-        cameraComponent.nearClip = 0.1f;
-        cameraComponent.farClip = 100.0f;
-        cameraComponent.targetTag = Nimbus::kPlayerTag;
-        cameraComponent.targetEntity = m_cubeEntity;
-        scene.addComponent<Nebula::ScriptComponent>(m_cameraEntity).scriptName = "MainCamera";
-    }
-
     bool resolveRuntimeEntities()
     {
         Nebula::Scene &scene = getScene();
