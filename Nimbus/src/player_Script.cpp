@@ -14,7 +14,7 @@ namespace Nimbus
       return;
     }
     const Nebula::ScriptComponent &sc = ctx.scene.getScriptComponent(self);
-    m_moveSpeed = Nebula::readScriptParamFloat(sc.paramsJson, "moveSpeed", 3.f);
+    m_moveSpeed = m_params.readScriptParamFloat(sc.paramsJson, "moveSpeed", 3.f);
   }
 
   Nebula::Entity PlayerScript::GetCamera(Nebula::ScriptContext &ctx, Nebula::Entity self)

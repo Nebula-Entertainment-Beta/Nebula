@@ -1,5 +1,6 @@
 #pragma once
 #include <script.h>
+#include <scriptParams.h>
 
 namespace Nimbus
 {
@@ -22,6 +23,7 @@ namespace Nimbus
     float m_pitchMax = 0.65f;
     float m_minDistance = 1.5f;
     float m_maxDistance = 24.f;
+    Nebula::ScriptParams m_params;
   };
 
 }

@@ -7,6 +7,10 @@
 #include "application.h"
 #include "editorState.h"
 #include "sceneViewPanel.h"
+#include "hierarchyPanel.h"
+#include "inspectorPanel.h"
+#include "consolePanel.h"
+#include "editorLog.h"
 #include "render/sceneViewFrameBuffer.h"
 
 namespace Editor
@@ -33,6 +37,10 @@ namespace Editor
     bool m_dockLayoutBuilt = false;
     SceneViewPanel m_sceneViewPanel;
     SceneViewFrameBuffer m_sceneViewFrameBuffer;
+    HierarchyPanel m_hierarchy;
+    InspectorPanel m_inspector;
+    ConsolePanel m_console;
+    EditorLog m_editorLog;
 
     void drawDockspace();
     void drawEditorPanels();

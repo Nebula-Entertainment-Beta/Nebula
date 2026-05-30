@@ -21,8 +21,13 @@ add_executable(NebulaEditor
   src/main.cpp
   src/editorApplication.cpp
   src/imGuiLayer.cpp
+  src/editorLog.cpp
   src/panels/sceneViewPanel.cpp 
+  src/panels/hierarchyPanel.cpp
+  src/panels/inspectorPanel.cpp
+  src/panels/consolePanel.cpp 
   src/render/sceneViewFrameBuffer.cpp 
+  
 
 )
 
