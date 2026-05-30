@@ -1,5 +1,6 @@
 #pragma once
 #include <script.h>
+#include <scriptParams.h>
 
 namespace Nimbus
 {
@@ -18,6 +19,7 @@ namespace Nimbus
 
   private:
     float m_moveSpeed = 3.f;
+    Nebula::ScriptParams m_params;
   };
 
 }

@@ -1,7 +1,6 @@
 #include "sceneViewPanel.h"
 #include "imGuiLayer.h"
 #include "sceneSerializer.h"
-#include "render/sceneViewFrameBuffer.h"
 #include "renderSystem.h"
 
 #include <imgui.h>

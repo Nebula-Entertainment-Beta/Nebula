@@ -1,6 +1,7 @@
-#include "scriptParams.h"
+
 
 #include <nlohmann/json.hpp>
+#include "scriptParams.h"
 
 namespace Nebula
 {
@@ -27,9 +28,9 @@ namespace Nebula
     }
   } // namespace
 
-  float readScriptParamFloat(std::string_view paramsJson,
-                             std::string_view fieldName,
-                             float defaultValue)
+  float ScriptParams::readScriptParamFloat(std::string_view paramsJson,
+                                           std::string_view fieldName,
+                                           float defaultValue)
   {
     const nlohmann::json params = parseParamsObject(paramsJson);
     const std::string key(fieldName);
@@ -40,9 +41,9 @@ namespace Nebula
     return defaultValue;
   }
 
-  int readScriptParamInt(std::string_view paramsJson,
-                         std::string_view fieldName,
-                         int defaultValue)
+  int ScriptParams::readScriptParamInt(std::string_view paramsJson,
+                                       std::string_view fieldName,
+                                       int defaultValue)
   {
     const nlohmann::json params = parseParamsObject(paramsJson);
     const std::string key(fieldName);
@@ -57,9 +58,9 @@ namespace Nebula
     return defaultValue;
   }
 
-  bool readScriptParamBool(std::string_view paramsJson,
-                           std::string_view fieldName,
-                           bool defaultValue)
+  bool ScriptParams::readScriptParamBool(std::string_view paramsJson,
+                                         std::string_view fieldName,
+                                         bool defaultValue)
   {
     const nlohmann::json params = parseParamsObject(paramsJson);
     const std::string key(fieldName);
@@ -70,24 +71,24 @@ namespace Nebula
     return defaultValue;
   }
 
-  float readScriptParamFloat(std::string_view paramsJson, const ScriptFieldDescriptor &field)
+  float ScriptParams::readScriptParamFloat(std::string_view paramsJson, const ScriptFieldDescriptor &field)
   {
     return readScriptParamFloat(paramsJson, field.name, field.defaultFloat);
   }
 
-  int readScriptParamInt(std::string_view paramsJson, const ScriptFieldDescriptor &field)
+  int ScriptParams::readScriptParamInt(std::string_view paramsJson, const ScriptFieldDescriptor &field)
   {
     return readScriptParamInt(paramsJson, field.name, field.defaultInt);
   }
 
-  bool readScriptParamBool(std::string_view paramsJson, const ScriptFieldDescriptor &field)
+  bool ScriptParams::readScriptParamBool(std::string_view paramsJson, const ScriptFieldDescriptor &field)
   {
     return readScriptParamBool(paramsJson, field.name, field.defaultBool);
   }
 
-  std::string mergeScriptParamDefaults(std::string_view paramsJson,
-                                       const ScriptFieldRegistry &registry,
-                                       std::string_view scriptName)
+  std::string ScriptParams::mergeScriptParamDefaults(std::string_view paramsJson,
+                                                     const ScriptFieldRegistry &registry,
+                                                     std::string_view scriptName)
   {
     nlohmann::json merged = parseParamsObject(paramsJson);
     const std::vector<ScriptFieldDescriptor> *fields = registry.getFields(scriptName);
@@ -116,6 +117,27 @@ namespace Nebula
       }
     }
     return merged.dump();
+  }
+
+  std::string ScriptParams::setScriptParamFloat(std::string_view paramsJson, std::string_view fieldName, float value)
+  {
+    nlohmann::json params = parseParamsObject(paramsJson);
+    params[std::string(fieldName)] = value;
+    return params.dump();
+  }
+
+  std::string ScriptParams::setScriptParamInt(std::string_view paramsJson, std::string_view fieldName, int value)
+  {
+    nlohmann::json params = parseParamsObject(paramsJson);
+    params[std::string(fieldName)] = value;
+    return params.dump();
+  }
+
+  std::string ScriptParams::setScriptParamBool(std::string_view paramsJson, std::string_view fieldName, bool value)
+  {
+    nlohmann::json params = parseParamsObject(paramsJson);
+    params[std::string(fieldName)] = value;
+    return params.dump();
   }
 
 } // namespace Nebula

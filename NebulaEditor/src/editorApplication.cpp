@@ -29,17 +29,22 @@ namespace Editor
   {
     if (m_registerScripts)
     {
+      m_editorLog.info("Registering scripts...");
       m_registerScripts(getScriptRegistry(), getScriptFieldRegistry());
     }
 
     Nebula::Scene &scene = getScene();
     if (!Nebula::SceneSerializer::load(scene, getAssets(), m_state.scenePath))
     {
+      m_editorLog.info("Failed to load scene: " + m_state.scenePath);
       scene.clear();
     }
+    m_editorLog.info("Scene loaded: " + m_state.scenePath);
+
     resolveSceneAssets();
     Nebula::Application::onStartup();
     NebulaEditor::ImGuiLayer::init(getWindow());
+    m_editorLog.info("Editor started");
   }
 
   void EditorApplication::onRender()
@@ -53,37 +58,10 @@ namespace Editor
 
   void EditorApplication::drawEditorPanels()
   {
-    ImGui::Begin("Hierarchy");
-    const auto &entities = getScene().getAllEntities();
-    ImGui::Text("Entities: %d", (int)entities.size());
-    ImGui::Separator();
-    for (const Nebula::Entity e : entities)
-    {
-      const bool selected = (m_state.selectedEntity == e);
-      char label[64];
-      std::snprintf(label, sizeof(label), "Entity %u", e.id);
-      if (ImGui::Selectable(label, selected))
-      {
-        m_state.selectedEntity = e;
-      }
-    }
-    ImGui::End();
 
-    ImGui::Begin("Console");
-    ImGui::TextUnformatted("Log output (Task 4+)");
-    ImGui::End();
-
-    ImGui::Begin("Inspector");
-    if (m_state.selectedEntity.id != 0)
-    {
-      ImGui::Text("Selected entity id: %u", m_state.selectedEntity.id);
-    }
-    else
-    {
-      ImGui::TextUnformatted("No entity selected");
-    }
-    ImGui::End();
-
+    m_hierarchy.drawHierarchyPanel(getScene(), m_state);
+    m_console.drawConsolePanel(m_editorLog);
+    m_inspector.drawInspectorPanel(m_state, getScene(), m_state.selectedEntity, getScriptFieldRegistry());
     m_sceneViewPanel.drawSceneViewPanel(m_state, m_sceneViewFrameBuffer, getScene(), getAssetManager(), getRenderer(), getWindow());
   }
 
@@ -121,11 +99,13 @@ namespace Editor
         if (ImGui::MenuItem("Play"))
         {
           setPlaying(true);
+          m_editorLog.info("Play");
         }
       }
       else if (ImGui::MenuItem("Stop"))
       {
         setPlaying(false);
+        m_editorLog.info("Stop");
       }
       ImGui::EndMenu();
     }
@@ -176,6 +156,7 @@ namespace Editor
 
     resolveSceneAssets();
     Nebula::Application::onStartup();
+    m_editorLog.info("New scene created");
   }
 
   void EditorApplication::saveScene()
@@ -189,6 +170,11 @@ namespace Editor
     if (ok)
     {
       m_state.sceneDirty = false;
+      m_editorLog.info("Scene saved: " + m_state.scenePath);
+    }
+    else
+    {
+      m_editorLog.info("Failed to save scene: " + m_state.scenePath);
     }
   }
 
@@ -199,11 +185,13 @@ namespace Editor
 
     if (!loaded)
     {
+      m_editorLog.info("Failed to load scene: " + m_state.scenePath);
       return;
     }
 
     m_state.selectedEntity = {};
     m_state.sceneDirty = false;
+    m_editorLog.info("Scene loaded: " + m_state.scenePath);
 
     resolveSceneAssets();
     Nebula::Application::onStartup();
