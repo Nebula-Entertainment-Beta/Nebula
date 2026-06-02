@@ -27,8 +27,7 @@ namespace Nimbus
         {.name = "zoomSpeed", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.6f},
         {.name = "pitchMin", .type = Nebula::ScriptFieldType::Float, .defaultFloat = -1.2f},
         {.name = "pitchMax", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.65f},
-        {.name = "minDistance", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 1.5f},
-        {.name = "maxDistance", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 24.f},
+
     };
     fieldRegistry.registerFields("MainCamera", cameraFields, std::size(cameraFields));
     registry.registerScript("MainCamera", []

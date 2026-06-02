@@ -22,6 +22,7 @@ add_library(NebulaEditorLib STATIC
   src/editorApplication.cpp
   src/imGuiLayer.cpp
   src/editorLog.cpp
+  src/editorTemplate.cpp
   src/panels/sceneViewPanel.cpp
   src/panels/hierarchyPanel.cpp
   src/panels/inspectorPanel.cpp

@@ -55,7 +55,7 @@ namespace Nimbus
 
     const float yaw = cameraComponent.yaw;
 
-    const Nebula::Vec3 forward{std::sin(yaw), 0.0f, std::cos(yaw)};
+    const Nebula::Vec3 forward{-std::sin(yaw), 0.0f, -std::cos(yaw)};
     const Nebula::Vec3 right{std::cos(yaw), 0.0f, -std::sin(yaw)};
 
     Nebula::Vec3 velocity{

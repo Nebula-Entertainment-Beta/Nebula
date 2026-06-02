@@ -21,6 +21,7 @@ namespace Nebula
     void registerScript(std::string_view id, scriptFactoryFunc factory);
     ScriptPtr createScript(std::string_view id) const;
     bool isRegistered(std::string_view id) const;
+    std::vector<std::string> registeredScriptIds() const;
 
   private:
     std::unordered_map<std::string, scriptFactoryFunc> m_factories;

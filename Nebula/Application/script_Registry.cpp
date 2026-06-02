@@ -40,4 +40,14 @@ namespace Nebula
     return m_factories.find(std::string(id)) != m_factories.end();
   }
 
+  std::vector<std::string> ScriptRegistry::registeredScriptIds() const
+  {
+    std::vector<std::string> ids;
+    for (const auto &pair : m_factories)
+    {
+      ids.push_back(pair.first);
+    }
+    return ids;
+  }
+
 }
