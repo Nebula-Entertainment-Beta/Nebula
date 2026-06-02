@@ -14,8 +14,9 @@ namespace Editor
   EditorApplication::EditorApplication(const Nebula::ApplicationSpec &spec)
       : Nebula::Application(spec)
   {
-    m_hierarchy.setEntityActions([this]() { createEmptyEntity(); },
-                                 [this]() { deleteSelectedEntity(); });
+    m_hierarchy.setEntityActions(
+        [this](const char *id) { createEntityFromTemplate(id); },
+        [this]() { deleteSelectedEntity(); });
   }
 
   EditorApplication::EditorApplication(const Nebula::ApplicationSpec &spec,
@@ -25,8 +26,9 @@ namespace Editor
         m_registerScripts(std::move(registerScripts)),
         m_buildNewScene(std::move(buildNewScene))
   {
-    m_hierarchy.setEntityActions([this]() { createEmptyEntity(); },
-                                 [this]() { deleteSelectedEntity(); });
+    m_hierarchy.setEntityActions(
+        [this](const char *id) { createEntityFromTemplate(id); },
+        [this]() { deleteSelectedEntity(); });
   }
 
   EditorApplication::~EditorApplication()
@@ -70,7 +72,11 @@ namespace Editor
 
     m_hierarchy.drawHierarchyPanel(getScene(), m_state);
     m_console.drawConsolePanel(m_editorLog);
-    m_inspector.drawInspectorPanel(m_state, getScene(), m_state.selectedEntity, getScriptFieldRegistry());
+    m_inspector.drawInspectorPanel(m_state, getScene(), m_state.selectedEntity,
+                                   getScriptFieldRegistry(), getScriptRegistry(), [this]()
+                                   {
+      resolveSceneAssets();
+      m_state.sceneDirty = true; });
     m_sceneViewPanel.drawSceneViewPanel(m_state, m_sceneViewFrameBuffer, getScene(), getAssetManager(),
                                         getRenderer(), getWindow());
   }
@@ -144,9 +150,17 @@ namespace Editor
       }
       if (ImGui::BeginMenu("Edit"))
       {
-        if (ImGui::MenuItem("Create Entity"))
+        if (ImGui::MenuItem("Create Empty"))
         {
-          createEmptyEntity();
+          createEntityFromTemplate("empty");
+        }
+        if (ImGui::MenuItem("Create Mesh Cube"))
+        {
+          createEntityFromTemplate("cube");
+        }
+        if (ImGui::MenuItem("Create Enemy Placeholder"))
+        {
+          createEntityFromTemplate("enemy");
         }
         ImGui::EndMenu();
       }
@@ -212,12 +226,7 @@ namespace Editor
 
   void EditorApplication::createEmptyEntity()
   {
-    Nebula::Scene &scene = getScene();
-    const Nebula::Entity entity = scene.createEntity();
-    scene.addComponent<Nebula::TransformComponent>(entity);
-
-    m_state.selectedEntity = entity;
-    m_state.sceneDirty = true;
+    createEntityFromTemplate("empty");
   }
 
   void EditorApplication::deleteSelectedEntity()
@@ -270,8 +279,22 @@ namespace Editor
                              saveScene();
                              break;
                            }
-                         }
-                       });
+                         } });
+  }
+
+  void EditorApplication::createEntityFromTemplate(const char *id)
+  {
+    Nebula::Scene &scene = getScene();
+    Nebula::Entity e{};
+    if (strcmp(id, "cube") == 0)
+      e = m_template.createMeshCube(scene);
+    else if (strcmp(id, "enemy") == 0)
+      e = m_template.createEnemyPlaceholder(scene);
+    else
+      e = m_template.createEmpty(scene); // must add Transform inside
+    m_state.selectedEntity = e;
+    m_state.sceneDirty = true;
+    resolveSceneAssets();
   }
 
 } // namespace Editor

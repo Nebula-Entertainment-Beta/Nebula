@@ -8,11 +8,11 @@ namespace Editor
   class HierarchyPanel
   {
   public:
-    void setEntityActions(std::function<void()> createEntity, std::function<void()> deleteEntity);
+    void setEntityActions(std::function<void(const char *templateId)> factory, std::function<void()> deleteEntity);
     void drawHierarchyPanel(Nebula::Scene &scene, EditorState &state);
 
   private:
-    std::function<void()> m_createEntity;
+    std::function<void(const char *templateId)> m_entityFactory;
     std::function<void()> m_deleteEntity;
   };
 }

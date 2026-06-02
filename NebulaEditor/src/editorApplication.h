@@ -13,6 +13,7 @@
 #include "editorLog.h"
 #include "editorPlayMode.h"
 #include "sceneSerializer.h"
+#include "editorTemplate.h"
 #include "render/sceneViewFrameBuffer.h"
 
 namespace Editor
@@ -36,6 +37,7 @@ namespace Editor
     bool saveScene();
     void newScene();
     void registerGameSystems() override;
+    void createEntityFromTemplate(const char *templateId);
 
   protected:
     void onStartup() override;
@@ -53,6 +55,7 @@ namespace Editor
     ConsolePanel m_console;
     EditorLog m_editorLog;
     EditorPlayMode m_playmode;
+    EditorTemplate m_template;
     Nebula::SceneSerializer m_sceneSerializer;
 
     void drawDockspace();

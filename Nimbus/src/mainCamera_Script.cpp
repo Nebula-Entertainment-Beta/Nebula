@@ -17,8 +17,8 @@ namespace Nimbus
     m_zoomSpeed = m_params.readScriptParamFloat(sc.paramsJson, "zoomSpeed", 0.6f);
     m_pitchMin = m_params.readScriptParamFloat(sc.paramsJson, "pitchMin", -1.2f);
     m_pitchMax = m_params.readScriptParamFloat(sc.paramsJson, "pitchMax", 0.65f);
-    m_minDistance = m_params.readScriptParamFloat(sc.paramsJson, "minDistance", 1.5f);
-    m_maxDistance = m_params.readScriptParamFloat(sc.paramsJson, "maxDistance", 24.f);
+    /*m_minDistance = m_params.readScriptParamFloat(sc.paramsJson, "minDistance", 1.5f);
+    m_maxDistance = m_params.readScriptParamFloat(sc.paramsJson, "maxDistance", 24.f); */
   }
 
   void MainCameraScript::onUpdate(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt)
@@ -42,9 +42,9 @@ namespace Nimbus
     cameraComponent.yaw -= turnX;
     cameraComponent.pitch = std::clamp(cameraComponent.pitch - turnY, m_pitchMin, m_pitchMax);
 
-    float dist = cameraComponent.distance;
+    /*float dist = cameraComponent.distance;
     dist -= f.zoomY * m_zoomSpeed;
-    cameraComponent.distance = std::clamp(dist, m_minDistance, m_maxDistance);
+    cameraComponent.distance = std::clamp(dist, m_minDistance, m_maxDistance);*/
   }
 
 }

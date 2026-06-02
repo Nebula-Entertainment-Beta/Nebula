@@ -5,9 +5,9 @@
 namespace Editor
 {
 
-  void HierarchyPanel::setEntityActions(std::function<void()> createEntity, std::function<void()> deleteEntity)
+  void HierarchyPanel::setEntityActions(std::function<void(const char *templateId)> factory, std::function<void()> deleteEntity)
   {
-    m_createEntity = std::move(createEntity);
+    m_entityFactory = std::move(factory);
     m_deleteEntity = std::move(deleteEntity);
   }
 
@@ -31,9 +31,20 @@ namespace Editor
 
     if (ImGui::BeginPopupContextWindow("HierarchyContext"))
     {
-      if (m_createEntity && ImGui::MenuItem("Create Entity"))
+      if (m_entityFactory)
       {
-        m_createEntity();
+        if (ImGui::MenuItem("Create Empty"))
+        {
+          m_entityFactory("empty");
+        }
+        if (ImGui::MenuItem("Create Mesh Cube"))
+        {
+          m_entityFactory("cube");
+        }
+        if (ImGui::MenuItem("Create Enemy Placeholder"))
+        {
+          m_entityFactory("enemy");
+        }
       }
       const bool canDelete =
           state.selectedEntity != Nebula::Entity() && scene.isValidEntity(state.selectedEntity);
@@ -54,4 +65,5 @@ namespace Editor
 
     ImGui::End();
   }
+
 }
