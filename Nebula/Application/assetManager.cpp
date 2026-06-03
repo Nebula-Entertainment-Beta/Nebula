@@ -42,6 +42,7 @@ namespace Nebula
   {
     MeshAsset cube{};
     MeshAsset ground{};
+
     if (buildBuiltinCubeMeshAsset(cube))
     {
       m_database.registerMeshAsset(kBuiltinMeshCubePath, std::move(cube));
@@ -65,6 +66,22 @@ namespace Nebula
             "shaders/solid_color.frag",
             Vec3{0.15f, 0.45f, 0.95f},
             {}});
+
+    m_database.registerMaterialAsset(
+        kBuiltinMaterialEnemyPath,
+        MaterialAsset{
+            "shaders/solid_color.vert",
+            "shaders/solid_color.frag",
+            Vec3{0.0f, 1.0f, 0.0f}, // is color
+            {}});
+
+    m_database.registerMaterialAsset(
+        kBuiltinMaterialPlayerPath,
+        MaterialAsset{
+            "shaders/solid_color.vert",
+            "shaders/solid_color.frag",
+            Vec3{1.0f, 0.0f, 0.0f}, // is color
+            {}});
   }
 
   void AssetManager::loadBuiltinGpuAssets(IRenderResourceFactory &resources)
@@ -73,6 +90,8 @@ namespace Nebula
     loadMesh(kBuiltinMeshGroundPath, resources);
     loadMaterial(kBuiltinMaterialGroundPath, resources);
     loadMaterial(kBuiltinMaterialCubePath, resources);
+    loadMaterial(kBuiltinMaterialEnemyPath, resources);
+    loadMaterial(kBuiltinMaterialPlayerPath, resources);
   }
 
   void AssetManager::resolveScene(Scene &scene, IRenderResourceFactory &resources)

@@ -6,4 +6,5 @@ namespace Nebula
 {
   bool buildBuiltinCubeMeshAsset(MeshAsset &out);
   bool buildBuiltinGroundMeshAsset(MeshAsset &out);
+
 }
