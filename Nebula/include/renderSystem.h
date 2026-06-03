@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include "math_types.h"
 
 namespace Nebula

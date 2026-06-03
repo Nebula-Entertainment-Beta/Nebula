@@ -49,4 +49,5 @@ namespace Nebula
     const std::vector<uint32_t> indices = {0, 1, 2, 0, 2, 3};
     return buildIndexedMeshAsset(verts, indices, out);
   }
+
 }

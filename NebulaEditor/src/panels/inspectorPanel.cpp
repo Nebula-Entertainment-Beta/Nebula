@@ -16,18 +16,37 @@ namespace Editor
         meshRenderer.m_meshPath = "builtin/meshes/cube";
         meshRenderer.m_materialPath = "builtin/materials/cube";
       }
+
       else if (presetIndex == 1)
       {
         meshRenderer.m_meshPath = "builtin/meshes/ground";
         meshRenderer.m_materialPath = "builtin/materials/ground";
       }
+      else if (presetIndex == 2)
+      {
+        meshRenderer.m_meshPath = "builtin/meshes/cube";
+        meshRenderer.m_materialPath = "builtin/materials/enemy";
+      }
+      else if (presetIndex == 3)
+      {
+        meshRenderer.m_meshPath = "builtin/meshes/cube";
+        meshRenderer.m_materialPath = "builtin/materials/player";
+      }
     }
 
     int meshPresetIndexFromPaths(const Nebula::MeshRendererComponent &meshRenderer)
     {
-      if (meshRenderer.m_meshPath == "builtin/meshes/ground")
+      if (meshRenderer.m_materialPath == "builtin/materials/ground")
       {
         return 1;
+      }
+      else if (meshRenderer.m_materialPath == "builtin/materials/enemy")
+      {
+        return 2;
+      }
+      else if (meshRenderer.m_materialPath == "builtin/materials/player")
+      {
+        return 3;
       }
       return 0;
     }
@@ -56,8 +75,8 @@ namespace Editor
                                               const std::function<void()> &onSceneEdited)
   {
     int presetIndex = meshPresetIndexFromPaths(meshRenderer);
-    const char *presetLabels[] = {"Cube", "Ground"};
-    if (ImGui::Combo("Preset", &presetIndex, presetLabels, 2))
+    const char *presetLabels[] = {"Cube", "Ground", "Enemy", "Player"};
+    if (ImGui::Combo("Preset", &presetIndex, presetLabels, 4))
     {
       applyBuiltinMeshPreset(meshRenderer, presetIndex);
       state.sceneDirty = true;

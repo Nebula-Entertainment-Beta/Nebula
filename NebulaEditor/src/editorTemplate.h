@@ -1,4 +1,5 @@
 #pragma once
+#include <cstring>
 #include "Nebula.h"
 
 namespace Editor

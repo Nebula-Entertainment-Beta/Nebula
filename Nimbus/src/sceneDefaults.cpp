@@ -28,7 +28,7 @@ namespace Nimbus
     cubeTransform.transform.setScale(1.0f);
     auto &cubeMesh = scene.addComponent<Nebula::MeshRendererComponent>(cubeEntity);
     cubeMesh.m_meshPath = "builtin/meshes/cube";
-    cubeMesh.m_materialPath = "builtin/materials/cube";
+    cubeMesh.m_materialPath = "builtin/materials/player";
     scene.addComponent<Nebula::ScriptComponent>(cubeEntity).scriptName = "Player";
 
     const Nebula::Entity cameraEntity = scene.createEntity();
