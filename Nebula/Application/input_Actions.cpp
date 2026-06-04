@@ -28,6 +28,8 @@ namespace Nebula
         m_actionBindings[Action::Hit] = {};
         m_actionBindings[Action::Interact] = {};
         m_actionBindings[Action::SaveScene] = {}; // temporary
+        m_actionBindings[Action::LightAttack] = {};
+        m_actionBindings[Action::HeavyAttack] = {};
 
         m_axisBindings[Axis::MoveX] = {};
         m_axisBindings[Axis::MoveY] = {};
@@ -44,6 +46,8 @@ namespace Nebula
         bindAction(Action::MoveRight, Tasto::d);
         bindAction(Action::Interact, Tasto::tab);
         bindAction(Action::SaveScene, Tasto::num5);
+        bindMouseAction(Action::LightAttack, TastoDelMouse::left);
+        bindMouseAction(Action::HeavyAttack, TastoDelMouse::right);
         bindAxis(Axis::MoveX,
                  AxisBinding{AxisSourceType::KeyPair, Tasto::d, Tasto::a, 1.0f});
         bindAxis(Axis::MoveY,
@@ -234,11 +238,22 @@ namespace Nebula
     bool ActionMapping::wasActionPressed(Action action, const Input &input) const
     {
         auto it = m_actionBindings.find(action);
+        auto mouseIt = m_mouseActionBindings.find(action);
         if (it != m_actionBindings.end())
         {
             for (Tasto key : it->second)
             {
                 if (input.wasKeyPressed(key))
+                {
+                    return true;
+                }
+            }
+        }
+        if (mouseIt != m_mouseActionBindings.end())
+        {
+            for (TastoDelMouse mouseButton : mouseIt->second)
+            {
+                if (input.wasMouseButtonPressed(mouseButton))
                 {
                     return true;
                 }

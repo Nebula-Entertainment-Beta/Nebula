@@ -3,6 +3,7 @@
 #include "scriptParams.h"
 
 #include <cmath>
+#include <iostream>
 
 namespace Nimbus
 {
@@ -51,6 +52,14 @@ namespace Nimbus
       const float len = std::sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
       moveDir.x /= len;
       moveDir.z /= len;
+    }
+    if (f.lightAttackPressed)
+    {
+      std::cout << "Light attack pressed!" << std::endl;
+    }
+    if (f.heavyAttackPressed)
+    {
+      std::cout << "Heavy attack pressed!" << std::endl;
     }
 
     const float yaw = cameraComponent.yaw;
