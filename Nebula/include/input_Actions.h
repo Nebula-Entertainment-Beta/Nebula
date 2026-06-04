@@ -29,6 +29,8 @@ namespace Nebula
         Sprint,
         Hit,
         Interact,
+        LightAttack,
+        HeavyAttack,
         SaveScene
     };
 
@@ -72,6 +74,7 @@ namespace Nebula
         void bindDefaultActions();
         void setupDefaultBindings();
         void bindAction(Action action, Tasto key) { m_actionBindings[action].push_back(key); }
+        void bindMouseAction(Action action, TastoDelMouse mouseButton) { m_mouseActionBindings[action].push_back(mouseButton); }
 
         void bindAxis(Axis axis, const AxisBinding &binding) { m_axisBindings[axis].push_back(binding); }
         void updateMappings(const Input &input);
@@ -106,6 +109,7 @@ namespace Nebula
 
     private:
         std::unordered_map<Action, std::vector<Tasto>> m_actionBindings;
+        std::unordered_map<Action, std::vector<TastoDelMouse>> m_mouseActionBindings;
         std::unordered_map<Axis, std::vector<AxisBinding>> m_axisBindings;
         std::unordered_map<Action, bool> m_actionStates;
         std::unordered_map<Axis, std::array<float, 3>> m_axisValues;

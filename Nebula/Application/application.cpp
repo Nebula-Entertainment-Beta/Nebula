@@ -145,6 +145,16 @@ namespace Nebula
     Input &input = world.input();
     ActionMapping &map = world.actions();
 
+    if (map.wasActionPressed(Action::LightAttack, input))
+    {
+      f.lightAttackPressed = true;
+    }
+
+    if (map.wasActionPressed(Action::HeavyAttack, input))
+    {
+      f.heavyAttackPressed = true;
+    }
+
     if (map.wasActionPressed(Action::Interact, input))
     {
 
