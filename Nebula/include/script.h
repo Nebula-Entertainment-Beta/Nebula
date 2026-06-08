@@ -12,6 +12,7 @@
 #include <memory>
 #include "scene.h"
 #include "inputQuery.h"
+#include "logSink.h"
 #include "sceneAccess.h"
 
 namespace Nebula
@@ -20,7 +21,8 @@ namespace Nebula
   struct ScriptContext
   {
     ISceneAccess &scene;
-    IInputQuery *input = nullptr; // nullptr = transform-only scripts
+    IInputQuery *input = nullptr;   // nullptr = transform-only scripts
+    ILogSink *log = nullptr;        // nullptr = no host console (standalone game)
   };
 
   class IScript

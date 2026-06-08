@@ -7,7 +7,6 @@
 #include "renderSystem.h"
 #include "physics/iphysics_world.h"
 #include "physics/physics_system.h"
-
 #include "math_types.h"
 
 namespace Nebula
@@ -134,7 +133,7 @@ namespace Nebula
 
   ScriptContext Application::makeScriptContext()
   {
-    return ScriptContext{m_sceneAccess, &m_inputQuery};
+    return ScriptContext{m_sceneAccess, &m_inputQuery, m_logSink};
   }
 
   void buildFrameInput(World &world, EventBus &bus)

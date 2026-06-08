@@ -21,4 +21,21 @@ namespace Nebula
     return {};
   }
 
+  std::vector<Entity> findAllByTag(Scene &scene, std::string_view tag)
+  {
+    std::vector<Entity> entities;
+    for (const Entity entity : scene.getAllEntities())
+    {
+      if (!scene.hasComponent<TagComponent>(entity))
+      {
+        continue;
+      }
+      if (scene.getComponent<TagComponent>(entity).tag == tag)
+      {
+        entities.push_back(entity);
+      }
+    }
+    return entities;
+  }
+
 } // namespace Nebula

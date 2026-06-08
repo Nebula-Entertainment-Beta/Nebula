@@ -5,6 +5,7 @@
 #include <imgui.h>
 
 #include "application.h"
+#include "logSink.h"
 #include "editorState.h"
 #include "sceneViewPanel.h"
 #include "hierarchyPanel.h"
@@ -18,12 +19,24 @@
 
 namespace Editor
 {
+  using DebugPanelDrawer = std::function<void(bool isPlaying)>;
   using ScriptRegistrar = std::function<void(
       Nebula::ScriptRegistry &,
       Nebula::ScriptFieldRegistry &)>;
 
   /** Game-specific default scene content; supplied by the host executable at startup. */
   using NewSceneBuilder = std::function<void(Nebula::Scene &)>;
+
+  /** Forwards engine script logs into the editor Console panel. */
+  class EditorLogSink final : public Nebula::ILogSink
+  {
+  public:
+    void setLog(EditorLog *log) { m_log = log; }
+    void info(std::string_view msg) override;
+
+  private:
+    EditorLog *m_log = nullptr;
+  };
 
   class EditorApplication : public Nebula::Application
   {
@@ -54,6 +67,7 @@ namespace Editor
     InspectorPanel m_inspector;
     ConsolePanel m_console;
     EditorLog m_editorLog;
+    EditorLogSink m_scriptLogSink;
     EditorPlayMode m_playmode;
     EditorTemplate m_template;
     Nebula::SceneSerializer m_sceneSerializer;

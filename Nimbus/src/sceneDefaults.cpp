@@ -45,6 +45,11 @@ namespace Nimbus
     cameraComponent.targetTag = kPlayerTag;
     cameraComponent.targetEntity = cubeEntity;
     scene.addComponent<Nebula::ScriptComponent>(cameraEntity).scriptName = "MainCamera";
+
+    const Nebula::Entity directorEntity = scene.createEntity();
+    scene.addComponent<Nebula::TagComponent>(directorEntity).tag = "CombatDirector";
+    scene.addComponent<Nebula::TransformComponent>(directorEntity);
+    scene.addComponent<Nebula::ScriptComponent>(directorEntity).scriptName = "CombatDirector";
   }
 
 }

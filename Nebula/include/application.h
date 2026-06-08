@@ -22,6 +22,7 @@
 #include "systemScheduler.h"
 #include "assetProvider.h"
 #include "input_Actions.h"
+#include "logSink.h"
 #include "script.h"
 #include "inputQuery.h"
 #include "sceneAccess.h"
@@ -84,6 +85,7 @@ namespace Nebula
 
         ScriptRegistry &getScriptRegistry() { return m_scriptRegistry; }
         ScriptContext makeScriptContext();
+        void setLogSink(ILogSink *sink) { m_logSink = sink; }
         SystemScheduler &getScheduler() { return m_scheduler; }
 
         void registerEngineSystems();
@@ -140,6 +142,7 @@ namespace Nebula
         int m_lastFbHeight = 0;
         SceneAccess m_sceneAccess{m_scene};
         FrameInputQuery m_inputQuery{m_frameInput};
+        ILogSink *m_logSink = nullptr;
         World m_world;
         std::unique_ptr<IPhysicsWorld> m_physicsWorld;
     };
