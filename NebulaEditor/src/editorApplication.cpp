@@ -15,8 +15,10 @@ namespace Editor
       : Nebula::Application(spec)
   {
     m_hierarchy.setEntityActions(
-        [this](const char *id) { createEntityFromTemplate(id); },
-        [this]() { deleteSelectedEntity(); });
+        [this](const char *id)
+        { createEntityFromTemplate(id); },
+        [this]()
+        { deleteSelectedEntity(); });
   }
 
   EditorApplication::EditorApplication(const Nebula::ApplicationSpec &spec,
@@ -27,8 +29,10 @@ namespace Editor
         m_buildNewScene(std::move(buildNewScene))
   {
     m_hierarchy.setEntityActions(
-        [this](const char *id) { createEntityFromTemplate(id); },
-        [this]() { deleteSelectedEntity(); });
+        [this](const char *id)
+        { createEntityFromTemplate(id); },
+        [this]()
+        { deleteSelectedEntity(); });
   }
 
   EditorApplication::~EditorApplication()
@@ -36,8 +40,19 @@ namespace Editor
     NebulaEditor::ImGuiLayer::shutdown();
   }
 
+  void EditorLogSink::info(std::string_view msg)
+  {
+    if (m_log != nullptr)
+    {
+      m_log->info(msg);
+    }
+  }
+
   void EditorApplication::onStartup()
   {
+    m_scriptLogSink.setLog(&m_editorLog);
+    setLogSink(&m_scriptLogSink);
+
     if (m_registerScripts)
     {
       m_editorLog.info("Registering scripts...");
@@ -77,6 +92,10 @@ namespace Editor
                                    {
       resolveSceneAssets();
       m_state.sceneDirty = true; });
+
+    // call drawer
+    DebugPanelDrawer isPlaying;
+
     m_sceneViewPanel.drawSceneViewPanel(m_state, m_sceneViewFrameBuffer, getScene(), getAssetManager(),
                                         getRenderer(), getWindow());
   }

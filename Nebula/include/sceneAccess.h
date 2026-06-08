@@ -14,6 +14,7 @@ namespace Nebula
     virtual TransformComponent &getTransform(Entity e) = 0;
     virtual CameraComponent &getCamera(Entity e) = 0;
     virtual Entity findByTag(std::string_view tag) = 0;
+    virtual std::vector<Entity> findAllByTag(std::string_view tag) = 0;
     virtual const ScriptComponent &getScriptComponent(Entity e) const = 0;
   };
 
@@ -40,6 +41,10 @@ namespace Nebula
     Entity findByTag(std::string_view tag) override
     {
       return Nebula::findByTag(m_scene, tag);
+    }
+    std::vector<Entity> findAllByTag(std::string_view tag) override
+    {
+      return Nebula::findAllByTag(m_scene, tag);
     }
 
   private:

@@ -29,4 +29,6 @@ namespace Nebula
     return result;
   }
 
+  std::vector<Entity> findAllByTag(Scene &scene, std::string_view tag);
+
 } // namespace Nebula
