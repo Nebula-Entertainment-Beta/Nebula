@@ -43,9 +43,11 @@ namespace Nimbus
     void grantIFrame();
 
   private:
+    void applyPendingPlayerDamage(Nebula::ScriptContext &ctx);
     void applyAttackLunge(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt, float speedMultiplier);
 
     float m_moveSpeed = 3.f;
+    float m_health = 100.f;
     float stateTimer = 0.f;
     float m_playerIFrameTimer = 0.f;
     bool m_hitThisSwing = false;

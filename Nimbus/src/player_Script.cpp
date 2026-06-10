@@ -36,6 +36,8 @@ namespace Nimbus
         m_playerIFrameTimer = 0.f;
       }
     }
+    Nimbus::Combat::instance().playerIFrameTimer = m_playerIFrameTimer;
+    applyPendingPlayerDamage(ctx);
     movement(ctx, self, dt);
     combatFSM(ctx, self, dt, getAttackState());
   }
@@ -43,6 +45,23 @@ namespace Nimbus
   void PlayerScript::grantIFrame()
   {
     m_playerIFrameTimer = Nimbus::Combat::instance().playerIFrameDuration;
+    Nimbus::Combat::instance().playerIFrameTimer = m_playerIFrameTimer;
+  }
+
+  void PlayerScript::applyPendingPlayerDamage(Nebula::ScriptContext &ctx)
+  {
+    const float damage = Nimbus::Combat::instance().consumePendingPlayerDamage();
+    if (damage <= 0.f || isInvulnerable())
+    {
+      return;
+    }
+    m_health -= damage;
+    grantIFrame();
+    if (ctx.log != nullptr)
+    {
+      ctx.log->info("[Combat] Player took " + std::to_string(damage) +
+                    " damage, health=" + std::to_string(m_health));
+    }
   }
 
   void PlayerScript::movement(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt)
@@ -193,10 +212,10 @@ namespace Nimbus
             {
               for (const Nebula::Entity enemy : hits)
               {
+                Nimbus::Combat::instance().queueEnemyHit(enemy, t.lightDamage, false);
                 ctx.log->info("[Combat] Light attack hit enemy id=" +
                               std::to_string(enemy.id) + " damage=" +
                               std::to_string(t.lightDamage));
-                // Day 4: apply t.lightDamage to enemy
               }
             }
           }
@@ -235,10 +254,10 @@ namespace Nimbus
             {
               for (const Nebula::Entity enemy : hits)
               {
+                Nimbus::Combat::instance().queueEnemyHit(enemy, t.heavyDamage, true);
                 ctx.log->info("[Combat] Heavy attack hit enemy id=" +
                               std::to_string(enemy.id) + " damage=" +
                               std::to_string(t.heavyDamage));
-                // Day 4: apply t.heavyDamage to enemy
               }
             }
           }
