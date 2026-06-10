@@ -5,6 +5,7 @@
 #include "script_Registry.h"
 #include "player_Script.h"
 #include "ground_Script.h"
+#include "enemy_Script.h"
 #include "mainCamera_Script.h"
 #include "combatDirector.h"
 
@@ -59,5 +60,14 @@ namespace Nimbus
     fieldRegistry.registerFields("CombatDirector", combatDirectorFields, std::size(combatDirectorFields));
     registry.registerScript("CombatDirector", []
                             { return std::make_unique<combatDirector>(); });
+
+    static const Nebula::ScriptFieldDescriptor enemyFields[] = {
+        {.name = "health", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 100.f},
+        {.name = "attackDamage", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 20.f},
+
+    };
+    fieldRegistry.registerFields("Enemy", enemyFields, std::size(enemyFields));
+    registry.registerScript("Enemy", []
+                            { return std::make_unique<enemyScript>(); });
   }
 }

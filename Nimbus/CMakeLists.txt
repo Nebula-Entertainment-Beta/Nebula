@@ -6,6 +6,7 @@ add_library(NimbusScripts STATIC
   src/register_Script.cpp
   src/player_Script.cpp
   src/mainCamera_Script.cpp
+  src/enemy_Script.cpp
   src/sceneDefaults.cpp
   src/combat.cpp 
   src/combatDirector.cpp
