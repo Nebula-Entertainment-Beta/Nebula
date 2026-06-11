@@ -8,6 +8,7 @@
 #include "enemy_Script.h"
 #include "mainCamera_Script.h"
 #include "combatDirector.h"
+#include "waveSpawner.h"
 
 namespace Nimbus
 {
@@ -69,5 +70,13 @@ namespace Nimbus
     fieldRegistry.registerFields("Enemy", enemyFields, std::size(enemyFields));
     registry.registerScript("Enemy", []
                             { return std::make_unique<enemyScript>(); });
+
+
+    static const Nebula::ScriptFieldDescriptor waveSpawnerFields[] = {
+        {.name = "waveEnemies", .type = Nebula::ScriptFieldType::EntityVector, .defaultEntityVector = {}},
+    };
+    fieldRegistry.registerFields("WaveSpawner", waveSpawnerFields, std::size(waveSpawnerFields));
+    registry.registerScript("WaveSpawner", []
+                            { return std::make_unique<WaveSpawner>(); });
   }
 }

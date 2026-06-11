@@ -7,6 +7,37 @@ namespace Nebula
 {
   namespace
   {
+    nlohmann::json entityVectorToJson(const std::vector<Nebula::Entity> &entities)
+    {
+      nlohmann::json arr = nlohmann::json::array();
+      for (const Nebula::Entity &entity : entities)
+      {
+        arr.push_back({{"id", entity.id}, {"generation", entity.generation}});
+      }
+      return arr;
+    }
+
+    std::vector<Nebula::Entity> entityVectorFromJson(const nlohmann::json &json)
+    {
+      std::vector<Nebula::Entity> entities;
+      if (!json.is_array())
+      {
+        return entities;
+      }
+      for (const nlohmann::json &item : json)
+      {
+        if (!item.is_object() || !item.contains("id"))
+        {
+          continue;
+        }
+        Nebula::Entity entity{};
+        entity.id = item["id"].get<Nebula::EntityID>();
+        entity.generation = item.value("generation", 0u);
+        entities.push_back(entity);
+      }
+      return entities;
+    }
+
     nlohmann::json parseParamsObject(std::string_view paramsJson)
     {
       if (paramsJson.empty())
@@ -71,6 +102,22 @@ namespace Nebula
     return defaultValue;
   }
 
+  std::vector<Nebula::Entity> ScriptParams::readScriptParamEntityVector(std::string_view paramsJson, std::string_view fieldName, std::vector<Nebula::Entity> defaultValue)
+  {
+    const nlohmann::json params = parseParamsObject(paramsJson);
+    const std::string key(fieldName);
+    if (params.contains(key) && params[key].is_array())
+    {
+      return entityVectorFromJson(params[key]);
+    }
+    return defaultValue;
+  }
+
+  std::vector<Nebula::Entity> ScriptParams::readScriptParamEntityVector(std::string_view paramsJson, const ScriptFieldDescriptor &field)
+  {
+    return readScriptParamEntityVector(paramsJson, field.name, field.defaultEntityVector);
+  }
+
   float ScriptParams::readScriptParamFloat(std::string_view paramsJson, const ScriptFieldDescriptor &field)
   {
     return readScriptParamFloat(paramsJson, field.name, field.defaultFloat);
@@ -114,6 +161,9 @@ namespace Nebula
       case ScriptFieldType::Bool:
         merged[field.name] = field.defaultBool;
         break;
+      case ScriptFieldType::EntityVector:
+        merged[field.name] = entityVectorToJson(field.defaultEntityVector);
+        break;
       }
     }
     return merged.dump();
@@ -137,6 +187,13 @@ namespace Nebula
   {
     nlohmann::json params = parseParamsObject(paramsJson);
     params[std::string(fieldName)] = value;
+    return params.dump();
+  }
+
+  std::string ScriptParams::setScriptParamEntityVector(std::string_view paramsJson, std::string_view fieldName, const std::vector<Nebula::Entity> &value)
+  {
+    nlohmann::json params = parseParamsObject(paramsJson);
+    params[std::string(fieldName)] = entityVectorToJson(value);
     return params.dump();
   }
 

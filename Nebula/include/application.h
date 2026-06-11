@@ -113,15 +113,19 @@ namespace Nebula
 
         ScriptSystem &getScriptSystem() { return m_scriptSystem; }
         void rebuildScripts();
+        void bindNewScripts();
+        void queueScriptRebuild();
 
         virtual bool renderSceneToMainFramebuffer() const { return true; }
 
     private:
+        static void onRequestScriptRebuild(void *userData);
         Window m_window;
         Input m_input;
         ActionMapping m_actionMapping;
         bool m_hasRun = false;
         bool m_isPlaying = false;
+        bool m_pendingScriptRebuild = false;
         bool m_rendererInitialized = false;
         uint32_t m_width;
         uint32_t m_height;

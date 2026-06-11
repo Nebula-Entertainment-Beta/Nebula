@@ -10,6 +10,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+#include "ecs/entity.h"
 
 namespace Nebula
 {
@@ -19,6 +20,7 @@ namespace Nebula
     Float,
     Int,
     Bool,
+    EntityVector,
   };
 
   struct ScriptFieldDescriptor
@@ -29,6 +31,7 @@ namespace Nebula
     float defaultFloat = 0.f;
     int defaultInt = 0;
     bool defaultBool = false;
+    std::vector<Nebula::Entity> defaultEntityVector;
   };
 
   class ScriptFieldRegistry

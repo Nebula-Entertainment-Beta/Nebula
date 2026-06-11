@@ -24,6 +24,8 @@ namespace Nebula
   {
   public:
     void rebuildFromScene(Scene &scene, ScriptRegistry &registry, ScriptContext &ctx);
+    /** Binds scripts for scene entities not yet in m_instances; does not reset existing scripts. */
+    void bindNewFromScene(Scene &scene, ScriptRegistry &registry, ScriptContext &ctx);
     void initializeAll(ScriptContext &ctx);
     void updateAll(ScriptContext &ctx, float dt);
     void physicsUpdateAll(ScriptContext &ctx, float fixedDt);

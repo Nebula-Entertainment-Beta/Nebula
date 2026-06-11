@@ -50,6 +50,34 @@ namespace Nebula
     }
   }
 
+  void ScriptSystem::bindNewFromScene(Scene &scene, ScriptRegistry &registry, ScriptContext &ctx)
+  {
+    for (const Entity entity : scene.getAllEntities())
+    {
+      if (!scene.isValidEntity(entity) || !scene.hasComponent<ScriptComponent>(entity))
+      {
+        continue;
+      }
+      if (m_instances.find(entity) != m_instances.end())
+      {
+        continue;
+      }
+      const auto &sc = scene.getComponent<ScriptComponent>(entity);
+      ScriptPtr script = registry.createScript(sc.scriptName);
+      if (script)
+      {
+        script->onCreate(ctx, entity);
+        script->onEnable(ctx, entity);
+        m_instances[entity] = std::move(script);
+      }
+      else
+      {
+        std::cerr << "[ScriptSystem] Failed to bind new script \""
+                  << sc.scriptName << "\" on entity id=" << entity.id << '\n';
+      }
+    }
+  }
+
   void ScriptSystem::initializeAll(ScriptContext &ctx)
   {
     for (auto &[entity, script] : m_instances)

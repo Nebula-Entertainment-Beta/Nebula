@@ -99,6 +99,30 @@ namespace Nebula
     ScriptContext ctx = makeScriptContext();
     m_scriptSystem.rebuildFromScene(m_scene, m_scriptRegistry, ctx);
     m_scriptSystem.initializeAll(ctx);
+    if (m_rendererInitialized)
+    {
+      m_assetManager.resolveSceneAssets(m_scene, m_renderer.resources());
+    }
+  }
+
+  void Application::bindNewScripts()
+  {
+    ScriptContext ctx = makeScriptContext();
+    m_scriptSystem.bindNewFromScene(m_scene, m_scriptRegistry, ctx);
+    if (m_rendererInitialized)
+    {
+      m_assetManager.resolveSceneAssets(m_scene, m_renderer.resources());
+    }
+  }
+
+  void Application::queueScriptRebuild()
+  {
+    m_pendingScriptRebuild = true;
+  }
+
+  void Application::onRequestScriptRebuild(void *userData)
+  {
+    static_cast<Application *>(userData)->queueScriptRebuild();
   }
 
   void Application::onStartup()
@@ -133,7 +157,10 @@ namespace Nebula
 
   ScriptContext Application::makeScriptContext()
   {
-    return ScriptContext{m_sceneAccess, &m_inputQuery, m_logSink};
+    ScriptContext ctx{m_sceneAccess, &m_inputQuery, m_logSink};
+    ctx.scriptRebuildUserData = this;
+    ctx.requestScriptRebuildFn = &Application::onRequestScriptRebuild;
+    return ctx;
   }
 
   void buildFrameInput(World &world, EventBus &bus)
@@ -184,6 +211,15 @@ namespace Nebula
                         ScriptContext ctx = makeScriptContext();
                         m_scriptSystem.updateAll(ctx, dt);
                       } });
+
+    m_scheduler.add(SystemPhase::PostUpdate, [this](float)
+                    {
+                      if (m_pendingScriptRebuild)
+                      {
+                        m_pendingScriptRebuild = false;
+                        bindNewScripts();
+                      }
+                    });
 
     m_scheduler.add(SystemPhase::FixedUpdate, [this](float fdt)
                     { 
