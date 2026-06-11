@@ -99,7 +99,7 @@ private:
     Nebula::Entity m_cubeEntity{};
     Nebula::Entity m_cameraEntity{};
 
-    std::string m_scenePath = "scenes/week2_scene.json";
+    std::string m_scenePath = "scenes/combat_arena.json";
 };
 
 int main()

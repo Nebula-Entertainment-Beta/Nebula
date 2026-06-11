@@ -8,6 +8,8 @@ add_library(NimbusScripts STATIC
   src/mainCamera_Script.cpp
   src/enemy_Script.cpp
   src/sceneDefaults.cpp
+  src/waveSpawner.cpp
+  src/combatSpawn.cpp
   src/combat.cpp 
   src/combatDirector.cpp
   src/combatHelper.cpp

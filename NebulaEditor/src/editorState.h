@@ -9,7 +9,7 @@ namespace Editor
   struct EditorState
   {
     Nebula::Entity selectedEntity{};
-    std::string scenePath = "scenes/week2_scene.json";
+    std::string scenePath = "scenes/combat_arena.json";
     bool sceneDirty = false;
   };
 

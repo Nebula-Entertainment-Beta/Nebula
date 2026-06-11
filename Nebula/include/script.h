@@ -23,6 +23,16 @@ namespace Nebula
     ISceneAccess &scene;
     IInputQuery *input = nullptr;   // nullptr = transform-only scripts
     ILogSink *log = nullptr;        // nullptr = no host console (standalone game)
+    void *scriptRebuildUserData = nullptr;
+    void (*requestScriptRebuildFn)(void *userData) = nullptr;
+
+    void requestScriptRebuild() const
+    {
+      if (requestScriptRebuildFn != nullptr)
+      {
+        requestScriptRebuildFn(scriptRebuildUserData);
+      }
+    }
   };
 
   class IScript

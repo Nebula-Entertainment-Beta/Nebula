@@ -24,9 +24,18 @@ namespace Nebula
                              std::string_view fieldName,
                              bool defaultValue);
 
+    std::vector<Nebula::Entity> readScriptParamEntityVector(std::string_view paramsJson,
+                                                            std::string_view fieldName,
+                                                            std::vector<Nebula::Entity> defaultValue);
+
     float readScriptParamFloat(std::string_view paramsJson, const ScriptFieldDescriptor &field);
     int readScriptParamInt(std::string_view paramsJson, const ScriptFieldDescriptor &field);
     bool readScriptParamBool(std::string_view paramsJson, const ScriptFieldDescriptor &field);
+
+    // FIND A WAY TO READ ALL TYPES OF VECTOR AS PARAMS NOT JUST ONE
+    std::vector<int> readScriptIntVector(std::string_view paramsJson, const ScriptFieldDescriptor &field);
+
+    std::vector<Nebula::Entity> readScriptParamEntityVector(std::string_view paramsJson, const ScriptFieldDescriptor &field);
 
     /** Ensures paramsJson contains every registered field (missing keys filled with defaults). */
     std::string mergeScriptParamDefaults(std::string_view paramsJson,
@@ -36,6 +45,7 @@ namespace Nebula
     std::string setScriptParamFloat(std::string_view paramsJson, std::string_view fieldName, float value);
     std::string setScriptParamInt(std::string_view paramsJson, std::string_view fieldName, int value);
     std::string setScriptParamBool(std::string_view paramsJson, std::string_view fieldName, bool value);
+    std::string setScriptParamEntityVector(std::string_view paramsJson, std::string_view fieldName, const std::vector<Nebula::Entity> &value);
   };
 
 } // namespace Nebula

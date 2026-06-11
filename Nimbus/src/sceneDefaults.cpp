@@ -14,7 +14,7 @@ namespace Nimbus
     auto &groundTransform = scene.addComponent<Nebula::TransformComponent>(groundEntity);
     groundTransform.transform.setPosition(Nebula::Vec3{0.0f, 0.0f, 0.0f});
     groundTransform.transform.setYaw(0.0f);
-    groundTransform.transform.setScale(1.0f);
+    groundTransform.transform.setScale(20.0f);
     auto &groundMesh = scene.addComponent<Nebula::MeshRendererComponent>(groundEntity);
     groundMesh.m_meshPath = "builtin/meshes/ground";
     groundMesh.m_materialPath = "builtin/materials/ground";
