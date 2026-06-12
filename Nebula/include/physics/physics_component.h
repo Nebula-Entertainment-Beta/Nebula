@@ -22,7 +22,8 @@ namespace Nebula
       Box,
       Sphere
     };
-
+    bool isTrigger = false;
+    bool isStatic = true;
     Shape shape = Shape::Box;
     Vec3 halfExtents{0.5f, 0.5f, 0.5f};
   };

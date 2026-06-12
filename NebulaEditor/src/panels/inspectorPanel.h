@@ -25,6 +25,7 @@ namespace Editor
     void drawScriptSelector(Nebula::ScriptComponent &script, Nebula::ScriptFieldRegistry &fieldRegistry,
                             Nebula::ScriptRegistry &scriptRegistry, EditorState &state);
     void drawCameraFields(Nebula::CameraComponent &camera, EditorState &state);
+    void drawColliderFields(Nebula::ColliderComponent &collider, EditorState &state);
 
     Nebula::ScriptParams m_scriptParams;
   };

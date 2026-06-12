@@ -1,4 +1,5 @@
 #include "editorTemplate.h"
+#include <physics/physics_component.h>
 
 namespace Editor
 {
@@ -45,6 +46,23 @@ namespace Editor
     auto &t = scene.getComponent<Nebula::TransformComponent>(entity).transform;
     t.setPosition({0.f, 0.5f, 0.f});
     t.setScale(1.f);
+    return entity;
+  }
+
+  Nebula::Entity EditorTemplate::createPlatform(Nebula::Scene &scene)
+  {
+    auto entity = createMeshCube(scene, "Platform");
+
+    auto &t = scene.getComponent<Nebula::TransformComponent>(entity).transform;
+    t.setPosition({0.f, 0.5f, 0.f});
+    t.setScale(1.f);
+    scene.addComponent<Nebula::ColliderComponent>(entity);
+    auto &c = scene.getComponent<Nebula::ColliderComponent>(entity);
+    c.halfExtents = {0.5f, 0.5f, 0.5f};
+    c.isStatic = true;
+    c.isTrigger = false;
+    c.shape = Nebula::ColliderComponent::Shape::Box;
+
     return entity;
   }
 }

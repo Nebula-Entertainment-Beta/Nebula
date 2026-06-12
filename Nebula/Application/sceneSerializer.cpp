@@ -171,7 +171,10 @@ namespace Nebula
       entityJson["ColliderComponent"] = {
           {"shape", shapeName},
           {"halfExtents",
-           {component.halfExtents.x, component.halfExtents.y, component.halfExtents.z}}};
+
+           {component.halfExtents.x, component.halfExtents.y, component.halfExtents.z}},
+          {"isTrigger", component.isTrigger},
+          {"isStatic", component.isStatic}};
     }
 
     void loadTransformComponent(Scene &scene, Entity entity, const nlohmann::json &entityJson)
@@ -361,6 +364,8 @@ namespace Nebula
       }
 
       readVec3ArrayField(colliderJson, "halfExtents", colliderComponent.halfExtents);
+      readBoolField(colliderJson, "isTrigger", colliderComponent.isTrigger);
+      readBoolField(colliderJson, "isStatic", colliderComponent.isStatic);
     }
 
 #define NEBULA_SAVE_COMPONENT(Type)                            \

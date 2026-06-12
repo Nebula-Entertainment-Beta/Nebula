@@ -309,6 +309,8 @@ namespace Editor
       e = m_template.createMeshCube(scene);
     else if (strcmp(id, "enemy") == 0)
       e = m_template.createEnemyPlaceholder(scene);
+    else if (strcmp(id, "platform") == 0)
+      e = m_template.createPlatform(scene);
     else
       e = m_template.createEmpty(scene); // must add Transform inside
     m_state.selectedEntity = e;

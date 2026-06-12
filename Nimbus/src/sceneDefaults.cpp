@@ -18,9 +18,14 @@ namespace Nimbus
     auto &groundMesh = scene.addComponent<Nebula::MeshRendererComponent>(groundEntity);
     groundMesh.m_meshPath = "builtin/meshes/ground";
     groundMesh.m_materialPath = "builtin/materials/ground";
+    auto &groundCollider = scene.addComponent<Nebula::ColliderComponent>(groundEntity);
+    groundCollider.halfExtents = {10.0f, 0.5f, 10.0f};
+    groundCollider.isStatic = true;
+    groundCollider.isTrigger = false;
+    groundCollider.shape = Nebula::ColliderComponent::Shape::Box;
     scene.addComponent<Nebula::ScriptComponent>(groundEntity).scriptName = "Ground";
 
-    const Nebula::Entity cubeEntity = scene.createEntity();
+        const Nebula::Entity cubeEntity = scene.createEntity();
     scene.addComponent<Nebula::TagComponent>(cubeEntity).tag = kPlayerTag;
     auto &cubeTransform = scene.addComponent<Nebula::TransformComponent>(cubeEntity);
     cubeTransform.transform.setPosition(Nebula::Vec3{0.0f, 0.5f, 0.0f});

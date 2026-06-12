@@ -1,4 +1,5 @@
 #include "inspectorPanel.h"
+#include "physics/physics_component.h"
 #include <imgui.h>
 
 #include <cstring>
@@ -130,6 +131,38 @@ namespace Editor
     if (ImGui::InputText("Target Tag", targetTagBuf, sizeof(targetTagBuf)))
     {
       camera.targetTag = targetTagBuf;
+      state.sceneDirty = true;
+    }
+  }
+
+  void InspectorPanel::drawColliderFields(Nebula::ColliderComponent &collider, EditorState &state)
+  {
+    int shapeIndex = collider.shape == Nebula::ColliderComponent::Shape::Sphere ? 1 : 0;
+    const char *shapeLabels[] = {"Box", "Sphere"};
+
+    if (ImGui::Combo("Shape", &shapeIndex, shapeLabels, 2))
+    {
+      collider.shape = shapeIndex == 1
+                           ? Nebula::ColliderComponent::Shape::Sphere
+                           : Nebula::ColliderComponent::Shape::Box;
+      state.sceneDirty = true;
+    }
+
+    float halfExtents[3] = {collider.halfExtents.x, collider.halfExtents.y, collider.halfExtents.z};
+
+    if (ImGui::DragFloat3("Half Extents", halfExtents, 0.01f, 0.01f, 100.f))
+    {
+      collider.halfExtents = {halfExtents[0], halfExtents[1], halfExtents[2]};
+      state.sceneDirty = true;
+    }
+
+    if (ImGui::Checkbox("Is Trigger", &collider.isTrigger))
+    {
+      state.sceneDirty = true;
+    }
+
+    if (ImGui::Checkbox("Is Static", &collider.isStatic))
+    {
       state.sceneDirty = true;
     }
   }
@@ -269,6 +302,18 @@ namespace Editor
         drawCameraFields(scene.getComponent<Nebula::CameraComponent>(entity), state);
       }
     }
+    if (scene.hasComponent<Nebula::ColliderComponent>(entity))
+    {
+      if (drawComponentHeaderWithRemove("Collider", "Remove##Collider"))
+      {
+        scene.removeComponent<Nebula::ColliderComponent>(entity);
+        state.sceneDirty = true;
+      }
+      else
+      {
+        drawColliderFields(scene.getComponent<Nebula::ColliderComponent>(entity), state);
+      }
+    }
 
     if (ImGui::Button("Add Component"))
     {
@@ -303,6 +348,11 @@ namespace Editor
       if (!scene.hasComponent<Nebula::CameraComponent>(entity) && ImGui::MenuItem("Camera"))
       {
         scene.addComponent<Nebula::CameraComponent>(entity);
+        state.sceneDirty = true;
+      }
+      if (!scene.hasComponent<Nebula::ColliderComponent>(entity) && ImGui::MenuItem("Collider"))
+      {
+        scene.addComponent<Nebula::ColliderComponent>(entity);
         state.sceneDirty = true;
       }
       ImGui::EndPopup();
