@@ -1,6 +1,7 @@
 #include "player_Script.h"
 #include "combatHelper.h"
 #include "nimbus_config.h"
+#include "physics/iphysics_world.h"
 #include "scriptParams.h"
 
 #include <cmath>
@@ -38,8 +39,12 @@ namespace Nimbus
     }
     Nimbus::Combat::instance().playerIFrameTimer = m_playerIFrameTimer;
     applyPendingPlayerDamage(ctx);
-    movement(ctx, self, dt);
     combatFSM(ctx, self, dt, getAttackState());
+  }
+
+  void PlayerScript::onPhysicsUpdate(Nebula::ScriptContext &ctx, Nebula::Entity self, float fixedDt)
+  {
+    movement(ctx, self, fixedDt);
   }
 
   void PlayerScript::grantIFrame()
@@ -64,9 +69,9 @@ namespace Nimbus
     }
   }
 
-  void PlayerScript::movement(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt)
+  void PlayerScript::movement(Nebula::ScriptContext &ctx, Nebula::Entity self, float fixedDt)
   {
-    if (!ctx.scene.isValidEntity(self))
+    if (!ctx.scene.isValidEntity(self) || ctx.physics == nullptr || ctx.physicsScene == nullptr)
     {
       return;
     }
@@ -77,7 +82,6 @@ namespace Nimbus
       return;
     }
     auto &cameraComponent = ctx.scene.getCamera(cameraEntity);
-    auto &transformComponent = ctx.scene.getTransform(self);
 
     if (ctx.input == nullptr)
     {
@@ -102,10 +106,11 @@ namespace Nimbus
         forward.x * moveDir.z + right.x * moveDir.x,
         forward.y * moveDir.z + right.y * moveDir.x,
         forward.z * moveDir.z + right.z * moveDir.x};
-    velocity = velocity * (m_moveSpeed * getMoveSpeedMultiplier() * dt);
-    Nebula::Vec3 cubePos = transformComponent.transform.getPosition();
-    cubePos += velocity;
-    transformComponent.transform.setPosition(cubePos);
+    velocity = velocity * (m_moveSpeed * getMoveSpeedMultiplier() * fixedDt);
+
+    bool grounded = false;
+    ctx.physics->moveKinematic(*ctx.physicsScene, self, velocity, grounded);
+    m_grounded = grounded;
   }
 
   void PlayerScript::applyAttackLunge(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt, float speedMultiplier)
@@ -121,10 +126,19 @@ namespace Nimbus
     }
     const float yaw = ctx.scene.getCamera(cameraEntity).yaw;
     const Nebula::Vec3 forward{-std::sin(yaw), 0.0f, -std::cos(yaw)};
-    auto &transformComponent = ctx.scene.getTransform(self);
-    Nebula::Vec3 pos = transformComponent.transform.getPosition();
-    pos += forward * (m_moveSpeed * speedMultiplier * dt);
-    transformComponent.transform.setPosition(pos);
+    if (ctx.physics != nullptr && ctx.physicsScene != nullptr)
+    {
+      bool grounded = false;
+      const Nebula::Vec3 delta = forward * (m_moveSpeed * speedMultiplier * dt);
+      ctx.physics->moveKinematic(*ctx.physicsScene, self, delta, grounded);
+    }
+    else
+    {
+      auto &transformComponent = ctx.scene.getTransform(self);
+      Nebula::Vec3 pos = transformComponent.transform.getPosition();
+      pos += forward * (m_moveSpeed * speedMultiplier * dt);
+      transformComponent.transform.setPosition(pos);
+    }
   }
 
   float PlayerScript::getMoveSpeedMultiplier() const
