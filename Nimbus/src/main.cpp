@@ -45,6 +45,7 @@ public:
 protected:
     void onStartup() override
     {
+        setPlaying(true);
         Nebula::ScriptFieldRegistry fieldRegistry;
         Nimbus::registerAllGameplayScripts(getScriptRegistry(), getScriptFieldRegistry());
         Nebula::Application::onStartup();

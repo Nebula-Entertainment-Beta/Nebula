@@ -26,7 +26,7 @@ namespace Nebula
 
     // create default scene data
     m_scene = Scene();
-    m_physicsWorld = createNullPhysicsWorld();
+    m_physicsWorld = createSimplePhysicsWorld();
   }
 
   void Application::run()
@@ -158,6 +158,8 @@ namespace Nebula
   ScriptContext Application::makeScriptContext()
   {
     ScriptContext ctx{m_sceneAccess, &m_inputQuery, m_logSink};
+    ctx.physics = m_physicsWorld.get();
+    ctx.physicsScene = &m_scene;
     ctx.scriptRebuildUserData = this;
     ctx.requestScriptRebuildFn = &Application::onRequestScriptRebuild;
     return ctx;

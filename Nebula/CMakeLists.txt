@@ -42,6 +42,8 @@ add_library(Nebula STATIC
     Application/renderSystem.cpp
     Application/eventBus.cpp
     Application/null_physics_world.cpp
+    Application/simple_physics_world.cpp
+    Application/physics/collision_math.cpp
     Application/physics_system.cpp
     Application/scene_query.cpp
     render_pipeline/interface/renderer.cpp
@@ -77,7 +79,4 @@ target_include_directories(Nebula PRIVATE
 )
 
 find_package(nlohmann_json CONFIG REQUIRED)
-target_link_libraries(Nebula PRIVATE glfw glad nlohmann_json::nlohmann_json glm::glm-header-only)  
-
-
-
+target_link_libraries(Nebula PRIVATE glfw glad nlohmann_json::nlohmann_json glm::glm-header-only)

@@ -7,7 +7,7 @@ namespace Nebula
 
   void runPhysicsFixedUpdate(Scene &scene, IPhysicsWorld &world, float fixedDt)
   {
-    world.step(fixedDt);
+    world.step(scene, fixedDt);
     world.syncTransformsToScene(scene);
   }
 

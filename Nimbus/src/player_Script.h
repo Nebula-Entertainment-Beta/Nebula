@@ -28,9 +28,9 @@ namespace Nimbus
     void onCreate(Nebula::ScriptContext &ctx, Nebula::Entity self) override;
     void onEnable(Nebula::ScriptContext &, Nebula::Entity) override {}
     void onUpdate(Nebula::ScriptContext &, Nebula::Entity, float) override;
-    void movement(Nebula::ScriptContext &, Nebula::Entity, float);
+    void movement(Nebula::ScriptContext &, Nebula::Entity, float fixedDt);
     void combatFSM(Nebula::ScriptContext &, Nebula::Entity, float, AttackStates state);
-    void onPhysicsUpdate(Nebula::ScriptContext &, Nebula::Entity, float) override {}
+    void onPhysicsUpdate(Nebula::ScriptContext &, Nebula::Entity, float fixedDt) override;
     void onRender(Nebula::ScriptContext &, Nebula::Entity, float) override {}
     void onDisable(Nebula::ScriptContext &, Nebula::Entity) override {}
     void onDestroy(Nebula::ScriptContext &, Nebula::Entity) override {}
@@ -51,6 +51,7 @@ namespace Nimbus
     float stateTimer = 0.f;
     float m_playerIFrameTimer = 0.f;
     bool m_hitThisSwing = false;
+    bool m_grounded = false;
 
     AttackStates m_AttackState;
     Nebula::ScriptParams m_params;
