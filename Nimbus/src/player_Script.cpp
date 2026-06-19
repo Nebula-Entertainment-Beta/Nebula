@@ -1,7 +1,7 @@
 #include "player_Script.h"
 #include "combatHelper.h"
 #include "nimbus_config.h"
-#include "physics/iphysics_world.h"
+#include "physicsQuery.h"
 #include "scriptParams.h"
 
 #include <cmath>
@@ -72,44 +72,38 @@ namespace Nimbus
   void PlayerScript::movement(Nebula::ScriptContext &ctx, Nebula::Entity self, float fixedDt)
   {
     if (!ctx.scene.isValidEntity(self) || ctx.physics == nullptr || ctx.physicsScene == nullptr)
-    {
       return;
-    }
 
     const Nebula::Entity cameraEntity = GetCamera(ctx, self);
-    if (!ctx.scene.isValidEntity(cameraEntity))
-    {
+    if (!ctx.scene.isValidEntity(cameraEntity) || ctx.input == nullptr)
       return;
-    }
-    auto &cameraComponent = ctx.scene.getCamera(cameraEntity);
 
-    if (ctx.input == nullptr)
-    {
-      return;
-    }
+    constexpr float kGravity = 20.f;
+
     const Nebula::FrameInput &f = ctx.input->frame();
-
     Nebula::Vec3 moveDir{f.moveX, 0.0f, f.moveY};
-
     if (moveDir.x != 0.0f || moveDir.z != 0.0f)
     {
       const float len = std::sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
       moveDir.x /= len;
       moveDir.z /= len;
     }
-    const float yaw = cameraComponent.yaw;
 
+    const float yaw = ctx.scene.getCamera(cameraEntity).yaw;
     const Nebula::Vec3 forward{-std::sin(yaw), 0.0f, -std::cos(yaw)};
     const Nebula::Vec3 right{std::cos(yaw), 0.0f, -std::sin(yaw)};
 
-    Nebula::Vec3 velocity{
+    Nebula::Vec3 delta{
         forward.x * moveDir.z + right.x * moveDir.x,
-        forward.y * moveDir.z + right.y * moveDir.x,
+        0.0f,
         forward.z * moveDir.z + right.z * moveDir.x};
-    velocity = velocity * (m_moveSpeed * getMoveSpeedMultiplier() * fixedDt);
+    delta = delta * (m_moveSpeed * getMoveSpeedMultiplier() * fixedDt);
+
+    if (!m_grounded)
+      delta.y -= kGravity * fixedDt;
 
     bool grounded = false;
-    ctx.physics->moveKinematic(*ctx.physicsScene, self, velocity, grounded);
+    ctx.physics->moveKinematic(*ctx.physicsScene, self, delta, grounded);
     m_grounded = grounded;
   }
 

@@ -7,6 +7,7 @@
 #include "renderSystem.h"
 #include "physics/iphysics_world.h"
 #include "physics/physics_system.h"
+#include "physics_query_adapter.h"
 #include "math_types.h"
 
 namespace Nebula
@@ -27,6 +28,7 @@ namespace Nebula
     // create default scene data
     m_scene = Scene();
     m_physicsWorld = createSimplePhysicsWorld();
+    m_physicsQuery = std::make_unique<PhysicsQueryAdapter>(*m_physicsWorld);
   }
 
   void Application::run()
@@ -158,7 +160,7 @@ namespace Nebula
   ScriptContext Application::makeScriptContext()
   {
     ScriptContext ctx{m_sceneAccess, &m_inputQuery, m_logSink};
-    ctx.physics = m_physicsWorld.get();
+    ctx.physics = m_physicsQuery.get();
     ctx.physicsScene = &m_scene;
     ctx.scriptRebuildUserData = this;
     ctx.requestScriptRebuildFn = &Application::onRequestScriptRebuild;
