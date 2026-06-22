@@ -185,6 +185,21 @@ namespace Nebula
       f.heavyAttackPressed = true;
     }
 
+    if (map.wasActionPressed(Action::Jump, input))
+    {
+      f.jumpPressed = true;
+    }
+
+    if (map.isActionDown(Action::Jump, input))
+    {
+      f.jumpHeld = true;
+    }
+
+    if (map.isActionDown(Action::FastFall, input))
+    {
+      f.fastFall = true;
+    }
+
     if (map.wasActionPressed(Action::Interact, input))
     {
 
@@ -222,8 +237,7 @@ namespace Nebula
                       {
                         m_pendingScriptRebuild = false;
                         bindNewScripts();
-                      }
-                    });
+                      } });
 
     m_scheduler.add(SystemPhase::FixedUpdate, [this](float fdt)
                     { 

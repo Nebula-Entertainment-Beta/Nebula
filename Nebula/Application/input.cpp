@@ -22,6 +22,8 @@ namespace Nebula
             {
             case GLFW_KEY_1:
                 return Tasto::num1;
+            case GLFW_KEY_SPACE:
+                return Tasto::space;
             case GLFW_KEY_2:
                 return Tasto::num2;
             case GLFW_KEY_3:

@@ -30,6 +30,7 @@ namespace Nebula
         m_actionBindings[Action::SaveScene] = {}; // temporary
         m_actionBindings[Action::LightAttack] = {};
         m_actionBindings[Action::HeavyAttack] = {};
+        m_actionBindings[Action::FastFall] = {};
 
         m_axisBindings[Axis::MoveX] = {};
         m_axisBindings[Axis::MoveY] = {};
@@ -46,6 +47,8 @@ namespace Nebula
         bindAction(Action::MoveRight, Tasto::d);
         bindAction(Action::Interact, Tasto::tab);
         bindAction(Action::SaveScene, Tasto::num5);
+        bindAction(Action::Jump, Tasto::space);
+        bindAction(Action::FastFall, Tasto::left_shift);
         bindMouseAction(Action::LightAttack, TastoDelMouse::left);
         bindMouseAction(Action::HeavyAttack, TastoDelMouse::right);
         bindAxis(Axis::MoveX,
