@@ -15,14 +15,6 @@ namespace Nebula
 
   class Scene;
 
-  struct RaycastHit
-  {
-    Entity entity{};
-    Vec3 point{};
-    Vec3 normal{};
-    float distance = 0.0f;
-  };
-
   class IPhysicsWorld
   {
   public:

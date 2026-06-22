@@ -25,7 +25,25 @@ namespace Nimbus
     groundCollider.shape = Nebula::ColliderComponent::Shape::Box;
     scene.addComponent<Nebula::ScriptComponent>(groundEntity).scriptName = "Ground";
 
-        const Nebula::Entity cubeEntity = scene.createEntity();
+    const Nebula::Entity platformEntity = scene.createEntity();
+    scene.addComponent<Nebula::TagComponent>(platformEntity).tag = "Platform";
+
+    auto &platformTransform = scene.addComponent<Nebula::TransformComponent>(platformEntity);
+    platformTransform.transform.setPosition(Nebula::Vec3{3.0f, 1.0f, 0.0f});
+    platformTransform.transform.setYaw(0.0f);
+    platformTransform.transform.setScale(2.0f);
+
+    auto &platformMesh = scene.addComponent<Nebula::MeshRendererComponent>(platformEntity);
+    platformMesh.m_meshPath = "builtin/meshes/cube";
+    platformMesh.m_materialPath = "builtin/materials/cube";
+
+    auto &platformCollider = scene.addComponent<Nebula::ColliderComponent>(platformEntity);
+    platformCollider.halfExtents = {0.5f, 0.5f, 0.5f}; // local; scale 2 => ~1m tall slab
+    platformCollider.isStatic = true;
+    platformCollider.isTrigger = false;
+    platformCollider.shape = Nebula::ColliderComponent::Shape::Box;
+
+    const Nebula::Entity cubeEntity = scene.createEntity();
     scene.addComponent<Nebula::TagComponent>(cubeEntity).tag = kPlayerTag;
     auto &cubeTransform = scene.addComponent<Nebula::TransformComponent>(cubeEntity);
     cubeTransform.transform.setPosition(Nebula::Vec3{0.0f, 0.5f, 0.0f});
@@ -39,6 +57,9 @@ namespace Nimbus
     cubeCollider.isStatic = false;
     cubeCollider.isTrigger = false;
     cubeCollider.shape = Nebula::ColliderComponent::Shape::Box;
+    auto &body = scene.addComponent<Nebula::RigidBodyComponent>(cubeEntity);
+    body.kinematic = true;
+    body.mass = 1.f;
     scene.addComponent<Nebula::ScriptComponent>(cubeEntity).scriptName = "Player";
 
     const Nebula::Entity cameraEntity = scene.createEntity();

@@ -45,6 +45,7 @@ add_library(Nebula STATIC
     Application/simple_physics_world.cpp
     Application/physics/collision_math.cpp
     Application/physics_system.cpp
+    Application/physics_query_adapter.cpp
     Application/scene_query.cpp
     render_pipeline/interface/renderer.cpp
     render_pipeline/interface/texture.cpp

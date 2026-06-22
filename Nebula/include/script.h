@@ -18,7 +18,7 @@
 namespace Nebula
 {
 
-  class IPhysicsWorld;
+  class IPhysicsQuery;
   class Scene;
 
   struct ScriptContext
@@ -26,7 +26,7 @@ namespace Nebula
     ISceneAccess &scene;
     IInputQuery *input = nullptr;   // nullptr = transform-only scripts
     ILogSink *log = nullptr;        // nullptr = no host console (standalone game)
-    IPhysicsWorld *physics = nullptr;
+    IPhysicsQuery *physics = nullptr;
     Scene *physicsScene = nullptr;
     void *scriptRebuildUserData = nullptr;
     void (*requestScriptRebuildFn)(void *userData) = nullptr;

@@ -2,6 +2,8 @@
 #include <script.h>
 #include <scriptParams.h>
 #include "combat.h"
+#include "traversal.h"
+#include "ecs/entity.h"
 
 namespace Nimbus
 {
@@ -45,6 +47,8 @@ namespace Nimbus
   private:
     void applyPendingPlayerDamage(Nebula::ScriptContext &ctx);
     void applyAttackLunge(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt, float speedMultiplier);
+    void syncTraversalSettings(Nebula::ScriptContext &ctx);
+    void handleKillPlane(Nebula::ScriptContext &ctx, Nebula::Entity self);
 
     float m_moveSpeed = 3.f;
     float m_health = 100.f;
@@ -52,6 +56,13 @@ namespace Nimbus
     float m_playerIFrameTimer = 0.f;
     bool m_hitThisSwing = false;
     bool m_grounded = false;
+
+    float m_velocityY = 0.f;
+    float m_coyoteTimer = 0.f;
+    float m_jumpBufferTimer = 0.f;
+    TraversalSettings m_traversal{};
+    Nebula::Entity m_traversalDirector{};
+    Nebula::Vec3 m_spawnPosition{0.f, 0.5f, 0.f};
 
     AttackStates m_AttackState;
     Nebula::ScriptParams m_params;

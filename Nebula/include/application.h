@@ -39,6 +39,7 @@ namespace Nebula
 {
 
     class IPhysicsWorld;
+    class PhysicsQueryAdapter;
 
     struct ApplicationSpec
     {
@@ -149,5 +150,6 @@ namespace Nebula
         ILogSink *m_logSink = nullptr;
         World m_world;
         std::unique_ptr<IPhysicsWorld> m_physicsWorld;
+        std::unique_ptr<PhysicsQueryAdapter> m_physicsQuery;
     };
 }

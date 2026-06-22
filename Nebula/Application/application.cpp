@@ -7,6 +7,7 @@
 #include "renderSystem.h"
 #include "physics/iphysics_world.h"
 #include "physics/physics_system.h"
+#include "physics_query_adapter.h"
 #include "math_types.h"
 
 namespace Nebula
@@ -27,6 +28,7 @@ namespace Nebula
     // create default scene data
     m_scene = Scene();
     m_physicsWorld = createSimplePhysicsWorld();
+    m_physicsQuery = std::make_unique<PhysicsQueryAdapter>(*m_physicsWorld);
   }
 
   void Application::run()
@@ -158,7 +160,7 @@ namespace Nebula
   ScriptContext Application::makeScriptContext()
   {
     ScriptContext ctx{m_sceneAccess, &m_inputQuery, m_logSink};
-    ctx.physics = m_physicsWorld.get();
+    ctx.physics = m_physicsQuery.get();
     ctx.physicsScene = &m_scene;
     ctx.scriptRebuildUserData = this;
     ctx.requestScriptRebuildFn = &Application::onRequestScriptRebuild;
@@ -181,6 +183,21 @@ namespace Nebula
     if (map.wasActionPressed(Action::HeavyAttack, input))
     {
       f.heavyAttackPressed = true;
+    }
+
+    if (map.wasActionPressed(Action::Jump, input))
+    {
+      f.jumpPressed = true;
+    }
+
+    if (map.isActionDown(Action::Jump, input))
+    {
+      f.jumpHeld = true;
+    }
+
+    if (map.isActionDown(Action::FastFall, input))
+    {
+      f.fastFall = true;
     }
 
     if (map.wasActionPressed(Action::Interact, input))
@@ -220,8 +237,7 @@ namespace Nebula
                       {
                         m_pendingScriptRebuild = false;
                         bindNewScripts();
-                      }
-                    });
+                      } });
 
     m_scheduler.add(SystemPhase::FixedUpdate, [this](float fdt)
                     { 

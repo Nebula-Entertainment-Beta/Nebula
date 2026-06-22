@@ -5,6 +5,14 @@
 namespace Nebula
 {
 
+  struct RaycastHit
+  {
+    Entity entity{};
+    Vec3 point{};
+    Vec3 normal{};
+    float distance = 0.0f;
+  };
+
   struct OverlapHit
   {
     Entity entity{};

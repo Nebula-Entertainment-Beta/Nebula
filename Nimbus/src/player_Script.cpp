@@ -1,7 +1,7 @@
 #include "player_Script.h"
 #include "combatHelper.h"
 #include "nimbus_config.h"
-#include "physics/iphysics_world.h"
+#include "physicsQuery.h"
 #include "scriptParams.h"
 
 #include <cmath>
@@ -19,6 +19,8 @@ namespace Nimbus
     }
     const Nebula::ScriptComponent &sc = ctx.scene.getScriptComponent(self);
     m_moveSpeed = m_params.readScriptParamFloat(sc.paramsJson, "moveSpeed", 3.f);
+    m_traversalDirector = ctx.scene.findByTag("TraversalDirector");
+    m_spawnPosition = ctx.scene.getTransform(self).transform.getPosition();
   }
 
   Nebula::Entity PlayerScript::GetCamera(Nebula::ScriptContext &ctx, Nebula::Entity self)
@@ -69,48 +71,116 @@ namespace Nimbus
     }
   }
 
+  void PlayerScript::syncTraversalSettings(Nebula::ScriptContext &ctx)
+  {
+    if (!ctx.scene.isValidEntity(m_traversalDirector))
+      return;
+    syncTraversalFromParams(
+        ctx.scene.getScriptComponent(m_traversalDirector),
+        m_params,
+        m_traversal);
+  }
+
   void PlayerScript::movement(Nebula::ScriptContext &ctx, Nebula::Entity self, float fixedDt)
   {
-    if (!ctx.scene.isValidEntity(self) || ctx.physics == nullptr || ctx.physicsScene == nullptr)
-    {
+    if (!ctx.scene.isValidEntity(self) || ctx.physics == nullptr ||
+        ctx.physicsScene == nullptr || ctx.input == nullptr)
       return;
-    }
 
     const Nebula::Entity cameraEntity = GetCamera(ctx, self);
     if (!ctx.scene.isValidEntity(cameraEntity))
-    {
       return;
-    }
-    auto &cameraComponent = ctx.scene.getCamera(cameraEntity);
 
-    if (ctx.input == nullptr)
-    {
-      return;
-    }
+    syncTraversalSettings(ctx);
+    const TraversalSettings &t = m_traversal;
     const Nebula::FrameInput &f = ctx.input->frame();
 
-    Nebula::Vec3 moveDir{f.moveX, 0.0f, f.moveY};
+    const bool wasGrounded = m_grounded;
 
-    if (moveDir.x != 0.0f || moveDir.z != 0.0f)
+    // --- Jump buffer (press slightly before landing) ---
+    if (f.jumpPressed)
+      m_jumpBufferTimer = t.jumpBufferTime;
+    else
+      m_jumpBufferTimer = std::max(0.f, m_jumpBufferTimer - fixedDt);
+
+    // --- Try jump (buffer + coyote or grounded) ---
+    const bool canJump = m_grounded || m_coyoteTimer > 0.f;
+    if (m_jumpBufferTimer > 0.f && canJump)
+    {
+      m_velocityY = t.jumpSpeed;
+      m_jumpBufferTimer = 0.f;
+      m_coyoteTimer = 0.f;
+    }
+
+    // --- Gravity + fast fall ---
+    if (!m_grounded)
+    {
+      float grav = t.gravity;
+      // NOTE: buildFrameInput currently sets f.fastFall on press only;
+      // for held fast-fall use isActionDown(FastFall) in buildFrameInput instead.
+      if (f.fastFall)
+        grav *= t.fastFallMult;
+
+      m_velocityY -= grav * fixedDt;
+      m_velocityY = std::clamp(m_velocityY, -t.terminalVelocity, t.terminalVelocity);
+    }
+
+    // Optional variable jump: release Space while rising → cut upward speed
+    if (!f.jumpHeld && m_velocityY > 0.f)
+    {
+      m_velocityY *= 0.5f;
+    }
+
+    // --- Horizontal (camera-relative) ---
+    Nebula::Vec3 moveDir{f.moveX, 0.f, f.moveY};
+    if (moveDir.x != 0.f || moveDir.z != 0.f)
     {
       const float len = std::sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
       moveDir.x /= len;
       moveDir.z /= len;
     }
-    const float yaw = cameraComponent.yaw;
 
-    const Nebula::Vec3 forward{-std::sin(yaw), 0.0f, -std::cos(yaw)};
-    const Nebula::Vec3 right{std::cos(yaw), 0.0f, -std::sin(yaw)};
+    const float yaw = ctx.scene.getCamera(cameraEntity).yaw;
+    const Nebula::Vec3 forward{-std::sin(yaw), 0.f, -std::cos(yaw)};
+    const Nebula::Vec3 right{std::cos(yaw), 0.f, -std::sin(yaw)};
 
-    Nebula::Vec3 velocity{
+    const float controlMult = m_grounded ? 1.f : t.airControlMult;
+    const float speed = m_moveSpeed * getMoveSpeedMultiplier() * controlMult;
+
+    Nebula::Vec3 delta{
         forward.x * moveDir.z + right.x * moveDir.x,
-        forward.y * moveDir.z + right.y * moveDir.x,
+        0.f,
         forward.z * moveDir.z + right.z * moveDir.x};
-    velocity = velocity * (m_moveSpeed * getMoveSpeedMultiplier() * fixedDt);
+    delta = delta * (speed * fixedDt);
+    delta.y = m_velocityY * fixedDt;
 
+    // --- Engine collision (single authority for grounded) ---
     bool grounded = false;
-    ctx.physics->moveKinematic(*ctx.physicsScene, self, velocity, grounded);
+    ctx.physics->moveKinematic(*ctx.physicsScene, self, delta, grounded);
     m_grounded = grounded;
+
+    // --- Land / coyote ---
+    if (m_grounded && m_velocityY <= 0.f)
+      m_velocityY = 0.f;
+
+    if (m_grounded)
+      m_coyoteTimer = t.coyoteTime;
+    else if (wasGrounded)
+      m_coyoteTimer = t.coyoteTime; // just walked off ledge
+    else
+      m_coyoteTimer = std::max(0.f, m_coyoteTimer - fixedDt);
+
+    // --- Kill plane ---
+    const Nebula::Vec3 pos = ctx.scene.getTransform(self).transform.getPosition();
+    if (pos.y < t.killY)
+    {
+      auto &xf = ctx.scene.getTransform(self);
+      xf.transform.setPosition(m_spawnPosition);
+      m_velocityY = 0.f;
+      m_grounded = false;
+      m_coyoteTimer = 0.f;
+      m_jumpBufferTimer = 0.f;
+    }
   }
 
   void PlayerScript::applyAttackLunge(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt, float speedMultiplier)

@@ -167,6 +167,14 @@ namespace Editor
     }
   }
 
+  void InspectorPanel::drawRigidBodyFields(Nebula::RigidBodyComponent &body, EditorState &state)
+  {
+    if (ImGui::Checkbox("Kinematic", &body.kinematic))
+      state.sceneDirty = true;
+    if (ImGui::DragFloat("Mass", &body.mass, 0.1f, 0.01f, 1000.f))
+      state.sceneDirty = true;
+  }
+
   void InspectorPanel::drawScriptSelector(Nebula::ScriptComponent &script,
                                           Nebula::ScriptFieldRegistry &fieldRegistry,
                                           Nebula::ScriptRegistry &scriptRegistry, EditorState &state)
@@ -314,6 +322,18 @@ namespace Editor
         drawColliderFields(scene.getComponent<Nebula::ColliderComponent>(entity), state);
       }
     }
+    if (scene.hasComponent<Nebula::RigidBodyComponent>(entity))
+    {
+      if (drawComponentHeaderWithRemove("Rigid Body", "Remove##RigidBody"))
+      {
+        scene.removeComponent<Nebula::RigidBodyComponent>(entity);
+        state.sceneDirty = true;
+      }
+      else
+      {
+        drawRigidBodyFields(scene.getComponent<Nebula::RigidBodyComponent>(entity), state);
+      }
+    }
 
     if (ImGui::Button("Add Component"))
     {
@@ -353,6 +373,11 @@ namespace Editor
       if (!scene.hasComponent<Nebula::ColliderComponent>(entity) && ImGui::MenuItem("Collider"))
       {
         scene.addComponent<Nebula::ColliderComponent>(entity);
+        state.sceneDirty = true;
+      }
+      if (!scene.hasComponent<Nebula::RigidBodyComponent>(entity) && ImGui::MenuItem("Rigid Body"))
+      {
+        scene.addComponent<Nebula::RigidBodyComponent>(entity);
         state.sceneDirty = true;
       }
       ImGui::EndPopup();

@@ -312,8 +312,12 @@ namespace Nebula
         Vec3 position = transform.getPosition();
 
         const float axisDelta[3] = {delta.x, delta.y, delta.z};
-        for (int axis = 0; axis < 3; ++axis)
+
+        constexpr int kAxisOrder[] = {1, 0, 2};
+
+        for (int i = 0; i < 3; ++i)
         {
+          const int axis = kAxisOrder[i];
           if (axisDelta[axis] == 0.0f)
           {
             continue;

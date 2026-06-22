@@ -31,7 +31,8 @@ namespace Nebula
         Interact,
         LightAttack,
         HeavyAttack,
-        SaveScene
+        SaveScene,
+        FastFall
     };
 
     enum class Axis

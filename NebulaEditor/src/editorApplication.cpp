@@ -181,6 +181,10 @@ namespace Editor
         {
           createEntityFromTemplate("enemy");
         }
+        if (ImGui::MenuItem("Create Platform"))
+        {
+          createEntityFromTemplate("platform");
+        }
         ImGui::EndMenu();
       }
       drawPlayStopToolbar();
