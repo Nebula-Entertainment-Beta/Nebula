@@ -123,6 +123,18 @@ namespace Nebula
       return 0.0f;
     }
 
+    constexpr float kContactSkin = 0.08f;
+
+    bool isStandingOnTop(const AABB &moving, const AABB &other)
+    {
+      return moving.min.y >= other.max.y - kContactSkin;
+    }
+
+    bool shouldSkipHorizontalBlock(const AABB &moving, const AABB &other, int axis)
+    {
+      return (axis == 0 || axis == 2) && isStandingOnTop(moving, other);
+    }
+
     class SimplePhysicsWorld final : public IPhysicsWorld
     {
     public:
@@ -329,11 +341,17 @@ namespace Nebula
 
           const AABB movedBounds = m_collisionMath.worldAABBFromEntity(scene, entity);
           float axisCorrection = 0.0f;
+          bool hasCorrection = false;
 
           for (const std::size_t proxyIndex : gatherCandidates(movedBounds))
           {
             const PhysicsProxy &proxy = m_proxies[proxyIndex];
             if (proxy.entity == entity || proxy.collider.isTrigger)
+            {
+              continue;
+            }
+
+            if (shouldSkipHorizontalBlock(movedBounds, proxy.bounds, axis))
             {
               continue;
             }
@@ -345,7 +363,19 @@ namespace Nebula
               continue;
             }
 
-            axisCorrection += penetration;
+            if (!hasCorrection)
+            {
+              axisCorrection = penetration;
+              hasCorrection = true;
+            }
+            else if (axisDelta[axis] > 0.0f)
+            {
+              axisCorrection = std::min(axisCorrection, penetration);
+            }
+            else if (axisDelta[axis] < 0.0f)
+            {
+              axisCorrection = std::max(axisCorrection, penetration);
+            }
 
             if (axis == 1 && axisDelta[1] < 0.0f && penetration > 0.0f)
             {

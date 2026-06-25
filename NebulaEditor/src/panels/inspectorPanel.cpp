@@ -1,4 +1,5 @@
 #include "inspectorPanel.h"
+#include "collider_fit.h"
 #include "physics/physics_component.h"
 #include <imgui.h>
 
@@ -135,7 +136,9 @@ namespace Editor
     }
   }
 
-  void InspectorPanel::drawColliderFields(Nebula::ColliderComponent &collider, EditorState &state)
+  void InspectorPanel::drawColliderFields(Nebula::ColliderComponent &collider, Nebula::Scene &scene,
+                                          Nebula::Entity entity, Nebula::AssetManager &assets,
+                                          EditorState &state, const std::function<void()> &onSceneEdited)
   {
     int shapeIndex = collider.shape == Nebula::ColliderComponent::Shape::Sphere ? 1 : 0;
     const char *shapeLabels[] = {"Box", "Sphere"};
@@ -154,6 +157,21 @@ namespace Editor
     {
       collider.halfExtents = {halfExtents[0], halfExtents[1], halfExtents[2]};
       state.sceneDirty = true;
+    }
+
+    if (scene.hasComponent<Nebula::MeshRendererComponent>(entity))
+    {
+      if (ImGui::Button("Fit to Mesh"))
+      {
+        auto &meshRenderer = scene.getComponent<Nebula::MeshRendererComponent>(entity);
+        if (Nebula::fitBoxColliderToMeshRenderer(collider, assets, meshRenderer))
+        {
+          state.sceneDirty = true;
+          onSceneEdited();
+        }
+      }
+      ImGui::SameLine();
+      ImGui::TextDisabled("(local size; transform scale applies in world)");
     }
 
     if (ImGui::Checkbox("Is Trigger", &collider.isTrigger))
@@ -203,7 +221,8 @@ namespace Editor
 
   void InspectorPanel::drawInspectorPanel(EditorState &state, Nebula::Scene &scene,
                                           Nebula::Entity entity, Nebula::ScriptFieldRegistry &scriptFieldRegistry,
-                                          Nebula::ScriptRegistry &scriptRegistry, std::function<void()> onSceneEdited)
+                                          Nebula::ScriptRegistry &scriptRegistry, Nebula::AssetManager &assets,
+                                          std::function<void()> onSceneEdited)
   {
     ImGui::Begin("Inspector");
 
@@ -319,7 +338,8 @@ namespace Editor
       }
       else
       {
-        drawColliderFields(scene.getComponent<Nebula::ColliderComponent>(entity), state);
+        drawColliderFields(scene.getComponent<Nebula::ColliderComponent>(entity), scene, entity, assets,
+                           state, onSceneEdited);
       }
     }
     if (scene.hasComponent<Nebula::RigidBodyComponent>(entity))

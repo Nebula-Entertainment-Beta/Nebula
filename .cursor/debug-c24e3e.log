@@ -13,3 +13,24 @@
 {"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1781155365517}
 {"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1781155373063}
 {"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onUpdate","message":"spawned wave","data":{"count":5,"m_spawned":1},"timestamp":1781155373066}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782422622364}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782422948028}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782422988310}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782423539217}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782423736659}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782423741433}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onUpdate","message":"spawned wave","data":{"count":5,"m_spawned":1},"timestamp":1782423741438}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782423829874}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782423883778}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782424482647}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782424498695}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onUpdate","message":"spawned wave","data":{"count":5,"m_spawned":1},"timestamp":1782424498706}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782424525551}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782425023909}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782425039951}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onUpdate","message":"spawned wave","data":{"count":5,"m_spawned":1},"timestamp":1782425039954}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782425054974}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782425241016}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782425254587}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onUpdate","message":"spawned wave","data":{"count":5,"m_spawned":1},"timestamp":1782425254592}
+{"sessionId":"c24e3e","hypothesisId":"A","location":"waveSpawner.cpp:onCreate","message":"restored spawn state","data":{"count":0,"m_spawned":0},"timestamp":1782425311429}

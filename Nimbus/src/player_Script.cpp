@@ -3,6 +3,7 @@
 #include "nimbus_config.h"
 #include "physicsQuery.h"
 #include "scriptParams.h"
+#include "traversalVolumes.h"
 
 #include <cmath>
 #include <string>
@@ -21,6 +22,55 @@ namespace Nimbus
     m_moveSpeed = m_params.readScriptParamFloat(sc.paramsJson, "moveSpeed", 3.f);
     m_traversalDirector = ctx.scene.findByTag("TraversalDirector");
     m_spawnPosition = ctx.scene.getTransform(self).transform.getPosition();
+    m_pendingGroundSnap = true;
+  }
+
+  void PlayerScript::snapToGround(Nebula::ScriptContext &ctx, Nebula::Entity self)
+  {
+    if (ctx.physics == nullptr || ctx.physicsScene == nullptr)
+    {
+      return;
+    }
+
+    auto &transform = ctx.scene.getTransform(self).transform;
+    Nebula::Vec3 pos = transform.getPosition();
+    const float halfHeight = 0.5f * transform.getScale();
+
+    Nebula::RaycastHit hit{};
+    const Nebula::Vec3 origin{pos.x, pos.y - halfHeight + 0.01f, pos.z};
+    const Nebula::Vec3 down{0.f, -1.f, 0.f};
+    if (ctx.physics->raycast(*ctx.physicsScene, origin, down, 8.f, hit) && hit.entity != self &&
+        hit.normal.y > 0.5f)
+    {
+      constexpr float kSkin = 0.02f;
+      pos.y = hit.point.y + halfHeight + kSkin;
+      transform.setPosition(pos);
+      m_grounded = true;
+      m_velocityY = 0.f;
+      m_spawnPosition = pos;
+      return;
+    }
+
+    for (int step = 0; step < 32; ++step)
+    {
+      if (ctx.physics->isGrounded(*ctx.physicsScene, self))
+      {
+        m_grounded = true;
+        m_velocityY = 0.f;
+        m_spawnPosition = ctx.scene.getTransform(self).transform.getPosition();
+        return;
+      }
+
+      bool grounded = false;
+      ctx.physics->moveKinematic(*ctx.physicsScene, self, Nebula::Vec3{0.f, -0.05f, 0.f}, grounded);
+      if (grounded)
+      {
+        m_grounded = true;
+        m_velocityY = 0.f;
+        m_spawnPosition = ctx.scene.getTransform(self).transform.getPosition();
+        return;
+      }
+    }
   }
 
   Nebula::Entity PlayerScript::GetCamera(Nebula::ScriptContext &ctx, Nebula::Entity self)
@@ -46,6 +96,11 @@ namespace Nimbus
 
   void PlayerScript::onPhysicsUpdate(Nebula::ScriptContext &ctx, Nebula::Entity self, float fixedDt)
   {
+    if (m_pendingGroundSnap)
+    {
+      snapToGround(ctx, self);
+      m_pendingGroundSnap = false;
+    }
     movement(ctx, self, fixedDt);
   }
 
@@ -131,6 +186,21 @@ namespace Nimbus
       m_velocityY *= 0.5f;
     }
 
+    const VolumeQueryContext volumeCtx{ctx.physics, ctx.physicsScene};
+    const float bounce = queryBounceImpulseIfOverlapping(volumeCtx, self, m_velocityY);
+    if (bounce > 0.f)
+    {
+      m_velocityY = bounce;
+      m_grounded = false;
+      m_coyoteTimer = 0.f;
+    }
+
+    const float wind = queryWindLiftIfOverlapping(volumeCtx, self);
+    if (wind > 0.f)
+    {
+      m_velocityY = std::max(m_velocityY, wind);
+    }
+
     // --- Horizontal (camera-relative) ---
     Nebula::Vec3 moveDir{f.moveX, 0.f, f.moveY};
     if (moveDir.x != 0.f || moveDir.z != 0.f)
@@ -153,6 +223,12 @@ namespace Nimbus
         forward.z * moveDir.z + right.z * moveDir.x};
     delta = delta * (speed * fixedDt);
     delta.y = m_velocityY * fixedDt;
+
+    if (m_grounded && m_velocityY <= 0.f)
+    {
+      constexpr float kGroundStick = 0.08f;
+      delta.y = std::min(delta.y, -kGroundStick);
+    }
 
     // --- Engine collision (single authority for grounded) ---
     bool grounded = false;

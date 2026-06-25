@@ -10,6 +10,8 @@
 #include "combatDirector.h"
 #include "waveSpawner.h"
 #include "traversalDirector.h"
+#include "bouncePad_Script.h"
+#include "windVolume_Script.h"
 
 namespace Nimbus
 {
@@ -93,5 +95,19 @@ namespace Nimbus
         fieldRegistry.registerFields("WaveSpawner", waveSpawnerFields, std::size(waveSpawnerFields));
         registry.registerScript("WaveSpawner", []
                                 { return std::make_unique<WaveSpawner>(); });
+
+        static const Nebula::ScriptFieldDescriptor bouncePadFields[] = {
+            {.name = "impulse", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 14.f},
+        };
+        fieldRegistry.registerFields("BouncePad", bouncePadFields, std::size(bouncePadFields));
+        registry.registerScript("BouncePad", []
+                                { return std::make_unique<BouncePadScript>(); });
+
+        static const Nebula::ScriptFieldDescriptor windVolumeFields[] = {
+            {.name = "liftSpeed", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 6.f},
+        };
+        fieldRegistry.registerFields("WindVolume", windVolumeFields, std::size(windVolumeFields));
+        registry.registerScript("WindVolume", []
+                                { return std::make_unique<WindVolumeScript>(); });
     }
 }

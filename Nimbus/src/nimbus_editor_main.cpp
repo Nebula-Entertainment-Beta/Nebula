@@ -7,12 +7,17 @@ int main()
   Nebula::ApplicationSpec spec;
   spec.title = "Nimbus Editor";
 
+  const std::vector<Editor::ScenePreset> scenePresets = {
+      {"Combat Arena", Nimbus::buildCombatArenaScene},
+      {"Traversal Test", Nimbus::buildTraversalTestScene},
+  };
+
   Editor::EditorApplication app(
       spec,
       [](auto &registry, auto &fields)
       { Nimbus::registerAllGameplayScripts(registry, fields); },
-      [](Nebula::Scene &scene)
-      { Nimbus::buildDefaultScene(scene); });
+      Nimbus::buildDefaultScene,
+      scenePresets);
 
   if (!app.getWindow().isValid())
     return 1;

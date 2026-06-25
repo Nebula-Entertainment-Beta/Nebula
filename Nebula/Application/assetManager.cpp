@@ -1,5 +1,6 @@
 #include "assetManager.h"
 
+#include "asset_id.h"
 #include "builtin_assets.h"
 #include "builtinMeshes.h"
 #include "mesh_upload.h"
@@ -293,5 +294,15 @@ namespace Nebula
       return {};
     }
     return m_database.pathForGuid(it->second);
+  }
+
+  const MeshAsset *AssetManager::getCpuMeshAsset(const std::string_view logicalPath) const
+  {
+    const AssetGuid guid = m_database.guidForPath(logicalPath);
+    if (guid == kInvalidAsset)
+    {
+      return nullptr;
+    }
+    return m_database.getMeshAsset(guid);
   }
 }

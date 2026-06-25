@@ -11,6 +11,7 @@ namespace Editor
     Nebula::Entity selectedEntity{};
     std::string scenePath = "scenes/combat_arena.json";
     bool sceneDirty = false;
+    bool showColliderGizmos = true;
   };
 
 }

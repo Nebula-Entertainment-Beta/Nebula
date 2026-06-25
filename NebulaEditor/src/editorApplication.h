@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <vector>
 
 #include <imgui.h>
 
@@ -27,6 +28,12 @@ namespace Editor
   /** Game-specific default scene content; supplied by the host executable at startup. */
   using NewSceneBuilder = std::function<void(Nebula::Scene &)>;
 
+  struct ScenePreset
+  {
+    const char *label = "";
+    NewSceneBuilder build;
+  };
+
   /** Forwards engine script logs into the editor Console panel. */
   class EditorLogSink final : public Nebula::ILogSink
   {
@@ -43,7 +50,8 @@ namespace Editor
   public:
     explicit EditorApplication(const Nebula::ApplicationSpec &spec);
     EditorApplication(const Nebula::ApplicationSpec &spec, ScriptRegistrar registerScripts,
-                      NewSceneBuilder buildNewScene = nullptr);
+                      NewSceneBuilder buildNewScene = nullptr,
+                      std::vector<ScenePreset> scenePresets = {});
     ~EditorApplication() override;
     bool renderSceneToMainFramebuffer() const override { return false; }
     bool loadScene(const std::string_view path);
@@ -60,6 +68,7 @@ namespace Editor
     EditorState m_state;
     ScriptRegistrar m_registerScripts;
     NewSceneBuilder m_buildNewScene;
+    std::vector<ScenePreset> m_scenePresets;
     bool m_dockLayoutBuilt = false;
     SceneViewPanel m_sceneViewPanel;
     SceneViewFrameBuffer m_sceneViewFrameBuffer;
@@ -81,5 +90,6 @@ namespace Editor
     void createEmptyEntity();
     void deleteSelectedEntity();
     void setupDefaultDockLayout(ImGuiID dockspaceId);
+    void newScene(NewSceneBuilder builder);
   };
 }

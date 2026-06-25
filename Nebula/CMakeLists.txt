@@ -40,6 +40,8 @@ add_library(Nebula STATIC
     Application/mesh_importer.cpp
     Application/mesh_upload.cpp
     Application/renderSystem.cpp
+    Application/collider_fit.cpp
+    Application/collider_debug.cpp
     Application/eventBus.cpp
     Application/null_physics_world.cpp
     Application/simple_physics_world.cpp

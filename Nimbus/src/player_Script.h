@@ -48,6 +48,7 @@ namespace Nimbus
     void applyPendingPlayerDamage(Nebula::ScriptContext &ctx);
     void applyAttackLunge(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt, float speedMultiplier);
     void syncTraversalSettings(Nebula::ScriptContext &ctx);
+    void snapToGround(Nebula::ScriptContext &ctx, Nebula::Entity self);
     void handleKillPlane(Nebula::ScriptContext &ctx, Nebula::Entity self);
 
     float m_moveSpeed = 3.f;
@@ -60,6 +61,7 @@ namespace Nimbus
     float m_velocityY = 0.f;
     float m_coyoteTimer = 0.f;
     float m_jumpBufferTimer = 0.f;
+    bool m_pendingGroundSnap = true;
     TraversalSettings m_traversal{};
     Nebula::Entity m_traversalDirector{};
     Nebula::Vec3 m_spawnPosition{0.f, 0.5f, 0.f};

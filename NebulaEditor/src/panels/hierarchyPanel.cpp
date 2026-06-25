@@ -45,6 +45,18 @@ namespace Editor
         {
           m_entityFactory("enemy");
         }
+        if (ImGui::MenuItem("Create Platform"))
+        {
+          m_entityFactory("platform");
+        }
+        if (ImGui::MenuItem("Create Bounce Pad"))
+        {
+          m_entityFactory("bouncePad");
+        }
+        if (ImGui::MenuItem("Create Wind Volume"))
+        {
+          m_entityFactory("windVolume");
+        }
       }
       const bool canDelete =
           state.selectedEntity != Nebula::Entity() && scene.isValidEntity(state.selectedEntity);

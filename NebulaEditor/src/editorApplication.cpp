@@ -23,10 +23,12 @@ namespace Editor
 
   EditorApplication::EditorApplication(const Nebula::ApplicationSpec &spec,
                                        ScriptRegistrar registerScripts,
-                                       NewSceneBuilder buildNewScene)
+                                       NewSceneBuilder buildNewScene,
+                                       std::vector<ScenePreset> scenePresets)
       : Nebula::Application(spec),
         m_registerScripts(std::move(registerScripts)),
-        m_buildNewScene(std::move(buildNewScene))
+        m_buildNewScene(std::move(buildNewScene)),
+        m_scenePresets(std::move(scenePresets))
   {
     m_hierarchy.setEntityActions(
         [this](const char *id)
@@ -88,7 +90,7 @@ namespace Editor
     m_hierarchy.drawHierarchyPanel(getScene(), m_state);
     m_console.drawConsolePanel(m_editorLog);
     m_inspector.drawInspectorPanel(m_state, getScene(), m_state.selectedEntity,
-                                   getScriptFieldRegistry(), getScriptRegistry(), [this]()
+                                   getScriptFieldRegistry(), getScriptRegistry(), getAssetManager(), [this]()
                                    {
       resolveSceneAssets();
       m_state.sceneDirty = true; });
@@ -153,9 +155,23 @@ namespace Editor
     {
       if (ImGui::BeginMenu("File"))
       {
-        if (ImGui::MenuItem("New Scene"))
+        if (m_scenePresets.empty())
         {
-          newScene();
+          if (ImGui::MenuItem("New Scene"))
+          {
+            newScene();
+          }
+        }
+        else if (ImGui::BeginMenu("New Scene"))
+        {
+          for (const ScenePreset &preset : m_scenePresets)
+          {
+            if (ImGui::MenuItem(preset.label))
+            {
+              newScene(preset.build);
+            }
+          }
+          ImGui::EndMenu();
         }
         if (ImGui::MenuItem("Open Scene"))
         {
@@ -184,6 +200,14 @@ namespace Editor
         if (ImGui::MenuItem("Create Platform"))
         {
           createEntityFromTemplate("platform");
+        }
+        if (ImGui::MenuItem("Create Bounce Pad"))
+        {
+          createEntityFromTemplate("bouncePad");
+        }
+        if (ImGui::MenuItem("Create Wind Volume"))
+        {
+          createEntityFromTemplate("windVolume");
         }
         ImGui::EndMenu();
       }
@@ -232,12 +256,28 @@ namespace Editor
 
   void EditorApplication::newScene()
   {
+    if (m_buildNewScene)
+    {
+      newScene(m_buildNewScene);
+      return;
+    }
+
+    getScene().clear();
+    m_state.selectedEntity = {};
+    m_state.sceneDirty = true;
+    resolveSceneAssets();
+    Nebula::Application::onStartup();
+    m_editorLog.info("New scene created");
+  }
+
+  void EditorApplication::newScene(NewSceneBuilder builder)
+  {
     getScene().clear();
     m_state.selectedEntity = {};
 
-    if (m_buildNewScene)
+    if (builder)
     {
-      m_buildNewScene(getScene());
+      builder(getScene());
     }
 
     m_state.sceneDirty = true;
@@ -314,7 +354,11 @@ namespace Editor
     else if (strcmp(id, "enemy") == 0)
       e = m_template.createEnemyPlaceholder(scene);
     else if (strcmp(id, "platform") == 0)
-      e = m_template.createPlatform(scene);
+      e = m_template.createPlatform(scene, getAssetManager());
+    else if (strcmp(id, "bouncePad") == 0)
+      e = m_template.createBouncePad(scene, getAssetManager());
+    else if (strcmp(id, "windVolume") == 0)
+      e = m_template.createWindVolume(scene, getAssetManager());
     else
       e = m_template.createEmpty(scene); // must add Transform inside
     m_state.selectedEntity = e;
