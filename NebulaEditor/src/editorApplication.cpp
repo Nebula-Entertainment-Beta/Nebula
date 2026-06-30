@@ -5,7 +5,10 @@
 #include "eventTypes.h"
 #include "sceneSerializer.h"
 #include "systemScheduler.h"
+#include "prefabSerializer.h"
+#include "prefabService.h"
 
+#include <cctype>
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -19,20 +22,32 @@ namespace Editor
         { createEntityFromTemplate(id); },
         [this]()
         { deleteSelectedEntity(); });
+    m_hierarchy.setPrefabActions(
+        [this](std::string_view path)
+        { instantiatePrefab(path); },
+        [this]()
+        { saveSelectedEntityAsPrefab(); });
   }
 
   EditorApplication::EditorApplication(const Nebula::ApplicationSpec &spec,
                                        ScriptRegistrar registerScripts,
-                                       NewSceneBuilder buildNewScene)
+                                       NewSceneBuilder buildNewScene,
+                                       std::vector<ScenePreset> scenePresets)
       : Nebula::Application(spec),
         m_registerScripts(std::move(registerScripts)),
-        m_buildNewScene(std::move(buildNewScene))
+        m_buildNewScene(std::move(buildNewScene)),
+        m_scenePresets(std::move(scenePresets))
   {
     m_hierarchy.setEntityActions(
         [this](const char *id)
         { createEntityFromTemplate(id); },
         [this]()
         { deleteSelectedEntity(); });
+    m_hierarchy.setPrefabActions(
+        [this](std::string_view path)
+        { instantiatePrefab(path); },
+        [this]()
+        { saveSelectedEntityAsPrefab(); });
   }
 
   EditorApplication::~EditorApplication()
@@ -88,7 +103,7 @@ namespace Editor
     m_hierarchy.drawHierarchyPanel(getScene(), m_state);
     m_console.drawConsolePanel(m_editorLog);
     m_inspector.drawInspectorPanel(m_state, getScene(), m_state.selectedEntity,
-                                   getScriptFieldRegistry(), getScriptRegistry(), [this]()
+                                   getScriptFieldRegistry(), getScriptRegistry(), getAssetManager(), [this]()
                                    {
       resolveSceneAssets();
       m_state.sceneDirty = true; });
@@ -153,9 +168,23 @@ namespace Editor
     {
       if (ImGui::BeginMenu("File"))
       {
-        if (ImGui::MenuItem("New Scene"))
+        if (m_scenePresets.empty())
         {
-          newScene();
+          if (ImGui::MenuItem("New Scene"))
+          {
+            newScene();
+          }
+        }
+        else if (ImGui::BeginMenu("New Scene"))
+        {
+          for (const ScenePreset &preset : m_scenePresets)
+          {
+            if (ImGui::MenuItem(preset.label))
+            {
+              newScene(preset.build);
+            }
+          }
+          ImGui::EndMenu();
         }
         if (ImGui::MenuItem("Open Scene"))
         {
@@ -184,6 +213,36 @@ namespace Editor
         if (ImGui::MenuItem("Create Platform"))
         {
           createEntityFromTemplate("platform");
+        }
+        if (ImGui::MenuItem("Create Bounce Pad"))
+        {
+          createEntityFromTemplate("bouncePad");
+        }
+        if (ImGui::MenuItem("Create Wind Volume"))
+        {
+          createEntityFromTemplate("windVolume");
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Save Selected as Prefab"))
+        {
+          saveSelectedEntityAsPrefab();
+        }
+        if (ImGui::BeginMenu("Instantiate Prefab"))
+        {
+          static const char *kKnownPrefabs[] = {
+              "prefabs/enemy.prefab",
+              "prefabs/platform.prefab",
+              "prefabs/bounce_pad.prefab",
+              "prefabs/wind_volume.prefab",
+          };
+          for (const char *path : kKnownPrefabs)
+          {
+            if (ImGui::MenuItem(path))
+            {
+              instantiatePrefab(path);
+            }
+          }
+          ImGui::EndMenu();
         }
         ImGui::EndMenu();
       }
@@ -232,12 +291,28 @@ namespace Editor
 
   void EditorApplication::newScene()
   {
+    if (m_buildNewScene)
+    {
+      newScene(m_buildNewScene);
+      return;
+    }
+
+    getScene().clear();
+    m_state.selectedEntity = {};
+    m_state.sceneDirty = true;
+    resolveSceneAssets();
+    Nebula::Application::onStartup();
+    m_editorLog.info("New scene created");
+  }
+
+  void EditorApplication::newScene(NewSceneBuilder builder)
+  {
     getScene().clear();
     m_state.selectedEntity = {};
 
-    if (m_buildNewScene)
+    if (builder)
     {
-      m_buildNewScene(getScene());
+      builder(getScene());
     }
 
     m_state.sceneDirty = true;
@@ -250,6 +325,62 @@ namespace Editor
   void EditorApplication::createEmptyEntity()
   {
     createEntityFromTemplate("empty");
+  }
+
+  bool EditorApplication::saveSelectedAsPrefab(std::string_view path)
+  {
+    if (!getScene().isValidEntity(m_state.selectedEntity))
+    {
+      return false;
+    }
+    if (!Nebula::PrefabSerializer::save(getScene(), m_state.selectedEntity,
+                                        getAssetManager(), getAssets(), path))
+    {
+      return false;
+    }
+    m_editorLog.info("Saved prefab: " + std::string(path));
+    return true;
+  }
+
+  void EditorApplication::saveSelectedEntityAsPrefab()
+  {
+    Nebula::Scene &scene = getScene();
+    if (!scene.isValidEntity(m_state.selectedEntity))
+    {
+      return;
+    }
+
+    std::string path = "prefabs/";
+    if (scene.hasComponent<Nebula::TagComponent>(m_state.selectedEntity))
+    {
+      for (char c : scene.getComponent<Nebula::TagComponent>(m_state.selectedEntity).tag)
+      {
+        path.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+      }
+    }
+    else
+    {
+      path += "entity_" + std::to_string(m_state.selectedEntity.id);
+    }
+    path += ".prefab";
+
+    if (saveSelectedAsPrefab(path))
+    {
+      m_state.sceneDirty = true;
+    }
+  }
+
+  Nebula::Entity EditorApplication::instantiatePrefab(std::string_view path)
+  {
+    Nebula::Entity e = Nebula::PrefabService::instantiate(
+        getScene(), getAssetManager(), getAssets(), getRenderer().resources(), path);
+    if (e.id != 0)
+    {
+      m_state.selectedEntity = e;
+      m_state.sceneDirty = true;
+      resolveSceneAssets();
+    }
+    return e;
   }
 
   void EditorApplication::deleteSelectedEntity()
@@ -309,12 +440,21 @@ namespace Editor
   {
     Nebula::Scene &scene = getScene();
     Nebula::Entity e{};
+
+    static const std::unordered_map<std::string, const char *> kPrefabForTemplate = {
+        {"enemy", "prefabs/enemy.prefab"},
+        {"platform", "prefabs/platform.prefab"},
+        {"bouncePad", "prefabs/bounce_pad.prefab"},
+        {"windVolume", "prefabs/wind_volume.prefab"},
+    };
+    if (auto it = kPrefabForTemplate.find(id); it != kPrefabForTemplate.end())
+    {
+      instantiatePrefab(it->second);
+      return;
+    }
     if (strcmp(id, "cube") == 0)
       e = m_template.createMeshCube(scene);
-    else if (strcmp(id, "enemy") == 0)
-      e = m_template.createEnemyPlaceholder(scene);
-    else if (strcmp(id, "platform") == 0)
-      e = m_template.createPlatform(scene);
+
     else
       e = m_template.createEmpty(scene); // must add Transform inside
     m_state.selectedEntity = e;

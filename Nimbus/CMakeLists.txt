@@ -13,6 +13,11 @@ add_library(NimbusScripts STATIC
   src/combat.cpp 
   src/combatDirector.cpp
   src/combatHelper.cpp
+  src/traversalDirector.cpp
+  src/traversal.cpp
+  src/traversalVolumes.cpp
+  src/bouncePad_Script.cpp
+  src/windVolume_Script.cpp
 )
 
 target_include_directories(NimbusScripts PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

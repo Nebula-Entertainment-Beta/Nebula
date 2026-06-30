@@ -19,6 +19,9 @@ add_library(Nebula STATIC
     Math/transform2D.cpp
     Math/transform3D.cpp
     Application/application.cpp
+    Application/entityComponentJson.cpp
+    Application/prefabSerializer.cpp
+    Application/prefabService.cpp
     Application/sceneSerializer.cpp
     Application/scene.cpp
     Application/registry.cpp
@@ -40,6 +43,8 @@ add_library(Nebula STATIC
     Application/mesh_importer.cpp
     Application/mesh_upload.cpp
     Application/renderSystem.cpp
+    Application/collider_fit.cpp
+    Application/collider_debug.cpp
     Application/eventBus.cpp
     Application/null_physics_world.cpp
     Application/simple_physics_world.cpp

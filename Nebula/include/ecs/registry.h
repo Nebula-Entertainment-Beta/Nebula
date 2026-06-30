@@ -9,6 +9,7 @@
 #include "physics/physics_component.h"
 #include "ecs/component_storage.h"
 #include "ecs/entity.h"
+#include "prefabInstance.h"
 #include <algorithm>
 #include <cstdint>
 #include <stdexcept>
@@ -30,17 +31,18 @@ namespace Nebula
         ComponentStorage<TagComponent>,
         ComponentStorage<RigidBodyComponent>,
         ComponentStorage<ColliderComponent>,
-        ComponentStorage<followTargetComponent>>;
+        ComponentStorage<followTargetComponent>,
+        ComponentStorage<PrefabInstanceComponent>>;
 
     template <typename T>
     struct ComponentTypeIndex;
 
-#define NEBULA_COMPONENT_INDEX(Type, Index) \
-    template <>                             \
-    struct ComponentTypeIndex<Type>         \
-    {                                       \
-      static constexpr std::size_t value = Index; \
-    };
+#define NEBULA_COMPONENT_INDEX(Type, Index)     \
+  template <>                                   \
+  struct ComponentTypeIndex<Type>               \
+  {                                             \
+    static constexpr std::size_t value = Index; \
+  };
 
     NEBULA_COMPONENTS_WITH_INDEX(NEBULA_COMPONENT_INDEX)
 

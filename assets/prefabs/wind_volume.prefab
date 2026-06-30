@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "entity": {
+    "TagComponent": {
+      "tag": "WindVolume"
+    },
+    "MeshRendererComponent": {
+      "meshPath": "builtin/meshes/cube",
+      "materialPath": "builtin/materials/cube"
+    },
+    "TransformComponent": {
+      "position": [0.0, 1.0, 0.0],
+      "yaw": 0.0,
+      "scale": 2.0
+    },
+    "ColliderComponent": {
+      "shape": "Box",
+      "halfExtents": [0.5, 0.5, 0.5],
+      "isTrigger": true,
+      "isStatic": true
+    },
+    "ScriptComponent": {
+      "scriptName": "WindVolume",
+      "paramsJson": {}
+    }
+  }
+}

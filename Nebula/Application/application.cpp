@@ -185,15 +185,14 @@ namespace Nebula
       f.heavyAttackPressed = true;
     }
 
-    if (map.wasActionPressed(Action::Jump, input))
+    static bool s_prevJumpDown = false;
+    const bool jumpDown = map.isActionDown(Action::Jump, input);
+    if (map.wasActionPressed(Action::Jump, input) || (jumpDown && !s_prevJumpDown))
     {
       f.jumpPressed = true;
     }
-
-    if (map.isActionDown(Action::Jump, input))
-    {
-      f.jumpHeld = true;
-    }
+    f.jumpHeld = jumpDown;
+    s_prevJumpDown = jumpDown;
 
     if (map.isActionDown(Action::FastFall, input))
     {

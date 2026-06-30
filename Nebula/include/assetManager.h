@@ -9,6 +9,7 @@
 #include "asset_id.h"
 #include "mesh.h"
 #include "material.h"
+#include "mesh_asset.h"
 #include "assetProvider.h"
 #include "renderResources.h"
 #include "scene.h"
@@ -42,6 +43,9 @@ namespace Nebula
 
     const Mesh *getMesh(MeshHandle handle) const;
     const Material *getMaterial(MaterialHandle handle) const;
+
+    /** CPU mesh bounds used to fit box colliders to rendered geometry. */
+    const MeshAsset *getCpuMeshAsset(std::string_view logicalPath) const;
 
     bool isMeshValid(MeshHandle handle) const;
     bool isMaterialValid(MaterialHandle handle) const;

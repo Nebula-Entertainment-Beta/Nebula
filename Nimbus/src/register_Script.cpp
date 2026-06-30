@@ -10,6 +10,8 @@
 #include "combatDirector.h"
 #include "waveSpawner.h"
 #include "traversalDirector.h"
+#include "bouncePad_Script.h"
+#include "windVolume_Script.h"
 
 namespace Nimbus
 {
@@ -39,7 +41,7 @@ namespace Nimbus
 
         static const Nebula::ScriptFieldDescriptor traversalDirectorFields[] = {
             {.name = "gravity", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 20.f},
-            {.name = "jumpSpeed", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 8.f},
+            {.name = "jumpSpeed", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 14.f},
             {.name = "coyoteTime", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.12f},
             {.name = "jumpBufferTime", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.12f},
             {.name = "airControlMult", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.65f},
@@ -64,7 +66,7 @@ namespace Nimbus
             {.name = "hitRadius", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 1.2f},
             {.name = "playerIFrameDuration", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.4f},
             {.name = "enemyMaxHealth", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 120.f},
-            {.name = "knockbackForce", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 2.f},
+            {.name = "knockbackForce", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 20.f},
             {.name = "staggerDuration", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.35f},
             {.name = "enemyAttackInterval", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 1.5f},
             {.name = "enemyMoveSpeed", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 2.f},
@@ -93,5 +95,19 @@ namespace Nimbus
         fieldRegistry.registerFields("WaveSpawner", waveSpawnerFields, std::size(waveSpawnerFields));
         registry.registerScript("WaveSpawner", []
                                 { return std::make_unique<WaveSpawner>(); });
+
+        static const Nebula::ScriptFieldDescriptor bouncePadFields[] = {
+            {.name = "impulse", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 14.f},
+        };
+        fieldRegistry.registerFields("BouncePad", bouncePadFields, std::size(bouncePadFields));
+        registry.registerScript("BouncePad", []
+                                { return std::make_unique<BouncePadScript>(); });
+
+        static const Nebula::ScriptFieldDescriptor windVolumeFields[] = {
+            {.name = "liftSpeed", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 6.f},
+        };
+        fieldRegistry.registerFields("WindVolume", windVolumeFields, std::size(windVolumeFields));
+        registry.registerScript("WindVolume", []
+                                { return std::make_unique<WindVolumeScript>(); });
     }
 }

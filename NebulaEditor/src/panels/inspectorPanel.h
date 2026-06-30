@@ -14,7 +14,8 @@ namespace Editor
   public:
     void drawInspectorPanel(EditorState &state, Nebula::Scene &scene,
                             Nebula::Entity entity, Nebula::ScriptFieldRegistry &scriptFieldRegistry,
-                            Nebula::ScriptRegistry &scriptRegistry, std::function<void()> onSceneEdited);
+                            Nebula::ScriptRegistry &scriptRegistry, Nebula::AssetManager &assets,
+                            std::function<void()> onSceneEdited);
     // script fields use existingregistry+ params json
     void drawScriptFields(Nebula::Entity entity, Nebula::ScriptFieldRegistry &fieldRegistry, Nebula::Scene &scene, EditorState &state);
 
@@ -25,7 +26,9 @@ namespace Editor
     void drawScriptSelector(Nebula::ScriptComponent &script, Nebula::ScriptFieldRegistry &fieldRegistry,
                             Nebula::ScriptRegistry &scriptRegistry, EditorState &state);
     void drawCameraFields(Nebula::CameraComponent &camera, EditorState &state);
-    void drawColliderFields(Nebula::ColliderComponent &collider, EditorState &state);
+    void drawColliderFields(Nebula::ColliderComponent &collider, Nebula::Scene &scene, Nebula::Entity entity,
+                            Nebula::AssetManager &assets, EditorState &state,
+                            const std::function<void()> &onSceneEdited);
     void drawRigidBodyFields(Nebula::RigidBodyComponent &body, EditorState &state);
 
     Nebula::ScriptParams m_scriptParams;

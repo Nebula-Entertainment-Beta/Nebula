@@ -10,7 +10,7 @@ namespace Nebula
 
   namespace
   {
-    constexpr float kGroundProbeDistance = 0.15f;
+    constexpr float kGroundProbeDistance = 0.25f;
   }
 
   PhysicsQueryAdapter::PhysicsQueryAdapter(IPhysicsWorld &world) : m_world(&world) {}

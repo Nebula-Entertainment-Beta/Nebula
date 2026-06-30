@@ -19,7 +19,7 @@ namespace Nebula
 
     constexpr float kSpatialCellSize = 8.0f;
     constexpr int kMaxCellSpanPerAxis = 4;
-    constexpr float kGroundProbeDistance = 0.15f;
+    constexpr float kGroundProbeDistance = 0.25f;
 
     bool passesOverlapFilter(const ColliderComponent &collider, OverlapFilter filter)
     {
@@ -121,6 +121,41 @@ namespace Nebula
         return otherMax - movingMin;
       }
       return 0.0f;
+    }
+
+    constexpr float kContactSkin = 0.08f;
+
+    bool isStandingOnTop(const AABB &moving, const AABB &other)
+    {
+      return moving.min.y >= other.max.y - kContactSkin;
+    }
+
+    bool colliderDataChanged(const ColliderComponent &previous, const ColliderComponent &current)
+    {
+      return previous.halfExtents.x != current.halfExtents.x ||
+             previous.halfExtents.y != current.halfExtents.y ||
+             previous.halfExtents.z != current.halfExtents.z ||
+             previous.isTrigger != current.isTrigger || previous.isStatic != current.isStatic ||
+             previous.shape != current.shape;
+    }
+
+    bool shouldSkipAxisBlock(const AABB &moving, const AABB &other, int axis, float moveDelta)
+    {
+      if (axis == 1 && moveDelta > 0.0f)
+      {
+        // Leaving a floor/ledge: ignore colliders whose top is not above our head.
+        if (other.max.y <= moving.max.y + kContactSkin)
+        {
+          return true;
+        }
+        return false;
+      }
+
+      if ((axis == 0 || axis == 2) && isStandingOnTop(moving, other))
+      {
+        return true;
+      }
+      return false;
     }
 
     class SimplePhysicsWorld final : public IPhysicsWorld
@@ -329,11 +364,17 @@ namespace Nebula
 
           const AABB movedBounds = m_collisionMath.worldAABBFromEntity(scene, entity);
           float axisCorrection = 0.0f;
+          bool hasCorrection = false;
 
           for (const std::size_t proxyIndex : gatherCandidates(movedBounds))
           {
             const PhysicsProxy &proxy = m_proxies[proxyIndex];
             if (proxy.entity == entity || proxy.collider.isTrigger)
+            {
+              continue;
+            }
+
+            if (shouldSkipAxisBlock(movedBounds, proxy.bounds, axis, axisDelta[axis]))
             {
               continue;
             }
@@ -345,7 +386,19 @@ namespace Nebula
               continue;
             }
 
-            axisCorrection += penetration;
+            if (!hasCorrection)
+            {
+              axisCorrection = penetration;
+              hasCorrection = true;
+            }
+            else if (axisDelta[axis] > 0.0f)
+            {
+              axisCorrection = std::min(axisCorrection, penetration);
+            }
+            else if (axisDelta[axis] < 0.0f)
+            {
+              axisCorrection = std::max(axisCorrection, penetration);
+            }
 
             if (axis == 1 && axisDelta[1] < 0.0f && penetration > 0.0f)
             {
@@ -372,7 +425,7 @@ namespace Nebula
         refreshProxyBounds(scene, entity);
         rebuildSpatialHash();
 
-        if (!outGrounded)
+        if (!outGrounded && delta.y <= 0.0f)
         {
           outGrounded = probeGroundedWithDownwardRay(scene, entity);
         }
@@ -415,6 +468,10 @@ namespace Nebula
           }
 
           PhysicsProxy &proxy = m_proxies[existingIndex];
+          if (colliderDataChanged(proxy.collider, entry.first))
+          {
+            proxy.dirty = true;
+          }
           proxy.collider = entry.first;
           if (proxy.cachedPosition.x != transform.getPosition().x ||
               proxy.cachedPosition.y != transform.getPosition().y ||
@@ -443,10 +500,8 @@ namespace Nebula
       {
         for (PhysicsProxy &proxy : m_proxies)
         {
-          if (!proxy.dirty && proxy.collider.isStatic)
-          {
-            continue;
-          }
+          // Always recompute bounds so editor collider edits (Fit to Mesh, inspector
+          // tweaks) stay in sync with debug gizmos and collision resolution.
           proxy.bounds = m_collisionMath.worldAABBFromEntity(scene, proxy.entity);
           proxy.dirty = false;
         }
@@ -481,15 +536,19 @@ namespace Nebula
         int maxY = cellIndex(bounds.max.y);
         int maxZ = cellIndex(bounds.max.z);
 
-        const int centerX = (minX + maxX) / 2;
-        const int centerY = (minY + maxY) / 2;
-        const int centerZ = (minZ + maxZ) / 2;
-        minX = centerX - kMaxCellSpanPerAxis;
-        maxX = centerX + kMaxCellSpanPerAxis;
-        minY = centerY - kMaxCellSpanPerAxis;
-        maxY = centerY + kMaxCellSpanPerAxis;
-        minZ = centerZ - kMaxCellSpanPerAxis;
-        maxZ = centerZ + kMaxCellSpanPerAxis;
+        const auto clampCellSpan = [](int &minCell, int &maxCell) {
+          const int span = maxCell - minCell + 1;
+          const int maxSpan = kMaxCellSpanPerAxis * 2 + 1;
+          if (span > maxSpan)
+          {
+            const int center = (minCell + maxCell) / 2;
+            minCell = center - kMaxCellSpanPerAxis;
+            maxCell = center + kMaxCellSpanPerAxis;
+          }
+        };
+        clampCellSpan(minX, maxX);
+        clampCellSpan(minY, maxY);
+        clampCellSpan(minZ, maxZ);
 
         for (int x = minX; x <= maxX; ++x)
         {
@@ -537,9 +596,16 @@ namespace Nebula
           }
         }
 
-        if (candidates.empty())
+        // Spatial hash can miss large static colliders (e.g. scaled ground planes).
+        // Always include every proxy whose cached bounds overlap the query volume.
+        for (std::size_t i = 0; i < m_proxies.size(); ++i)
         {
-          for (std::size_t i = 0; i < m_proxies.size(); ++i)
+          OverlapHit hit{};
+          if (!m_collisionMath.aabbVsAABB(queryBounds, m_proxies[i].bounds, hit))
+          {
+            continue;
+          }
+          if (seen.insert(i).second)
           {
             candidates.push_back(i);
           }

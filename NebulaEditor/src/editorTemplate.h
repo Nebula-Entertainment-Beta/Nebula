@@ -12,6 +12,8 @@ namespace Editor
     Nebula::Entity createEmpty(Nebula::Scene &scene);
     Nebula::Entity createMeshCube(Nebula::Scene &scene, const char *tag = "Cube");
     Nebula::Entity createEnemyPlaceholder(Nebula::Scene &scene);
-    Nebula::Entity createPlatform(Nebula::Scene &scene);
+    Nebula::Entity createPlatform(Nebula::Scene &scene, Nebula::AssetManager &assets);
+    Nebula::Entity createBouncePad(Nebula::Scene &scene, Nebula::AssetManager &assets);
+    Nebula::Entity createWindVolume(Nebula::Scene &scene, Nebula::AssetManager &assets);
   };
 }
