@@ -5,7 +5,10 @@
 #include "eventTypes.h"
 #include "sceneSerializer.h"
 #include "systemScheduler.h"
+#include "prefabSerializer.h"
+#include "prefabService.h"
 
+#include <cctype>
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -19,6 +22,11 @@ namespace Editor
         { createEntityFromTemplate(id); },
         [this]()
         { deleteSelectedEntity(); });
+    m_hierarchy.setPrefabActions(
+        [this](std::string_view path)
+        { instantiatePrefab(path); },
+        [this]()
+        { saveSelectedEntityAsPrefab(); });
   }
 
   EditorApplication::EditorApplication(const Nebula::ApplicationSpec &spec,
@@ -35,6 +43,11 @@ namespace Editor
         { createEntityFromTemplate(id); },
         [this]()
         { deleteSelectedEntity(); });
+    m_hierarchy.setPrefabActions(
+        [this](std::string_view path)
+        { instantiatePrefab(path); },
+        [this]()
+        { saveSelectedEntityAsPrefab(); });
   }
 
   EditorApplication::~EditorApplication()
@@ -209,6 +222,28 @@ namespace Editor
         {
           createEntityFromTemplate("windVolume");
         }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Save Selected as Prefab"))
+        {
+          saveSelectedEntityAsPrefab();
+        }
+        if (ImGui::BeginMenu("Instantiate Prefab"))
+        {
+          static const char *kKnownPrefabs[] = {
+              "prefabs/enemy.prefab",
+              "prefabs/platform.prefab",
+              "prefabs/bounce_pad.prefab",
+              "prefabs/wind_volume.prefab",
+          };
+          for (const char *path : kKnownPrefabs)
+          {
+            if (ImGui::MenuItem(path))
+            {
+              instantiatePrefab(path);
+            }
+          }
+          ImGui::EndMenu();
+        }
         ImGui::EndMenu();
       }
       drawPlayStopToolbar();
@@ -292,6 +327,62 @@ namespace Editor
     createEntityFromTemplate("empty");
   }
 
+  bool EditorApplication::saveSelectedAsPrefab(std::string_view path)
+  {
+    if (!getScene().isValidEntity(m_state.selectedEntity))
+    {
+      return false;
+    }
+    if (!Nebula::PrefabSerializer::save(getScene(), m_state.selectedEntity,
+                                        getAssetManager(), getAssets(), path))
+    {
+      return false;
+    }
+    m_editorLog.info("Saved prefab: " + std::string(path));
+    return true;
+  }
+
+  void EditorApplication::saveSelectedEntityAsPrefab()
+  {
+    Nebula::Scene &scene = getScene();
+    if (!scene.isValidEntity(m_state.selectedEntity))
+    {
+      return;
+    }
+
+    std::string path = "prefabs/";
+    if (scene.hasComponent<Nebula::TagComponent>(m_state.selectedEntity))
+    {
+      for (char c : scene.getComponent<Nebula::TagComponent>(m_state.selectedEntity).tag)
+      {
+        path.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+      }
+    }
+    else
+    {
+      path += "entity_" + std::to_string(m_state.selectedEntity.id);
+    }
+    path += ".prefab";
+
+    if (saveSelectedAsPrefab(path))
+    {
+      m_state.sceneDirty = true;
+    }
+  }
+
+  Nebula::Entity EditorApplication::instantiatePrefab(std::string_view path)
+  {
+    Nebula::Entity e = Nebula::PrefabService::instantiate(
+        getScene(), getAssetManager(), getAssets(), getRenderer().resources(), path);
+    if (e.id != 0)
+    {
+      m_state.selectedEntity = e;
+      m_state.sceneDirty = true;
+      resolveSceneAssets();
+    }
+    return e;
+  }
+
   void EditorApplication::deleteSelectedEntity()
   {
     if (m_state.selectedEntity == Nebula::Entity())
@@ -349,16 +440,21 @@ namespace Editor
   {
     Nebula::Scene &scene = getScene();
     Nebula::Entity e{};
+
+    static const std::unordered_map<std::string, const char *> kPrefabForTemplate = {
+        {"enemy", "prefabs/enemy.prefab"},
+        {"platform", "prefabs/platform.prefab"},
+        {"bouncePad", "prefabs/bounce_pad.prefab"},
+        {"windVolume", "prefabs/wind_volume.prefab"},
+    };
+    if (auto it = kPrefabForTemplate.find(id); it != kPrefabForTemplate.end())
+    {
+      instantiatePrefab(it->second);
+      return;
+    }
     if (strcmp(id, "cube") == 0)
       e = m_template.createMeshCube(scene);
-    else if (strcmp(id, "enemy") == 0)
-      e = m_template.createEnemyPlaceholder(scene);
-    else if (strcmp(id, "platform") == 0)
-      e = m_template.createPlatform(scene, getAssetManager());
-    else if (strcmp(id, "bouncePad") == 0)
-      e = m_template.createBouncePad(scene, getAssetManager());
-    else if (strcmp(id, "windVolume") == 0)
-      e = m_template.createWindVolume(scene, getAssetManager());
+
     else
       e = m_template.createEmpty(scene); // must add Transform inside
     m_state.selectedEntity = e;

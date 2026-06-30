@@ -12,7 +12,7 @@ namespace Nimbus
   struct TraversalSettings
   {
     float gravity = 20.f;
-    float jumpSpeed = 8.f;
+    float jumpSpeed = 15.f;
     float coyoteTime = 0.12f;
     float jumpBufferTime = 0.12f;
     float airControlMult = 0.65f;

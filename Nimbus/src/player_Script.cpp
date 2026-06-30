@@ -91,6 +91,24 @@ namespace Nimbus
     }
     Nimbus::Combat::instance().playerIFrameTimer = m_playerIFrameTimer;
     applyPendingPlayerDamage(ctx);
+
+    // Capture jump on the render frame (edge + buffer) so presses aren't lost.
+    if (ctx.input != nullptr)
+    {
+      const Nebula::FrameInput &f = ctx.input->frame();
+      syncTraversalSettings(ctx);
+      if (f.jumpPressed || (f.jumpHeld && !m_prevJumpHeld))
+      {
+        m_wantsJump = true;
+        m_jumpBufferTimer = m_traversal.jumpBufferTime;
+      }
+      if (!f.jumpHeld && m_prevJumpHeld && m_velocityY > 0.f)
+      {
+        m_pendingJumpCut = true;
+      }
+      m_prevJumpHeld = f.jumpHeld;
+    }
+
     combatFSM(ctx, self, dt, getAttackState());
   }
 
@@ -152,27 +170,33 @@ namespace Nimbus
 
     const bool wasGrounded = m_grounded;
 
-    // --- Jump buffer (press slightly before landing) ---
-    if (f.jumpPressed)
-      m_jumpBufferTimer = t.jumpBufferTime;
-    else
-      m_jumpBufferTimer = std::max(0.f, m_jumpBufferTimer - fixedDt);
+    bool onGround = m_grounded;
+    if (!onGround)
+    {
+      onGround = ctx.physics->isGrounded(*ctx.physicsScene, self);
+    }
 
-    // --- Try jump (buffer + coyote or grounded) ---
-    const bool canJump = m_grounded || m_coyoteTimer > 0.f;
-    if (m_jumpBufferTimer > 0.f && canJump)
+    // --- Try jump (buffer / edge + coyote or grounded) ---
+    const bool canJump = onGround || m_coyoteTimer > 0.f;
+    const bool jumpRequested = m_wantsJump || m_jumpBufferTimer > 0.f || f.jumpPressed;
+    if (jumpRequested && canJump)
     {
       m_velocityY = t.jumpSpeed;
       m_jumpBufferTimer = 0.f;
       m_coyoteTimer = 0.f;
+      m_grounded = false;
+      m_wantsJump = false;
+      m_jumpGraceTimer = 0.15f;
+      if (ctx.log != nullptr)
+      {
+        ctx.log->info("[Traversal] Player jump (speed=" + std::to_string(t.jumpSpeed) + ")");
+      }
     }
 
     // --- Gravity + fast fall ---
     if (!m_grounded)
     {
       float grav = t.gravity;
-      // NOTE: buildFrameInput currently sets f.fastFall on press only;
-      // for held fast-fall use isActionDown(FastFall) in buildFrameInput instead.
       if (f.fastFall)
         grav *= t.fastFallMult;
 
@@ -180,10 +204,10 @@ namespace Nimbus
       m_velocityY = std::clamp(m_velocityY, -t.terminalVelocity, t.terminalVelocity);
     }
 
-    // Optional variable jump: release Space while rising → cut upward speed
-    if (!f.jumpHeld && m_velocityY > 0.f)
+    if (m_pendingJumpCut)
     {
       m_velocityY *= 0.5f;
+      m_pendingJumpCut = false;
     }
 
     const VolumeQueryContext volumeCtx{ctx.physics, ctx.physicsScene};
@@ -224,16 +248,40 @@ namespace Nimbus
     delta = delta * (speed * fixedDt);
     delta.y = m_velocityY * fixedDt;
 
-    if (m_grounded && m_velocityY <= 0.f)
+    if (m_grounded && m_velocityY <= 0.f && m_jumpGraceTimer <= 0.f)
     {
       constexpr float kGroundStick = 0.08f;
       delta.y = std::min(delta.y, -kGroundStick);
     }
 
-    // --- Engine collision (single authority for grounded) ---
-    bool grounded = false;
-    ctx.physics->moveKinematic(*ctx.physicsScene, self, delta, grounded);
-    m_grounded = grounded;
+    // Resolve vertical then horizontal so floor contact doesn't eat jump motion.
+    bool groundedFromVertical = false;
+    bool groundedFromHorizontal = false;
+    const Nebula::Vec3 verticalDelta{0.f, delta.y, 0.f};
+    const Nebula::Vec3 horizontalDelta{delta.x, 0.f, delta.z};
+
+    if (verticalDelta.y != 0.f)
+    {
+      ctx.physics->moveKinematic(*ctx.physicsScene, self, verticalDelta, groundedFromVertical);
+    }
+
+    if (horizontalDelta.x != 0.f || horizontalDelta.z != 0.f)
+    {
+      ctx.physics->moveKinematic(*ctx.physicsScene, self, horizontalDelta, groundedFromHorizontal);
+    }
+
+    const bool contactGround = groundedFromVertical || groundedFromHorizontal;
+    if (m_jumpGraceTimer > 0.f)
+    {
+      m_jumpGraceTimer = std::max(0.f, m_jumpGraceTimer - fixedDt);
+      m_grounded = false;
+    }
+    else
+    {
+      m_grounded = contactGround && m_velocityY <= 0.f;
+    }
+
+    m_jumpBufferTimer = std::max(0.f, m_jumpBufferTimer - fixedDt);
 
     // --- Land / coyote ---
     if (m_grounded && m_velocityY <= 0.f)

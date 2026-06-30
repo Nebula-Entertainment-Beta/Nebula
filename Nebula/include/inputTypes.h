@@ -46,9 +46,9 @@ namespace Nebula
         b,
         n,
         m,
-        Count,
         space,
-        left_shift
+        left_shift,
+        Count,
     };
 
     enum class TastoDelMouse : std::uint8_t

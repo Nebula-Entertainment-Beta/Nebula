@@ -41,7 +41,7 @@ namespace Nimbus
 
         static const Nebula::ScriptFieldDescriptor traversalDirectorFields[] = {
             {.name = "gravity", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 20.f},
-            {.name = "jumpSpeed", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 8.f},
+            {.name = "jumpSpeed", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 14.f},
             {.name = "coyoteTime", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.12f},
             {.name = "jumpBufferTime", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.12f},
             {.name = "airControlMult", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.65f},
@@ -66,7 +66,7 @@ namespace Nimbus
             {.name = "hitRadius", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 1.2f},
             {.name = "playerIFrameDuration", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.4f},
             {.name = "enemyMaxHealth", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 120.f},
-            {.name = "knockbackForce", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 2.f},
+            {.name = "knockbackForce", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 20.f},
             {.name = "staggerDuration", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 0.35f},
             {.name = "enemyAttackInterval", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 1.5f},
             {.name = "enemyMoveSpeed", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 2.f},

@@ -29,7 +29,7 @@ namespace Nimbus
     float playerIFrameDuration = 0.4f;
     // Enemy
     float enemyMaxHealth = 120.f;
-    float knockbackForce = 200.f;
+    float knockbackForce = 400.f;
     float staggerDuration = 0.35f;
     float enemyAttackInterval = 1.5f;
     float enemyMoveSpeed = 2.f;

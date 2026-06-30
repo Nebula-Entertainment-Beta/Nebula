@@ -58,6 +58,8 @@ namespace Editor
     bool saveScene();
     void newScene();
     void registerGameSystems() override;
+    bool saveSelectedAsPrefab(std::string_view logicalPath);
+    Nebula::Entity instantiatePrefab(std::string_view prefabPath);
     void createEntityFromTemplate(const char *templateId);
 
   protected:
@@ -89,6 +91,7 @@ namespace Editor
     void openSceneDialog();
     void createEmptyEntity();
     void deleteSelectedEntity();
+    void saveSelectedEntityAsPrefab();
     void setupDefaultDockLayout(ImGuiID dockspaceId);
     void newScene(NewSceneBuilder builder);
   };

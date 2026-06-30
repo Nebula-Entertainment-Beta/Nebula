@@ -129,17 +129,22 @@ namespace Nimbus
 
   void buildDefaultScene(Nebula::Scene &scene)
   {
+    constexpr float kGroundScale = 20.0f;
+    constexpr float kGroundWorldHalfY = 0.05f;
+
     const Nebula::Entity groundEntity = scene.createEntity();
     scene.addComponent<Nebula::TagComponent>(groundEntity).tag = kGroundTag;
     auto &groundTransform = scene.addComponent<Nebula::TransformComponent>(groundEntity);
-    groundTransform.transform.setPosition(Nebula::Vec3{0.0f, 0.0f, 0.0f});
+    // Thin collider slab: top face at y=0 (mesh plane). Transform sits below so scaled
+    // halfExtents align with the visible ground surface, not a meter above it.
+    groundTransform.transform.setPosition(Nebula::Vec3{0.0f, -kGroundWorldHalfY, 0.0f});
     groundTransform.transform.setYaw(0.0f);
-    groundTransform.transform.setScale(20.0f);
+    groundTransform.transform.setScale(kGroundScale);
     auto &groundMesh = scene.addComponent<Nebula::MeshRendererComponent>(groundEntity);
     groundMesh.m_meshPath = "builtin/meshes/ground";
     groundMesh.m_materialPath = "builtin/materials/ground";
     auto &groundCollider = scene.addComponent<Nebula::ColliderComponent>(groundEntity);
-    groundCollider.halfExtents = {12.0f, 0.05f, 12.0f};
+    groundCollider.halfExtents = {12.0f, kGroundWorldHalfY / kGroundScale, 12.0f};
     groundCollider.isStatic = true;
     groundCollider.isTrigger = false;
     groundCollider.shape = Nebula::ColliderComponent::Shape::Box;

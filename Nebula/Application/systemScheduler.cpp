@@ -26,6 +26,12 @@ namespace Nebula
       accumulator -= fixedStep;
       steps++;
     }
+    // Always simulate at least once per rendered frame so one-frame inputs (jump)
+    // aren't dropped when frameDt < fixedStep.
+    if (steps == 0 && frameDt > 0.f)
+    {
+      run(phase, fixedDt);
+    }
   }
 
   std::vector<SystemScheduler::SystemFn> &SystemScheduler::bucket(SystemPhase p)

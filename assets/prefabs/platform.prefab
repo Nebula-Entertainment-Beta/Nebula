@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "entity": {
+    "TagComponent": {
+      "tag": "Platform"
+    },
+    "MeshRendererComponent": {
+      "meshPath": "builtin/meshes/cube",
+      "materialPath": "builtin/materials/cube"
+    },
+    "TransformComponent": {
+      "position": [0.0, 0.5, 0.0],
+      "yaw": 0.0,
+      "scale": 1.0
+    },
+    "ColliderComponent": {
+      "shape": "Box",
+      "halfExtents": [0.5, 0.5, 0.5],
+      "isTrigger": false,
+      "isStatic": true
+    }
+  }
+}

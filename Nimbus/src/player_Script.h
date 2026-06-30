@@ -61,6 +61,10 @@ namespace Nimbus
     float m_velocityY = 0.f;
     float m_coyoteTimer = 0.f;
     float m_jumpBufferTimer = 0.f;
+    float m_jumpGraceTimer = 0.f;
+    bool m_wantsJump = false;
+    bool m_prevJumpHeld = false;
+    bool m_pendingJumpCut = false;
     bool m_pendingGroundSnap = true;
     TraversalSettings m_traversal{};
     Nebula::Entity m_traversalDirector{};
