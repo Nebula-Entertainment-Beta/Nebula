@@ -9,6 +9,7 @@ namespace Editor
   {
     constexpr const char *kKnownPrefabs[] = {
         "prefabs/enemy.prefab",
+        "prefabs/enemy_fast.prefab",
         "prefabs/platform.prefab",
         "prefabs/bounce_pad.prefab",
         "prefabs/wind_volume.prefab",
@@ -41,7 +42,7 @@ namespace Editor
       }
       if (scene.hasComponent<Nebula::PrefabInstanceComponent>(entity))
       {
-        label += " [" + scene.getComponent<Nebula::PrefabInstanceComponent>(entity).prefabPath + "]";
+        label = "[Prefab] " + label;
       }
 
       ImGui::PushID(static_cast<int>(entity.id));

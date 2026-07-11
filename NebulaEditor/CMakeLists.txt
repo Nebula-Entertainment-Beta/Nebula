@@ -27,6 +27,7 @@ add_library(NebulaEditorLib STATIC
   src/panels/hierarchyPanel.cpp
   src/panels/inspectorPanel.cpp
   src/panels/consolePanel.cpp
+  src/panels/debugPanel.cpp
   src/render/sceneViewFrameBuffer.cpp
 )
 

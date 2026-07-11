@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "basePrefab": "prefabs/enemy.prefab",
+  "overrides": {
+    "ScriptComponent": {
+      "paramsJson": {
+        "health": 50.0,
+        "attackDamage": 30.0
+      }
+    },
+    "TransformComponent": {
+      "scale": 1.2
+    }
+  }
+}
