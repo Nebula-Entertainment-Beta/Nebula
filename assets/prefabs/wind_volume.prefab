@@ -5,13 +5,13 @@
       "tag": "WindVolume"
     },
     "MeshRendererComponent": {
-      "meshPath": "builtin/meshes/cube",
-      "materialPath": "builtin/materials/cube"
+      "meshPath": "meshes/wind_volume.mesh",
+      "materialPath": "materials/wind_volume.mat"
     },
     "TransformComponent": {
       "position": [0.0, 1.0, 0.0],
       "yaw": 0.0,
-      "scale": 2.0
+      "scale": 0.01
     },
     "ColliderComponent": {
       "shape": "Box",

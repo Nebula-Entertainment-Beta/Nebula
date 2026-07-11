@@ -12,6 +12,7 @@ namespace Editor
     std::string scenePath = "scenes/combat_arena.json";
     bool sceneDirty = false;
     bool showColliderGizmos = true;
+    bool showTransformGizmo = true;
   };
 
 }

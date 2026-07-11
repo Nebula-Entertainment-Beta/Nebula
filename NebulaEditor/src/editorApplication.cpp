@@ -102,14 +102,20 @@ namespace Editor
 
     m_hierarchy.drawHierarchyPanel(getScene(), m_state);
     m_console.drawConsolePanel(m_editorLog);
+    m_debug.drawDebugPanel(m_state, getScene(), getInput(), getActionMapping(), getScriptFieldRegistry(),
+                           isPlaying());
     m_inspector.drawInspectorPanel(m_state, getScene(), m_state.selectedEntity,
-                                   getScriptFieldRegistry(), getScriptRegistry(), getAssetManager(), [this]()
+                                   getScriptFieldRegistry(), getScriptRegistry(), getAssetManager(),
+                                   getAssets(), getRenderer().resources(),
+                                   [this]()
                                    {
-      resolveSceneAssets();
-      m_state.sceneDirty = true; });
-
-    // call drawer
-    DebugPanelDrawer isPlaying;
+                                     resolveSceneAssets();
+                                     m_state.sceneDirty = true;
+                                   },
+                                   [this]()
+                                   { revertSelectedPrefabInstance(); },
+                                   [this]()
+                                   { createVariantFromSelectedInstance(); });
 
     m_sceneViewPanel.drawSceneViewPanel(m_state, m_sceneViewFrameBuffer, getScene(), getAssetManager(),
                                         getRenderer(), getWindow());
@@ -136,6 +142,7 @@ namespace Editor
     ImGui::DockBuilderDockWindow("Hierarchy", dockLeft);
     ImGui::DockBuilderDockWindow("Inspector", dockRight);
     ImGui::DockBuilderDockWindow("Console", dockBottom);
+    ImGui::DockBuilderDockWindow("Debug", dockBottom);
     ImGui::DockBuilderDockWindow("Scene View", dockMain);
     ImGui::DockBuilderFinish(dockspaceId);
   }
@@ -181,7 +188,14 @@ namespace Editor
           {
             if (ImGui::MenuItem(preset.label))
             {
-              newScene(preset.build);
+              if (preset.loadPath != nullptr)
+              {
+                newSceneFromPath(preset.loadPath);
+              }
+              else
+              {
+                newScene(preset.build);
+              }
             }
           }
           ImGui::EndMenu();
@@ -227,10 +241,19 @@ namespace Editor
         {
           saveSelectedEntityAsPrefab();
         }
+        if (ImGui::MenuItem("Revert Selected to Prefab"))
+        {
+          revertSelectedPrefabInstance();
+        }
+        if (ImGui::MenuItem("Create Variant from Selected"))
+        {
+          createVariantFromSelectedInstance();
+        }
         if (ImGui::BeginMenu("Instantiate Prefab"))
         {
           static const char *kKnownPrefabs[] = {
               "prefabs/enemy.prefab",
+              "prefabs/enemy_fast.prefab",
               "prefabs/platform.prefab",
               "prefabs/bounce_pad.prefab",
               "prefabs/wind_volume.prefab",
@@ -322,6 +345,24 @@ namespace Editor
     m_editorLog.info("New scene created");
   }
 
+  void EditorApplication::newSceneFromPath(std::string_view path)
+  {
+    getScene().clear();
+    m_state.selectedEntity = {};
+
+    if (!Nebula::SceneSerializer::load(getScene(), getAssets(), path))
+    {
+      m_editorLog.info("Failed to load scene: " + std::string(path));
+      return;
+    }
+
+    m_state.scenePath = std::string(path);
+    m_state.sceneDirty = false;
+    resolveSceneAssets();
+    Nebula::Application::onStartup();
+    m_editorLog.info("Scene loaded: " + std::string(path));
+  }
+
   void EditorApplication::createEmptyEntity()
   {
     createEntityFromTemplate("empty");
@@ -381,6 +422,48 @@ namespace Editor
       resolveSceneAssets();
     }
     return e;
+  }
+
+  void EditorApplication::revertSelectedPrefabInstance()
+  {
+    if (!Nebula::PrefabService::revertInstance(getScene(), m_state.selectedEntity, getAssetManager(),
+                                               getAssets(), getRenderer().resources()))
+    {
+      return;
+    }
+    m_state.sceneDirty = true;
+    resolveSceneAssets();
+    m_editorLog.info("Reverted prefab instance");
+  }
+
+  void EditorApplication::createVariantFromSelectedInstance()
+  {
+    Nebula::Scene &scene = getScene();
+    if (!scene.isValidEntity(m_state.selectedEntity) ||
+        !scene.hasComponent<Nebula::PrefabInstanceComponent>(m_state.selectedEntity))
+    {
+      return;
+    }
+
+    std::string path = "prefabs/";
+    if (scene.hasComponent<Nebula::TagComponent>(m_state.selectedEntity))
+    {
+      for (char c : scene.getComponent<Nebula::TagComponent>(m_state.selectedEntity).tag)
+      {
+        path.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+      }
+    }
+    else
+    {
+      path += "entity_" + std::to_string(m_state.selectedEntity.id);
+    }
+    path += "_variant.prefab";
+
+    if (Nebula::PrefabService::saveVariantFromInstance(scene, m_state.selectedEntity, getAssetManager(),
+                                                        getAssets(), path))
+    {
+      m_editorLog.info("Saved prefab variant: " + path);
+    }
   }
 
   void EditorApplication::deleteSelectedEntity()

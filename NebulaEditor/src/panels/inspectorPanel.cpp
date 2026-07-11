@@ -1,6 +1,9 @@
 #include "inspectorPanel.h"
 #include "collider_fit.h"
 #include "physics/physics_component.h"
+#include "prefabInstance.h"
+#include "prefabService.h"
+
 #include <imgui.h>
 
 #include <cstring>
@@ -62,6 +65,22 @@ namespace Editor
       }
       return ids.front();
     }
+
+    std::string entityVectorToJson(const std::vector<Nebula::Entity> &entities)
+    {
+      std::string json = "[";
+      for (std::size_t i = 0; i < entities.size(); ++i)
+      {
+        if (i > 0)
+        {
+          json += ",";
+        }
+        json += "{\"id\":" + std::to_string(entities[i].id) +
+                ",\"generation\":" + std::to_string(entities[i].generation) + "}";
+      }
+      json += "]";
+      return json;
+    }
   } // namespace
 
   bool InspectorPanel::drawComponentHeaderWithRemove(const char *title, const char *buttonId)
@@ -70,6 +89,144 @@ namespace Editor
     ImGui::TextUnformatted(title);
     ImGui::SameLine();
     return ImGui::SmallButton(buttonId);
+  }
+
+  std::string InspectorPanel::entityLabel(Nebula::Scene &scene, Nebula::Entity entity) const
+  {
+    if (!scene.isValidEntity(entity))
+    {
+      return "(invalid)";
+    }
+    if (scene.hasComponent<Nebula::TagComponent>(entity))
+    {
+      return scene.getComponent<Nebula::TagComponent>(entity).tag;
+    }
+    return "Entity " + std::to_string(entity.id);
+  }
+
+  bool InspectorPanel::isOverrideActive(Nebula::Scene &scene, Nebula::Entity entity, const char *componentKey,
+                                        const char *fieldKey) const
+  {
+    if (!scene.hasComponent<Nebula::PrefabInstanceComponent>(entity))
+    {
+      return false;
+    }
+    const auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(entity);
+    return Nebula::PrefabService::overridesContainPath(inst.overridesJson, componentKey, fieldKey);
+  }
+
+  void InspectorPanel::drawPrefabInstanceHeader(Nebula::Scene &scene, Nebula::Entity entity, EditorState &state,
+                                                std::function<void()> onRevertPrefab,
+                                                std::function<void()> onCreateVariant)
+  {
+    if (!scene.hasComponent<Nebula::PrefabInstanceComponent>(entity))
+    {
+      return;
+    }
+
+    const auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(entity);
+    ImGui::Separator();
+    ImGui::TextUnformatted("Prefab Instance");
+    ImGui::Text("Source: %s", inst.prefabPath.c_str());
+    if (ImGui::Button("Revert to Prefab"))
+    {
+      onRevertPrefab();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Create Variant"))
+    {
+      onCreateVariant();
+      state.sceneDirty = true;
+    }
+  }
+
+  void InspectorPanel::drawOverrideResetButton(Nebula::Scene &scene, Nebula::Entity entity, EditorState &state,
+                                               Nebula::AssetManager &assets, Nebula::IAssetProvider &fileProvider,
+                                               const char *componentKey, const char *fieldKey)
+  {
+    if (!isOverrideActive(scene, entity, componentKey, fieldKey))
+    {
+      return;
+    }
+    ImGui::SameLine();
+    if (ImGui::SmallButton("Reset"))
+    {
+      if (Nebula::PrefabService::resetInstanceOverrideField(scene, entity, assets, fileProvider, componentKey,
+                                                            fieldKey))
+      {
+        state.sceneDirty = true;
+      }
+    }
+  }
+
+  void InspectorPanel::drawTransformFields(Nebula::Scene &scene, Nebula::Entity entity, EditorState &state,
+                                         bool isPrefabInstance, Nebula::AssetManager &assets,
+                                         Nebula::IAssetProvider &fileProvider)
+  {
+    auto &t = scene.getComponent<Nebula::TransformComponent>(entity).transform;
+    float pos[3] = {t.getPosition().x, t.getPosition().y, t.getPosition().z};
+
+    std::string posLabel = "Position";
+    if (isPrefabInstance && isOverrideActive(scene, entity, "TransformComponent", "position"))
+    {
+      posLabel += "*";
+    }
+    if (ImGui::DragFloat3(posLabel.c_str(), pos, 0.05f))
+    {
+      t.setPosition({pos[0], pos[1], pos[2]});
+      if (isPrefabInstance)
+      {
+        auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(entity);
+        Nebula::PrefabService::setInstanceOverrideField(inst, "TransformComponent", "position", pos);
+      }
+      state.sceneDirty = true;
+    }
+    if (isPrefabInstance)
+    {
+      drawOverrideResetButton(scene, entity, state, assets, fileProvider, "TransformComponent", "position");
+    }
+
+    float yaw = t.getYaw();
+    std::string yawLabel = "Yaw";
+    if (isPrefabInstance && isOverrideActive(scene, entity, "TransformComponent", "yaw"))
+    {
+      yawLabel += "*";
+    }
+    if (ImGui::DragFloat(yawLabel.c_str(), &yaw, 0.01f))
+    {
+      t.setYaw(yaw);
+      if (isPrefabInstance)
+      {
+        auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(entity);
+        Nebula::PrefabService::setInstanceOverrideField(inst, "TransformComponent", "yaw", yaw);
+      }
+      state.sceneDirty = true;
+    }
+    if (isPrefabInstance)
+    {
+      drawOverrideResetButton(scene, entity, state, assets, fileProvider, "TransformComponent", "yaw");
+    }
+
+    float scale = t.getScale();
+    std::string scaleLabel = "Scale";
+    if (isPrefabInstance && isOverrideActive(scene, entity, "TransformComponent", "scale"))
+    {
+      scaleLabel += "*";
+    }
+    if (ImGui::DragFloat(scaleLabel.c_str(), &scale, 0.01f))
+    {
+      t.setScale(scale);
+      if (isPrefabInstance)
+      {
+        auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(entity);
+        Nebula::PrefabService::setInstanceOverrideField(inst, "TransformComponent", "scale", scale);
+      }
+      state.sceneDirty = true;
+    }
+    if (isPrefabInstance)
+    {
+      drawOverrideResetButton(scene, entity, state, assets, fileProvider, "TransformComponent", "scale");
+    }
   }
 
   void InspectorPanel::drawMeshRendererFields(Nebula::MeshRendererComponent &meshRenderer,
@@ -219,11 +376,109 @@ namespace Editor
     }
   }
 
+  void InspectorPanel::drawEntityVectorField(Nebula::Entity owner, const Nebula::ScriptFieldDescriptor &field,
+                                             Nebula::ScriptComponent &script, Nebula::Scene &scene,
+                                             EditorState &state, bool isPrefabInstance)
+  {
+    std::vector<Nebula::Entity> entities =
+        m_scriptParams.readScriptParamEntityVector(script.paramsJson, field);
+
+    std::string header = field.name;
+    if (isPrefabInstance)
+    {
+      const std::string overrideKey = "paramsJson." + field.name;
+      if (isOverrideActive(scene, owner, "ScriptComponent", overrideKey.c_str()))
+      {
+        header += "*";
+      }
+    }
+    ImGui::TextUnformatted(header.c_str());
+
+    int removeIndex = -1;
+    for (int i = 0; i < static_cast<int>(entities.size()); ++i)
+    {
+      ImGui::PushID(i);
+      const std::string currentLabel = entityLabel(scene, entities[static_cast<std::size_t>(i)]);
+      if (ImGui::BeginCombo("Entity", currentLabel.c_str()))
+      {
+        for (Nebula::Entity candidate : scene.getAllEntities())
+        {
+          if (candidate == owner)
+          {
+            continue;
+          }
+          const std::string candidateLabel = entityLabel(scene, candidate);
+          const bool selected = entities[static_cast<std::size_t>(i)] == candidate;
+          if (ImGui::Selectable(candidateLabel.c_str(), selected))
+          {
+            entities[static_cast<std::size_t>(i)] = candidate;
+            script.paramsJson = m_scriptParams.setScriptParamEntityVector(script.paramsJson, field.name, entities);
+            if (isPrefabInstance)
+            {
+              auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(owner);
+              Nebula::PrefabService::setInstanceOverrideFieldJson(
+                  inst, "ScriptComponent", ("paramsJson." + field.name).c_str(),
+                  entityVectorToJson(entities));
+            }
+            state.sceneDirty = true;
+          }
+        }
+        ImGui::EndCombo();
+      }
+      ImGui::SameLine();
+      if (ImGui::SmallButton("Remove"))
+      {
+        removeIndex = i;
+      }
+      ImGui::PopID();
+    }
+
+    if (removeIndex >= 0)
+    {
+      entities.erase(entities.begin() + removeIndex);
+      script.paramsJson = m_scriptParams.setScriptParamEntityVector(script.paramsJson, field.name, entities);
+      if (isPrefabInstance)
+      {
+        auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(owner);
+        Nebula::PrefabService::setInstanceOverrideFieldJson(
+            inst, "ScriptComponent", ("paramsJson." + field.name).c_str(), entityVectorToJson(entities));
+      }
+      state.sceneDirty = true;
+    }
+
+    if (ImGui::Button("Add Entity"))
+    {
+      for (Nebula::Entity candidate : scene.getAllEntities())
+      {
+        if (candidate == owner)
+        {
+          continue;
+        }
+        entities.push_back(candidate);
+        break;
+      }
+      script.paramsJson = m_scriptParams.setScriptParamEntityVector(script.paramsJson, field.name, entities);
+      if (isPrefabInstance)
+      {
+        auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(owner);
+        Nebula::PrefabService::setInstanceOverrideFieldJson(
+            inst, "ScriptComponent", ("paramsJson." + field.name).c_str(), entityVectorToJson(entities));
+      }
+      state.sceneDirty = true;
+    }
+  }
+
   void InspectorPanel::drawInspectorPanel(EditorState &state, Nebula::Scene &scene,
                                           Nebula::Entity entity, Nebula::ScriptFieldRegistry &scriptFieldRegistry,
                                           Nebula::ScriptRegistry &scriptRegistry, Nebula::AssetManager &assets,
-                                          std::function<void()> onSceneEdited)
+                                          Nebula::IAssetProvider &fileProvider,
+                                          Nebula::IRenderResourceFactory &renderResources,
+                                          std::function<void()> onSceneEdited,
+                                          std::function<void()> onRevertPrefab,
+                                          std::function<void()> onCreateVariant)
   {
+    (void)fileProvider;
+    (void)renderResources;
     ImGui::Begin("Inspector");
 
     if (!scene.isValidEntity(entity))
@@ -233,6 +488,9 @@ namespace Editor
       return;
     }
 
+    const bool isPrefabInstance = scene.hasComponent<Nebula::PrefabInstanceComponent>(entity);
+    drawPrefabInstanceHeader(scene, entity, state, onRevertPrefab, onCreateVariant);
+
     if (!scene.hasComponent<Nebula::TransformComponent>(entity))
     {
       scene.addComponent<Nebula::TransformComponent>(entity);
@@ -240,25 +498,7 @@ namespace Editor
 
     if (scene.hasComponent<Nebula::TransformComponent>(entity))
     {
-      auto &t = scene.getComponent<Nebula::TransformComponent>(entity).transform;
-      float pos[3] = {t.getPosition().x, t.getPosition().y, t.getPosition().z};
-      if (ImGui::DragFloat3("Position", pos, 0.05f))
-      {
-        t.setPosition({pos[0], pos[1], pos[2]});
-        state.sceneDirty = true;
-      }
-      float yaw = t.getYaw();
-      if (ImGui::DragFloat("Yaw", &yaw, 0.01f))
-      {
-        t.setYaw(yaw);
-        state.sceneDirty = true;
-      }
-      float scale = t.getScale();
-      if (ImGui::DragFloat("Scale", &scale, 0.01f))
-      {
-        t.setScale(scale);
-        state.sceneDirty = true;
-      }
+      drawTransformFields(scene, entity, state, isPrefabInstance, assets, fileProvider);
     }
 
     if (scene.hasComponent<Nebula::TagComponent>(entity))
@@ -313,7 +553,7 @@ namespace Editor
       {
         drawScriptSelector(scene.getComponent<Nebula::ScriptComponent>(entity), scriptFieldRegistry, scriptRegistry,
                            state);
-        drawScriptFields(entity, scriptFieldRegistry, scene, state);
+        drawScriptFields(entity, scriptFieldRegistry, scene, state, isPrefabInstance, assets, fileProvider);
       }
     }
 
@@ -407,7 +647,8 @@ namespace Editor
   }
 
   void InspectorPanel::drawScriptFields(Nebula::Entity entity, Nebula::ScriptFieldRegistry &fieldRegistry,
-                                        Nebula::Scene &scene, EditorState &state)
+                                        Nebula::Scene &scene, EditorState &state, bool isPrefabInstance,
+                                        Nebula::AssetManager &assets, Nebula::IAssetProvider &fileProvider)
   {
     if (!scene.hasComponent<Nebula::ScriptComponent>(entity))
     {
@@ -434,31 +675,96 @@ namespace Editor
         case Nebula::ScriptFieldType::Float:
         {
           float v = m_scriptParams.readScriptParamFloat(script.paramsJson, field);
-          if (ImGui::DragFloat(field.name.c_str(), &v, 0.01f))
+          std::string label = field.name;
+          if (isPrefabInstance)
+          {
+            const std::string overrideKey = "paramsJson." + field.name;
+            if (isOverrideActive(scene, entity, "ScriptComponent", overrideKey.c_str()))
+            {
+              label += "*";
+            }
+          }
+          if (ImGui::DragFloat(label.c_str(), &v, 0.01f))
           {
             script.paramsJson = m_scriptParams.setScriptParamFloat(script.paramsJson, field.name, v);
+            if (isPrefabInstance)
+            {
+              auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(entity);
+              Nebula::PrefabService::setInstanceOverrideField(
+                  inst, "ScriptComponent", ("paramsJson." + field.name).c_str(), v);
+            }
             state.sceneDirty = true;
+          }
+          if (isPrefabInstance)
+          {
+            drawOverrideResetButton(scene, entity, state, assets, fileProvider, "ScriptComponent",
+                                    ("paramsJson." + field.name).c_str());
           }
           break;
         }
         case Nebula::ScriptFieldType::Int:
         {
           int v = m_scriptParams.readScriptParamInt(script.paramsJson, field);
-          if (ImGui::DragInt(field.name.c_str(), &v))
+          std::string label = field.name;
+          if (isPrefabInstance)
+          {
+            const std::string overrideKey = "paramsJson." + field.name;
+            if (isOverrideActive(scene, entity, "ScriptComponent", overrideKey.c_str()))
+            {
+              label += "*";
+            }
+          }
+          if (ImGui::DragInt(label.c_str(), &v))
           {
             script.paramsJson = m_scriptParams.setScriptParamInt(script.paramsJson, field.name, v);
+            if (isPrefabInstance)
+            {
+              auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(entity);
+              Nebula::PrefabService::setInstanceOverrideField(
+                  inst, "ScriptComponent", ("paramsJson." + field.name).c_str(), v);
+            }
             state.sceneDirty = true;
+          }
+          if (isPrefabInstance)
+          {
+            drawOverrideResetButton(scene, entity, state, assets, fileProvider, "ScriptComponent",
+                                    ("paramsJson." + field.name).c_str());
           }
           break;
         }
         case Nebula::ScriptFieldType::Bool:
         {
           bool v = m_scriptParams.readScriptParamBool(script.paramsJson, field);
-          if (ImGui::Checkbox(field.name.c_str(), &v))
+          std::string label = field.name;
+          if (isPrefabInstance)
+          {
+            const std::string overrideKey = "paramsJson." + field.name;
+            if (isOverrideActive(scene, entity, "ScriptComponent", overrideKey.c_str()))
+            {
+              label += "*";
+            }
+          }
+          if (ImGui::Checkbox(label.c_str(), &v))
           {
             script.paramsJson = m_scriptParams.setScriptParamBool(script.paramsJson, field.name, v);
+            if (isPrefabInstance)
+            {
+              auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(entity);
+              Nebula::PrefabService::setInstanceOverrideField(
+                  inst, "ScriptComponent", ("paramsJson." + field.name).c_str(), v);
+            }
             state.sceneDirty = true;
           }
+          if (isPrefabInstance)
+          {
+            drawOverrideResetButton(scene, entity, state, assets, fileProvider, "ScriptComponent",
+                                    ("paramsJson." + field.name).c_str());
+          }
+          break;
+        }
+        case Nebula::ScriptFieldType::EntityVector:
+        {
+          drawEntityVectorField(entity, field, script, scene, state, isPrefabInstance);
           break;
         }
         }

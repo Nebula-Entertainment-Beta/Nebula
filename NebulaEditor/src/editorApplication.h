@@ -12,6 +12,7 @@
 #include "hierarchyPanel.h"
 #include "inspectorPanel.h"
 #include "consolePanel.h"
+#include "debugPanel.h"
 #include "editorLog.h"
 #include "editorPlayMode.h"
 #include "sceneSerializer.h"
@@ -20,7 +21,6 @@
 
 namespace Editor
 {
-  using DebugPanelDrawer = std::function<void(bool isPlaying)>;
   using ScriptRegistrar = std::function<void(
       Nebula::ScriptRegistry &,
       Nebula::ScriptFieldRegistry &)>;
@@ -32,6 +32,8 @@ namespace Editor
   {
     const char *label = "";
     NewSceneBuilder build;
+    /** When non-null, loads this scene file instead of calling @p build. */
+    const char *loadPath = nullptr;
   };
 
   /** Forwards engine script logs into the editor Console panel. */
@@ -60,6 +62,8 @@ namespace Editor
     void registerGameSystems() override;
     bool saveSelectedAsPrefab(std::string_view logicalPath);
     Nebula::Entity instantiatePrefab(std::string_view prefabPath);
+    void revertSelectedPrefabInstance();
+    void createVariantFromSelectedInstance();
     void createEntityFromTemplate(const char *templateId);
 
   protected:
@@ -77,6 +81,7 @@ namespace Editor
     HierarchyPanel m_hierarchy;
     InspectorPanel m_inspector;
     ConsolePanel m_console;
+    DebugPanel m_debug;
     EditorLog m_editorLog;
     EditorLogSink m_scriptLogSink;
     EditorPlayMode m_playmode;
@@ -94,5 +99,6 @@ namespace Editor
     void saveSelectedEntityAsPrefab();
     void setupDefaultDockLayout(ImGuiID dockspaceId);
     void newScene(NewSceneBuilder builder);
+    void newSceneFromPath(std::string_view path);
   };
 }

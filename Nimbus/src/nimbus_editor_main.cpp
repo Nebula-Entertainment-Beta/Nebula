@@ -10,6 +10,7 @@ int main()
   const std::vector<Editor::ScenePreset> scenePresets = {
       {"Combat Arena", Nimbus::buildCombatArenaScene},
       {"Traversal Test", Nimbus::buildTraversalTestScene},
+      {"Prefab Encounter Test", nullptr, "scenes/encounter_prefab_test.json"},
   };
 
   Editor::EditorApplication app(

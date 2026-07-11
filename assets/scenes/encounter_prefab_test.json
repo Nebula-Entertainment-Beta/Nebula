@@ -1,0 +1,192 @@
+{
+  "version": 2,
+  "entities": [
+    {
+      "id": 1,
+      "TagComponent": { "tag": "Player" },
+      "TransformComponent": { "position": [0.0, 1.0, 0.0], "yaw": 0.0, "scale": 1.0 },
+      "MeshRendererComponent": {
+        "meshPath": "builtin/meshes/cube",
+        "materialPath": "builtin/materials/player"
+      },
+      "ColliderComponent": {
+        "shape": "Box",
+        "halfExtents": [0.5, 0.5, 0.5],
+        "isTrigger": false,
+        "isStatic": false
+      },
+      "RigidBodyComponent": { "mass": 1.0, "kinematic": true },
+      "ScriptComponent": { "scriptName": "Player", "paramsJson": { "moveSpeed": 3.0 } }
+    },
+    {
+      "id": 2,
+      "TagComponent": { "tag": "MainCamera" },
+      "TransformComponent": { "position": [0.0, 0.0, 0.0], "yaw": 0.0, "scale": 1.0 },
+      "CameraComponent": {
+        "pivotOffset": [0.0, 0.35, 0.0],
+        "distance": 6.0,
+        "yaw": 0.7,
+        "pitch": -0.3,
+        "fov": 55.0,
+        "nearClip": 0.1,
+        "farClip": 100.0,
+        "isPrimary": true,
+        "targetTag": "Player",
+        "targetEntityId": 1
+      },
+      "ScriptComponent": { "scriptName": "MainCamera", "paramsJson": {} }
+    },
+    {
+      "id": 3,
+      "TagComponent": { "tag": "Platform" },
+      "TransformComponent": { "position": [0.0, 0.5, 0.0], "yaw": 0.0, "scale": 4.0 },
+      "MeshRendererComponent": {
+        "meshPath": "builtin/meshes/cube",
+        "materialPath": "builtin/materials/cube"
+      },
+      "ColliderComponent": {
+        "shape": "Box",
+        "halfExtents": [0.5, 0.5, 0.5],
+        "isTrigger": false,
+        "isStatic": true
+      },
+      "PrefabInstanceComponent": {
+        "prefabPath": "prefabs/platform.prefab",
+        "overridesJson": {
+          "TransformComponent": {
+            "position": [0.0, 0.5, 0.0],
+            "scale": 4.0
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "TagComponent": { "tag": "Platform" },
+      "TransformComponent": { "position": [6.0, 0.5, 0.0], "yaw": 0.0, "scale": 2.0 },
+      "MeshRendererComponent": {
+        "meshPath": "builtin/meshes/cube",
+        "materialPath": "builtin/materials/cube"
+      },
+      "ColliderComponent": {
+        "shape": "Box",
+        "halfExtents": [0.5, 0.5, 0.5],
+        "isTrigger": false,
+        "isStatic": true
+      },
+      "PrefabInstanceComponent": {
+        "prefabPath": "prefabs/platform.prefab",
+        "overridesJson": {
+          "TransformComponent": {
+            "position": [6.0, 0.5, 0.0],
+            "scale": 2.0
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "TagComponent": { "tag": "Platform" },
+      "TransformComponent": { "position": [-6.0, 0.5, 0.0], "yaw": 0.0, "scale": 2.0 },
+      "MeshRendererComponent": {
+        "meshPath": "builtin/meshes/cube",
+        "materialPath": "builtin/materials/cube"
+      },
+      "ColliderComponent": {
+        "shape": "Box",
+        "halfExtents": [0.5, 0.5, 0.5],
+        "isTrigger": false,
+        "isStatic": true
+      },
+      "PrefabInstanceComponent": {
+        "prefabPath": "prefabs/platform.prefab",
+        "overridesJson": {
+          "TransformComponent": {
+            "position": [-6.0, 0.5, 0.0],
+            "scale": 2.0
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "TagComponent": { "tag": "Enemy" },
+      "TransformComponent": { "position": [2.0, 1.0, 2.0], "yaw": 0.0, "scale": 1.0 },
+      "MeshRendererComponent": {
+        "meshPath": "builtin/meshes/cube",
+        "materialPath": "builtin/materials/enemy"
+      },
+      "ScriptComponent": {
+        "scriptName": "Enemy",
+        "paramsJson": { "health": 100.0, "attackDamage": 20.0 }
+      },
+      "PrefabInstanceComponent": {
+        "prefabPath": "prefabs/enemy.prefab",
+        "overridesJson": {
+          "TransformComponent": {
+            "position": [2.0, 1.0, 2.0]
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "TagComponent": { "tag": "Enemy" },
+      "TransformComponent": { "position": [-2.0, 1.0, 2.0], "yaw": 0.0, "scale": 1.2 },
+      "MeshRendererComponent": {
+        "meshPath": "builtin/meshes/cube",
+        "materialPath": "builtin/materials/enemy"
+      },
+      "ScriptComponent": {
+        "scriptName": "Enemy",
+        "paramsJson": { "health": 50.0, "attackDamage": 30.0 }
+      },
+      "PrefabInstanceComponent": {
+        "prefabPath": "prefabs/enemy_fast.prefab",
+        "overridesJson": {
+          "TransformComponent": {
+            "position": [-2.0, 1.0, 2.0]
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "TagComponent": { "tag": "BouncePad" },
+      "TransformComponent": { "position": [0.0, 0.25, 5.0], "yaw": 0.0, "scale": 1.5 },
+      "MeshRendererComponent": {
+        "meshPath": "builtin/meshes/cube",
+        "materialPath": "builtin/materials/cube"
+      },
+      "ColliderComponent": {
+        "shape": "Box",
+        "halfExtents": [0.5, 0.5, 0.5],
+        "isTrigger": true,
+        "isStatic": true
+      },
+      "ScriptComponent": { "scriptName": "BouncePad", "paramsJson": { "impulse": 14.0 } },
+      "PrefabInstanceComponent": {
+        "prefabPath": "prefabs/bounce_pad.prefab",
+        "overridesJson": {
+          "TransformComponent": {
+            "position": [0.0, 0.25, 5.0]
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "TagComponent": { "tag": "WaveSpawner" },
+      "TransformComponent": { "position": [0.0, 1.0, 0.0], "yaw": 0.0, "scale": 1.0 },
+      "ScriptComponent": {
+        "scriptName": "WaveSpawner",
+        "paramsJson": {
+          "waveEnemies": [
+            { "id": 6, "generation": 0 },
+            { "id": 7, "generation": 0 }
+          ]
+        }
+      }
+    }
+  ]
+}

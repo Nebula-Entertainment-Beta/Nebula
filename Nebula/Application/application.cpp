@@ -162,6 +162,12 @@ namespace Nebula
     ScriptContext ctx{m_sceneAccess, &m_inputQuery, m_logSink};
     ctx.physics = m_physicsQuery.get();
     ctx.physicsScene = &m_scene;
+    ctx.assetManager = &m_assetManager;
+    ctx.assets = &m_assets;
+    if (m_rendererInitialized)
+    {
+      ctx.renderResources = &m_renderer.resources();
+    }
     ctx.scriptRebuildUserData = this;
     ctx.requestScriptRebuildFn = &Application::onRequestScriptRebuild;
     return ctx;

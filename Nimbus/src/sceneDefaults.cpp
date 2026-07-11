@@ -40,8 +40,8 @@ namespace Nimbus
       transform.transform.setYaw(0.0f);
       transform.transform.setScale(scale);
       auto &mesh = scene.addComponent<Nebula::MeshRendererComponent>(entity);
-      mesh.m_meshPath = "builtin/meshes/cube";
-      mesh.m_materialPath = "builtin/materials/cube";
+      mesh.m_meshPath = "meshes/bounce_pad.mesh";
+      mesh.m_materialPath = "materials/bounce_pad.mat";
       auto &collider = scene.addComponent<Nebula::ColliderComponent>(entity);
       collider.halfExtents = {0.5f, 0.5f, 0.5f};
       collider.isStatic = true;
@@ -60,8 +60,8 @@ namespace Nimbus
       transform.transform.setYaw(0.0f);
       transform.transform.setScale(scale);
       auto &mesh = scene.addComponent<Nebula::MeshRendererComponent>(entity);
-      mesh.m_meshPath = "builtin/meshes/cube";
-      mesh.m_materialPath = "builtin/materials/cube";
+      mesh.m_meshPath = "meshes/wind_volume.mesh";
+      mesh.m_materialPath = "materials/wind_volume.mat";
       auto &collider = scene.addComponent<Nebula::ColliderComponent>(entity);
       collider.halfExtents = {0.5f, 0.5f, 0.5f};
       collider.isStatic = true;
@@ -137,12 +137,12 @@ namespace Nimbus
     auto &groundTransform = scene.addComponent<Nebula::TransformComponent>(groundEntity);
     // Thin collider slab: top face at y=0 (mesh plane). Transform sits below so scaled
     // halfExtents align with the visible ground surface, not a meter above it.
-    groundTransform.transform.setPosition(Nebula::Vec3{0.0f, -kGroundWorldHalfY, 0.0f});
+    groundTransform.transform.setPosition(Nebula::Vec3{0.0f, 9.73f, 0.0f});
     groundTransform.transform.setYaw(0.0f);
-    groundTransform.transform.setScale(kGroundScale);
+    groundTransform.transform.setScale(0.12f);
     auto &groundMesh = scene.addComponent<Nebula::MeshRendererComponent>(groundEntity);
-    groundMesh.m_meshPath = "builtin/meshes/ground";
-    groundMesh.m_materialPath = "builtin/materials/ground";
+    groundMesh.m_meshPath = "meshes/ground_cloud.mesh";
+    groundMesh.m_materialPath = "materials/ground_cloud.mat";
     auto &groundCollider = scene.addComponent<Nebula::ColliderComponent>(groundEntity);
     groundCollider.halfExtents = {12.0f, kGroundWorldHalfY / kGroundScale, 12.0f};
     groundCollider.isStatic = true;

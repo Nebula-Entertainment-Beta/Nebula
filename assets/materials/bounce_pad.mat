@@ -1,0 +1,5 @@
+{
+  "vert": "shaders/solid_color.vert",
+  "frag": "shaders/solid_color.frag",
+  "albedo": [0.55, 0.85, 1.0]
+}

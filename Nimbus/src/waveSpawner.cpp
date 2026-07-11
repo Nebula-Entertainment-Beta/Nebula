@@ -76,7 +76,7 @@ namespace Nimbus
       const float x = radius * std::cos(angle);
       const float z = radius * std::sin(angle);
       const Nebula::Vec3 position{x, 0.5f, z};
-      m_waveEnemies.push_back(spawnEnemy(ctx.scene, position));
+      m_waveEnemies.push_back(spawnEnemy(ctx, position));
     }
 
     if (ctx.scene.isValidEntity(entity))

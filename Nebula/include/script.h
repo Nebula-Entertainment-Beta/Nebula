@@ -20,6 +20,9 @@ namespace Nebula
 
   class IPhysicsQuery;
   class Scene;
+  class AssetManager;
+  class IAssetProvider;
+  class IRenderResourceFactory;
 
   struct ScriptContext
   {
@@ -28,6 +31,9 @@ namespace Nebula
     ILogSink *log = nullptr;        // nullptr = no host console (standalone game)
     IPhysicsQuery *physics = nullptr;
     Scene *physicsScene = nullptr;
+    AssetManager *assetManager = nullptr;
+    const IAssetProvider *assets = nullptr;
+    IRenderResourceFactory *renderResources = nullptr;
     void *scriptRebuildUserData = nullptr;
     void (*requestScriptRebuildFn)(void *userData) = nullptr;
 

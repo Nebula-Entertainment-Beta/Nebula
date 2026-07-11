@@ -1,0 +1,109 @@
+{
+  "version": 2,
+  "entities": [
+    {
+      "id": 1,
+      "TagComponent": { "tag": "Ground" },
+      "TransformComponent": { "position": [0.0, 9.73, 0.0], "yaw": 0.0, "scale": 0.12 },
+      "MeshRendererComponent": {
+        "meshPath": "meshes/ground_cloud.mesh",
+        "materialPath": "materials/ground_cloud.mat"
+      },
+      "ColliderComponent": {
+        "shape": "Box",
+        "halfExtents": [12.0, 0.0025, 12.0],
+        "isTrigger": false,
+        "isStatic": true
+      },
+      "ScriptComponent": { "scriptName": "Ground", "paramsJson": {} }
+    },
+    {
+      "id": 2,
+      "TagComponent": { "tag": "Platform" },
+      "TransformComponent": { "position": [3.0, 1.0, 0.0], "yaw": 0.0, "scale": 2.0 },
+      "MeshRendererComponent": {
+        "meshPath": "builtin/meshes/cube",
+        "materialPath": "builtin/materials/cube"
+      },
+      "ColliderComponent": {
+        "shape": "Box",
+        "halfExtents": [0.5, 0.5, 0.5],
+        "isTrigger": false,
+        "isStatic": true
+      }
+    },
+    {
+      "id": 3,
+      "TagComponent": { "tag": "Player" },
+      "TransformComponent": { "position": [0.0, 0.5, 0.0], "yaw": 0.0, "scale": 1.0 },
+      "MeshRendererComponent": {
+        "meshPath": "builtin/meshes/cube",
+        "materialPath": "builtin/materials/player"
+      },
+      "ColliderComponent": {
+        "shape": "Box",
+        "halfExtents": [0.5, 0.5, 0.5],
+        "isTrigger": false,
+        "isStatic": false
+      },
+      "RigidBodyComponent": { "mass": 1.0, "kinematic": true },
+      "ScriptComponent": { "scriptName": "Player", "paramsJson": { "moveSpeed": 3.0 } }
+    },
+    {
+      "id": 4,
+      "TagComponent": { "tag": "MainCamera" },
+      "TransformComponent": { "position": [0.0, 0.0, 0.0], "yaw": 0.0, "scale": 1.0 },
+      "CameraComponent": {
+        "pivotOffset": [0.0, 0.35, 0.0],
+        "distance": 6.0,
+        "yaw": 0.7,
+        "pitch": -0.3,
+        "fov": 55.0,
+        "nearClip": 0.1,
+        "farClip": 100.0,
+        "isPrimary": true,
+        "targetTag": "Player",
+        "targetEntityId": 3
+      },
+      "ScriptComponent": {
+        "scriptName": "MainCamera",
+        "paramsJson": {
+          "lookSensitivity": 0.0035,
+          "zoomSpeed": 0.6,
+          "pitchMin": -1.2,
+          "pitchMax": 0.65
+        }
+      }
+    },
+    {
+      "id": 5,
+      "TagComponent": { "tag": "CombatDirector" },
+      "TransformComponent": { "position": [0.0, 0.0, 0.0], "yaw": 0.0, "scale": 1.0 },
+      "ScriptComponent": {
+        "scriptName": "CombatDirector",
+        "paramsJson": {
+          "lightDamage": 10.0,
+          "heavyDamage": 25.0,
+          "lightWindup": 0.08,
+          "lightActive": 0.12,
+          "lightRecovery": 0.2,
+          "heavyWindup": 0.18,
+          "heavyActive": 0.15,
+          "heavyRecovery": 0.35,
+          "hitRadius": 1.2,
+          "playerIFrameDuration": 0.4,
+          "enemyMaxHealth": 120.0,
+          "knockbackForce": 20.0,
+          "staggerDuration": 0.35,
+          "enemyAttackInterval": 1.5,
+          "enemyMoveSpeed": 2.0,
+          "aggroRange": 12.0,
+          "enemyAttackRange": 1.5,
+          "enemiesPerWave": 5,
+          "spawnRadius": 6.0,
+          "timeBetweenWaves": 3.0
+        }
+      }
+    }
+  ]
+}

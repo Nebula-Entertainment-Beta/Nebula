@@ -5,13 +5,13 @@
       "tag": "BouncePad"
     },
     "MeshRendererComponent": {
-      "meshPath": "builtin/meshes/cube",
-      "materialPath": "builtin/materials/cube"
+      "meshPath": "meshes/bounce_pad.mesh",
+      "materialPath": "materials/bounce_pad.mat"
     },
     "TransformComponent": {
-      "position": [0.0, 0.25, 0.0],
+      "position": [0.0, 0.01, 0.0],
       "yaw": 0.0,
-      "scale": 1.5
+      "scale": 0.0075
     },
     "ColliderComponent": {
       "shape": "Box",
