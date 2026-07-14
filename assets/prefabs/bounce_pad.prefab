@@ -9,9 +9,9 @@
       "materialPath": "materials/bounce_pad.mat"
     },
     "TransformComponent": {
-      "position": [0.0, 0.01, 0.0],
+      "position": [0.0, 0.25, 0.0],
       "yaw": 0.0,
-      "scale": 0.0075
+      "scale": 1.5
     },
     "ColliderComponent": {
       "shape": "Box",

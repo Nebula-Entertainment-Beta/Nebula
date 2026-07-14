@@ -24,6 +24,13 @@ namespace Nebula
 
     bool readFile(std::string_view logicalPath, std::vector<uint8_t> &out) const override;
 
+    /** Absolute path when the logical asset exists on disk (editor / Assimp import). */
+    std::filesystem::path resolvePhysicalPath(std::string_view logicalPath) const;
+
+    /** Recursive listing under @p logicalDir (e.g. "meshes"). Extensions without dot: {"mesh","obj"}. */
+    std::vector<std::string> listFiles(std::string_view logicalDir,
+                                       const std::vector<std::string> &extensions) const;
+
     const std::vector<std::filesystem::path> &searchRoots() const { return m_searchRoots; }
     bool writeFile(std::string_view logicalPath, const std::vector<uint8_t> &data) const override;
 

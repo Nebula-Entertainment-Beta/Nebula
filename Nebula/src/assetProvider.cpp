@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <algorithm>
 #include <system_error>
 
 #if defined(__APPLE__)
@@ -133,6 +134,64 @@ namespace Nebula
     if (rel.empty() || m_searchRoots.empty())
       return {};
     return m_searchRoots.front() / rel;
+  }
+
+  std::filesystem::path FileAssetProvider::resolvePhysicalPath(std::string_view logicalPath) const
+  {
+    return resolveExisting(logicalPath);
+  }
+
+  std::vector<std::string> FileAssetProvider::listFiles(std::string_view logicalDir,
+                                                         const std::vector<std::string> &extensions) const
+  {
+    std::vector<std::string> results;
+    const std::filesystem::path relDir = normalizeLogicalPath(logicalDir);
+    if (relDir.empty())
+    {
+      return results;
+    }
+
+    for (const auto &root : m_searchRoots)
+    {
+      const std::filesystem::path dir = root / relDir;
+      std::error_code ec;
+      if (!std::filesystem::is_directory(dir, ec) || ec)
+      {
+        continue;
+      }
+
+      for (std::filesystem::recursive_directory_iterator it(dir, ec), end; it != end; it.increment(ec))
+      {
+        if (ec)
+        {
+          break;
+        }
+        if (!it->is_regular_file())
+        {
+          continue;
+        }
+        const std::string ext = it->path().extension().string();
+        std::string extNoDot = ext.empty() ? "" : ext.substr(1);
+        for (const std::string &wanted : extensions)
+        {
+          if (extNoDot == wanted)
+          {
+            std::error_code relEc;
+            const std::filesystem::path relPath =
+                std::filesystem::relative(it->path(), root, relEc);
+            if (!relEc)
+            {
+              results.push_back(relPath.generic_string());
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    std::sort(results.begin(), results.end());
+    results.erase(std::unique(results.begin(), results.end()), results.end());
+    return results;
   }
 
   bool FileAssetProvider::readFile(std::string_view logicalPath, std::vector<uint8_t> &out) const

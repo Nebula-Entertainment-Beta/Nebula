@@ -13,6 +13,8 @@
 #include "inspectorPanel.h"
 #include "consolePanel.h"
 #include "debugPanel.h"
+#include "assetBrowserPanel.h"
+#include "editor/assetCatalog.h"
 #include "editorLog.h"
 #include "editorPlayMode.h"
 #include "sceneSerializer.h"
@@ -82,6 +84,8 @@ namespace Editor
     InspectorPanel m_inspector;
     ConsolePanel m_console;
     DebugPanel m_debug;
+    AssetBrowserPanel m_assetBrowser;
+    AssetCatalog m_assetCatalog;
     EditorLog m_editorLog;
     EditorLogSink m_scriptLogSink;
     EditorPlayMode m_playmode;
@@ -100,5 +104,10 @@ namespace Editor
     void setupDefaultDockLayout(ImGuiID dockspaceId);
     void newScene(NewSceneBuilder builder);
     void newSceneFromPath(std::string_view path);
+    void loadSceneFromAbsolutePath(const std::string &absolutePath);
+    void refreshAssetCatalog();
+    void spawnMeshAt(std::string_view meshPath, std::string_view materialPath, const Nebula::Vec3 &position);
+    void spawnPrefabAt(std::string_view prefabPath, const Nebula::Vec3 &position);
+    Nebula::FileAssetProvider *fileAssets();
   };
 }

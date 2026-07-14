@@ -159,6 +159,10 @@ namespace Nimbus
       }
       if (dist <= t.enemyAttackRange && m_attackCooldownTimer <= 0.f)
       {
+        if (ctx.scene.isValidEntity(entity))
+        {
+          m_windupBaseScale = ctx.scene.getTransform(entity).transform.getScale();
+        }
         setEnemyState(EnemyStates::Windup);
         break;
       }
@@ -174,7 +178,8 @@ namespace Nimbus
       {
         auto &transform = ctx.scene.getTransform(entity);
         const float pulse = 1.f + 0.12f * std::sin(stateTimer * 24.f);
-        transform.transform.setScale(pulse);
+        transform.transform.setScale(
+            {m_windupBaseScale.x * pulse, m_windupBaseScale.y * pulse, m_windupBaseScale.z * pulse});
         Nebula::Vec3 pos = transform.transform.getPosition();
         pos.y = 0.5f + 0.06f * std::sin(stateTimer * 24.f);
         transform.transform.setPosition(pos);
@@ -184,7 +189,7 @@ namespace Nimbus
         if (ctx.scene.isValidEntity(entity))
         {
           auto &transform = ctx.scene.getTransform(entity);
-          transform.transform.setScale(1.f);
+          transform.transform.setScale(m_windupBaseScale);
           Nebula::Vec3 pos = transform.transform.getPosition();
           pos.y = 0.5f;
           transform.transform.setPosition(pos);
@@ -246,7 +251,7 @@ namespace Nimbus
       stateTimer += dt;
       if (stateTimer >= 0.3f && ctx.scene.isValidEntity(entity))
       {
-        ctx.scene.getTransform(entity).transform.setScale(0.f);
+        ctx.scene.getTransform(entity).transform.setScale({0.f, 0.f, 0.f});
       }
       break;
     }

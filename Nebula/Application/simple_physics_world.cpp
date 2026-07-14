@@ -65,7 +65,7 @@ namespace Nebula
       ColliderComponent collider{};
       Vec3 cachedPosition{};
       float cachedYaw = 0.0f;
-      float cachedScale = 1.0f;
+      Vec3 cachedScale{1.0f, 1.0f, 1.0f};
       bool dirty = true;
     };
 
@@ -227,7 +227,9 @@ namespace Nebula
           if (proxy.collider.shape == ColliderComponent::Shape::Sphere)
           {
             const Vec3 center = proxy.cachedPosition;
-            const float radius = proxy.collider.halfExtents.x * proxy.cachedScale;
+            const float radius = proxy.collider.halfExtents.x *
+                                 std::max({std::fabs(proxy.cachedScale.x), std::fabs(proxy.cachedScale.y),
+                                           std::fabs(proxy.cachedScale.z)});
             hit = m_collisionMath.rayVsSphere(ray, center, radius, t);
           }
           else
@@ -476,7 +478,9 @@ namespace Nebula
           if (proxy.cachedPosition.x != transform.getPosition().x ||
               proxy.cachedPosition.y != transform.getPosition().y ||
               proxy.cachedPosition.z != transform.getPosition().z || proxy.cachedYaw != transform.getYaw() ||
-              proxy.cachedScale != transform.getScale())
+              proxy.cachedScale.x != transform.getScale().x ||
+              proxy.cachedScale.y != transform.getScale().y ||
+              proxy.cachedScale.z != transform.getScale().z)
           {
             proxy.dirty = true;
           }

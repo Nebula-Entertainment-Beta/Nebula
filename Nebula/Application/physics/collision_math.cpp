@@ -257,7 +257,9 @@ namespace Nebula
     const ColliderComponent &collider = scene.getComponent<ColliderComponent>(entity);
     if (collider.shape == ColliderComponent::Shape::Sphere)
     {
-      const float radius = collider.halfExtents.x * transform.getScale();
+      const float radius = collider.halfExtents.x *
+                           std::max({std::fabs(transform.getScale().x), std::fabs(transform.getScale().y),
+                                     std::fabs(transform.getScale().z)});
       const Vec3 center = transform.getPosition();
       return {
           {center.x - radius, center.y - radius, center.z - radius},

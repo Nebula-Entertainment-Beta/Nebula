@@ -104,7 +104,7 @@ namespace Nebula
   void renderScene(const RenderSystemContext &ctx)
   {
     const Entity cameraEntity = findPrimaryCameraEntity(ctx.scene);
-    if (cameraEntity.id == 0)
+    if (cameraEntity.id == 0 && ctx.overrideCamera == nullptr && ctx.overrideViewProjection == nullptr)
       return;
 
     int fbw = 0, fbh = 0;
@@ -123,19 +123,37 @@ namespace Nebula
                              ? (static_cast<float>(fbw) / static_cast<float>(fbh))
                              : (16.0f / 9.0f);
 
-    const auto &cameraComponent = ctx.scene.getComponent<CameraComponent>(cameraEntity);
-    Camera3D camera;
-    camera.setTarget(findCameraTarget(ctx.scene, cameraEntity));
-    camera.setPivotOffset(cameraComponent.pivotOffset);
-    camera.setDistance(cameraComponent.distance);
-    camera.setYaw(cameraComponent.yaw);
-    camera.setPitch(cameraComponent.pitch);
-    camera.setFOV(cameraComponent.fov);
-    camera.setNearPlane(cameraComponent.nearClip);
-    camera.setFarPlane(cameraComponent.farClip);
-    camera.setAspectRatio(aspect);
+    const Mat4 vp = [&]() -> Mat4
+    {
+      if (ctx.overrideViewProjection != nullptr)
+      {
+        return *ctx.overrideViewProjection;
+      }
+      if (ctx.overrideCamera != nullptr)
+      {
+        Camera3D camera = *ctx.overrideCamera;
+        camera.setAspectRatio(aspect);
+        return camera.getViewProjectionMatrix();
+      }
 
-    const Mat4 vp = camera.getViewProjectionMatrix();
+      const auto &cameraComponent = ctx.scene.getComponent<CameraComponent>(cameraEntity);
+      Camera3D camera;
+      camera.setTarget(findCameraTarget(ctx.scene, cameraEntity));
+      camera.setPivotOffset(cameraComponent.pivotOffset);
+      camera.setDistance(cameraComponent.distance);
+      camera.setYaw(cameraComponent.yaw);
+      camera.setPitch(cameraComponent.pitch);
+      camera.setFOV(cameraComponent.fov);
+      camera.setNearPlane(cameraComponent.nearClip);
+      camera.setFarPlane(cameraComponent.farClip);
+      camera.setAspectRatio(aspect);
+      return camera.getViewProjectionMatrix();
+    }();
+
+    if (ctx.overrideCamera == nullptr)
+    {
+      (void)cameraEntity;
+    }
 
     for (const Entity entity : ctx.scene.getAllEntities())
     {

@@ -8,6 +8,7 @@ namespace Nebula
   class AssetManager;
   class Renderer;
   class Window;
+  class Camera3D;
 
   struct RenderSystemContext
   {
@@ -17,6 +18,10 @@ namespace Nebula
     Window &window;
     int viewportX = 0, viewportY = 0;
     uint32_t viewportWidth = 0, viewportHeight = 0;
+    /** When set, Scene View / editor rendering uses this camera instead of the scene primary camera. */
+    const Camera3D *overrideCamera = nullptr;
+    /** When set, takes precedence over @p overrideCamera (used by editor fly camera). */
+    const Mat4 *overrideViewProjection = nullptr;
   };
 
   void renderScene(const RenderSystemContext &ctx);

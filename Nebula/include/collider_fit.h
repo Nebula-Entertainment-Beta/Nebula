@@ -14,7 +14,7 @@ namespace Nebula
 
   bool fitBoxColliderToMesh(ColliderComponent &collider, const MeshAsset &mesh);
 
-  bool fitBoxColliderToMeshRenderer(ColliderComponent &collider, const AssetManager &assets,
+  bool fitBoxColliderToMeshRenderer(ColliderComponent &collider, AssetManager &assets,
                                     const MeshRendererComponent &meshRenderer);
 
 }

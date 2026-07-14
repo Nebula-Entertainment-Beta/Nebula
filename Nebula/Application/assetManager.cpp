@@ -296,13 +296,23 @@ namespace Nebula
     return m_database.pathForGuid(it->second);
   }
 
-  const MeshAsset *AssetManager::getCpuMeshAsset(const std::string_view logicalPath) const
+  const MeshAsset *AssetManager::getCpuMeshAsset(const std::string_view logicalPath)
   {
+    ensureCpuMeshLoaded(logicalPath);
     const AssetGuid guid = m_database.guidForPath(logicalPath);
     if (guid == kInvalidAsset)
     {
       return nullptr;
     }
     return m_database.getMeshAsset(guid);
+  }
+
+  bool AssetManager::ensureCpuMeshLoaded(const std::string_view logicalPath)
+  {
+    if (m_database.guidForPath(logicalPath) != kInvalidAsset)
+    {
+      return true;
+    }
+    return m_database.loadOrGetMesh(logicalPath) != kInvalidAsset;
   }
 }

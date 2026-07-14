@@ -41,6 +41,7 @@ add_library(Nebula STATIC
     Application/assetManager.cpp
     Application/builtinMeshes.cpp
     Application/mesh_asset.cpp
+    Application/mesh_import_options.cpp
     Application/mesh_importer.cpp
     Application/mesh_upload.cpp
     Application/renderSystem.cpp
@@ -87,4 +88,23 @@ target_include_directories(Nebula PRIVATE
 )
 
 find_package(nlohmann_json CONFIG REQUIRED)
-target_link_libraries(Nebula PRIVATE glfw glad nlohmann_json::nlohmann_json glm::glm-header-only)
+
+if(NOT TARGET assimp::assimp)
+  find_package(assimp QUIET)
+  if(NOT assimp_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+      assimp
+      GIT_REPOSITORY https://github.com/assimp/assimp.git
+      GIT_TAG v5.4.3
+    )
+    set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+    set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+    set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+    set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(assimp)
+  endif()
+endif()
+
+target_link_libraries(Nebula PRIVATE glfw glad nlohmann_json::nlohmann_json glm::glm-header-only assimp::assimp)

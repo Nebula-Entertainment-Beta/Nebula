@@ -45,6 +45,7 @@ namespace Nimbus
     float m_attackCooldownTimer = 0.f;
     bool m_attackDealt = false;
     Nebula::Vec3 m_knockbackDir{};
+    Nebula::Vec3 m_windupBaseScale{1.0f, 1.0f, 1.0f};
     Nebula::ScriptParams m_params;
   };
 

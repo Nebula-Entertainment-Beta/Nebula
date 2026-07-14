@@ -96,10 +96,11 @@ namespace Nebula::EntityComponentJson
     void writeTransformComponent(nlohmann::json &entityJson, const TransformComponent &component)
     {
       const Vec3 position = component.transform.getPosition();
+      const Vec3 scale = component.transform.getScale();
       entityJson["TransformComponent"] = {
           {"position", {position.x, position.y, position.z}},
           {"yaw", component.transform.getYaw()},
-          {"scale", component.transform.getScale()}};
+          {"scale", {scale.x, scale.y, scale.z}}};
     }
 
     void writeMeshRendererComponent(nlohmann::json &entityJson, const MeshRendererComponent &component,
@@ -203,9 +204,19 @@ namespace Nebula::EntityComponentJson
         transformComponent.transform.setYaw(yaw);
       }
 
-      float scale = transformComponent.transform.getScale();
-      if (readFloatField(transformJson, "scale", scale))
+      Vec3 scale = transformComponent.transform.getScale();
+      if (transformJson.contains("scale"))
       {
+        const auto &scaleJson = transformJson["scale"];
+        if (scaleJson.is_number())
+        {
+          const float uniform = scaleJson.get<float>();
+          scale = Vec3{uniform, uniform, uniform};
+        }
+        else if (scaleJson.is_array() && scaleJson.size() == 3)
+        {
+          scale = {scaleJson[0].get<float>(), scaleJson[1].get<float>(), scaleJson[2].get<float>()};
+        }
         transformComponent.transform.setScale(scale);
       }
     }

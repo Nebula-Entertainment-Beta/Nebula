@@ -34,7 +34,7 @@ namespace Nimbus
 
     auto &transform = ctx.scene.getTransform(self).transform;
     Nebula::Vec3 pos = transform.getPosition();
-    const float halfHeight = 0.5f * transform.getScale();
+    const float halfHeight = 0.5f * transform.getScale().y;
 
     Nebula::RaycastHit hit{};
     const Nebula::Vec3 origin{pos.x, pos.y - halfHeight + 0.01f, pos.z};

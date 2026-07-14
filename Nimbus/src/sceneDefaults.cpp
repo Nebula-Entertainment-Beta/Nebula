@@ -137,9 +137,9 @@ namespace Nimbus
     auto &groundTransform = scene.addComponent<Nebula::TransformComponent>(groundEntity);
     // Thin collider slab: top face at y=0 (mesh plane). Transform sits below so scaled
     // halfExtents align with the visible ground surface, not a meter above it.
-    groundTransform.transform.setPosition(Nebula::Vec3{0.0f, 9.73f, 0.0f});
+    groundTransform.transform.setPosition(Nebula::Vec3{0.0f, 0.0f, 0.0f});
     groundTransform.transform.setYaw(0.0f);
-    groundTransform.transform.setScale(0.12f);
+    groundTransform.transform.setScale(12.0f);
     auto &groundMesh = scene.addComponent<Nebula::MeshRendererComponent>(groundEntity);
     groundMesh.m_meshPath = "meshes/ground_cloud.mesh";
     groundMesh.m_materialPath = "materials/ground_cloud.mat";
