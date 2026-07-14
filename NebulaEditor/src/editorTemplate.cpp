@@ -2,6 +2,7 @@
 #include "collider_fit.h"
 #include "component.h"
 #include <physics/physics_component.h>
+#include <tag_component.h>
 
 namespace Editor
 {
@@ -98,6 +99,30 @@ namespace Editor
     c.shape = Nebula::ColliderComponent::Shape::Box;
     Nebula::fitBoxColliderToMeshRenderer(c, assets, scene.getComponent<Nebula::MeshRendererComponent>(entity));
     scene.addComponent<Nebula::ScriptComponent>(entity).scriptName = "WindVolume";
+    return entity;
+  }
+
+  Nebula::Entity EditorTemplate::createStaticMesh(Nebula::Scene &scene, Nebula::AssetManager &assets,
+                                                  const Nebula::Vec3 &position,
+                                                  std::string_view meshPath,
+                                                  std::string_view materialPath, const char *tag)
+  {
+    const Nebula::Entity entity = scene.createEntity();
+    scene.addComponent<Nebula::TagComponent>(entity).tag = tag;
+    auto &transform = scene.addComponent<Nebula::TransformComponent>(entity);
+    transform.transform.setPosition(position);
+    transform.transform.setYaw(0.0f);
+    transform.transform.setScale(1.0f);
+    auto &mesh = scene.addComponent<Nebula::MeshRendererComponent>(entity);
+    mesh.m_meshPath = std::string(meshPath);
+    mesh.m_materialPath = std::string(materialPath);
+    scene.addComponent<Nebula::ColliderComponent>(entity);
+    auto &collider = scene.getComponent<Nebula::ColliderComponent>(entity);
+    collider.isStatic = true;
+    collider.isTrigger = false;
+    collider.shape = Nebula::ColliderComponent::Shape::Box;
+    assets.ensureCpuMeshLoaded(meshPath);
+    Nebula::fitBoxColliderToMeshRenderer(collider, assets, mesh);
     return entity;
   }
 }

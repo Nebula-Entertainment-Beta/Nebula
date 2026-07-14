@@ -1,3 +1,6 @@
 {
-  "source": "meshes/stylized_clouds_pack_vol_03.obj"
+  "source": "meshes/stylized_clouds_pack_vol_03.obj",
+  "meshIndex": 0,
+  "importScale": 0.01,
+  "pivot": "center_bottom"
 }

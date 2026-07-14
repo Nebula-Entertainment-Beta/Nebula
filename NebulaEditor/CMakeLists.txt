@@ -23,21 +23,33 @@ add_library(NebulaEditorLib STATIC
   src/imGuiLayer.cpp
   src/editorLog.cpp
   src/editorTemplate.cpp
+  src/editor/assetCatalog.cpp
+  src/editor/editorPicking.cpp
+  src/editor/editorFlyCamera.cpp
   src/panels/sceneViewPanel.cpp
   src/panels/hierarchyPanel.cpp
   src/panels/inspectorPanel.cpp
   src/panels/consolePanel.cpp
   src/panels/debugPanel.cpp
+  src/panels/assetBrowserPanel.cpp
   src/render/sceneViewFrameBuffer.cpp
+  src/platform/fileDialog_mac.mm
 )
 
 target_include_directories(NebulaEditorLib PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${CMAKE_CURRENT_SOURCE_DIR}/src/panels
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/editor
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/platform
+  ${CMAKE_SOURCE_DIR}/Nebula/vendor
 )
 
-target_link_libraries(NebulaEditorLib PUBLIC Nebula imgui)
+target_link_libraries(NebulaEditorLib PUBLIC Nebula imgui glm::glm-header-only)
 target_compile_definitions(NebulaEditorLib PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
+
+if(APPLE)
+  target_link_libraries(NebulaEditorLib PRIVATE "-framework AppKit")
+endif()
 
 # Generic editor binary (no game project). For gameplay content use a game-specific target.
 add_executable(NebulaEditor src/main.cpp)

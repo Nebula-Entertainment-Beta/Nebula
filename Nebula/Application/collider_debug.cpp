@@ -165,7 +165,7 @@ namespace Nebula
   void renderColliderGizmos(const RenderSystemContext &ctx)
   {
     const Entity cameraEntity = findPrimaryCameraEntity(ctx.scene);
-    if (cameraEntity.id == 0)
+    if (cameraEntity.id == 0 && ctx.overrideCamera == nullptr && ctx.overrideViewProjection == nullptr)
     {
       return;
     }
@@ -183,19 +183,39 @@ namespace Nebula
     }
     const float aspect = (fbh > 0) ? (static_cast<float>(fbw) / static_cast<float>(fbh)) : (16.0f / 9.0f);
 
-    const auto &cameraComponent = ctx.scene.getComponent<CameraComponent>(cameraEntity);
-    Camera3D camera;
-    camera.setTarget(findCameraTarget(ctx.scene, cameraEntity));
-    camera.setPivotOffset(cameraComponent.pivotOffset);
-    camera.setDistance(cameraComponent.distance);
-    camera.setYaw(cameraComponent.yaw);
-    camera.setPitch(cameraComponent.pitch);
-    camera.setFOV(cameraComponent.fov);
-    camera.setNearPlane(cameraComponent.nearClip);
-    camera.setFarPlane(cameraComponent.farClip);
-    camera.setAspectRatio(aspect);
+    const Mat4 vp = [&]() -> Mat4
+    {
+      if (ctx.overrideViewProjection != nullptr)
+      {
+        return *ctx.overrideViewProjection;
+      }
+      if (ctx.overrideCamera != nullptr)
+      {
+        Camera3D camera = *ctx.overrideCamera;
+        camera.setAspectRatio(aspect);
+        return camera.getViewProjectionMatrix();
+      }
 
-    const Mat4 vp = camera.getViewProjectionMatrix();
+      const Entity camEntity = findPrimaryCameraEntity(ctx.scene);
+      if (camEntity.id == 0)
+      {
+        return Mat4{};
+      }
+
+      const auto &cameraComponent = ctx.scene.getComponent<CameraComponent>(camEntity);
+      Camera3D camera;
+      camera.setTarget(findCameraTarget(ctx.scene, camEntity));
+      camera.setPivotOffset(cameraComponent.pivotOffset);
+      camera.setDistance(cameraComponent.distance);
+      camera.setYaw(cameraComponent.yaw);
+      camera.setPitch(cameraComponent.pitch);
+      camera.setFOV(cameraComponent.fov);
+      camera.setNearPlane(cameraComponent.nearClip);
+      camera.setFarPlane(cameraComponent.farClip);
+      camera.setAspectRatio(aspect);
+      return camera.getViewProjectionMatrix();
+    }();
+
     const Material *debugMaterial = ctx.assets.getMaterial(
         ctx.assets.loadMaterial("builtin/materials/cube", ctx.renderer.resources()));
     if (debugMaterial == nullptr || debugMaterial->shader == nullptr)

@@ -7,13 +7,31 @@
 #include "systemScheduler.h"
 #include "prefabSerializer.h"
 #include "prefabService.h"
+#include "platform/fileDialog.h"
+#include "assetProvider.h"
 
 #include <cctype>
+#include <filesystem>
 #include <imgui.h>
 #include <imgui_internal.h>
 
 namespace Editor
 {
+  namespace
+  {
+    std::string toAssetsRelativeScenePath(const std::string &absolutePath)
+    {
+      const std::filesystem::path scenesMarker = std::filesystem::path("assets") / "scenes";
+      const auto pos = absolutePath.find(scenesMarker.generic_string());
+      if (pos != std::string::npos)
+      {
+        return std::filesystem::path(absolutePath.substr(pos + std::string("assets/").size()))
+            .generic_string();
+      }
+      return std::filesystem::path(absolutePath).filename().generic_string();
+    }
+  }
+
   EditorApplication::EditorApplication(const Nebula::ApplicationSpec &spec)
       : Nebula::Application(spec)
   {
@@ -83,6 +101,7 @@ namespace Editor
     m_editorLog.info("Scene loaded: " + m_state.scenePath);
 
     resolveSceneAssets();
+    refreshAssetCatalog();
     Nebula::Application::onStartup();
     NebulaEditor::ImGuiLayer::init(getWindow());
     m_editorLog.info("Editor started");
@@ -117,8 +136,22 @@ namespace Editor
                                    [this]()
                                    { createVariantFromSelectedInstance(); });
 
-    m_sceneViewPanel.drawSceneViewPanel(m_state, m_sceneViewFrameBuffer, getScene(), getAssetManager(),
-                                        getRenderer(), getWindow());
+    m_sceneViewPanel.drawSceneViewPanel(
+        m_state, m_sceneViewFrameBuffer, getScene(), getAssetManager(), getRenderer(), getWindow(),
+        getInput(), isPlaying(),
+        [this](std::string_view meshPath, std::string_view materialPath, const Nebula::Vec3 &pos)
+        { spawnMeshAt(meshPath, materialPath, pos); },
+        [this](std::string_view prefabPath, const Nebula::Vec3 &pos)
+        { spawnPrefabAt(prefabPath, pos); });
+
+    m_assetBrowser.draw(
+        m_assetCatalog, m_state, getScene(), getAssetManager(),
+        [this](std::string_view meshPath, std::string_view materialPath)
+        { spawnMeshAt(meshPath, materialPath, Nebula::Vec3{0.0f, 0.5f, 0.0f}); },
+        [this](std::string_view prefabPath)
+        { spawnPrefabAt(prefabPath, Nebula::Vec3{0.0f, 0.5f, 0.0f}); },
+        [this]()
+        { refreshAssetCatalog(); });
   }
 
   void EditorApplication::setupDefaultDockLayout(ImGuiID dockspaceId)
@@ -140,6 +173,7 @@ namespace Editor
     ImGuiID dockBottom = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.28f, nullptr, &dockMain);
 
     ImGui::DockBuilderDockWindow("Hierarchy", dockLeft);
+    ImGui::DockBuilderDockWindow("Assets", dockLeft);
     ImGui::DockBuilderDockWindow("Inspector", dockRight);
     ImGui::DockBuilderDockWindow("Console", dockBottom);
     ImGui::DockBuilderDockWindow("Debug", dockBottom);
@@ -202,11 +236,24 @@ namespace Editor
         }
         if (ImGui::MenuItem("Open Scene"))
         {
-          openSceneDialog();
+          const std::string path = openFileDialog("Open Scene", {"json"});
+          if (!path.empty())
+          {
+            loadSceneFromAbsolutePath(path);
+          }
         }
         if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
         {
           saveScene();
+        }
+        if (ImGui::MenuItem("Save Scene As"))
+        {
+          const std::string path = saveFileDialog("Save Scene As", "my_level.json", {"json"});
+          if (!path.empty())
+          {
+            m_state.scenePath = toAssetsRelativeScenePath(path);
+            saveScene();
+          }
         }
         ImGui::EndMenu();
       }
@@ -295,21 +342,74 @@ namespace Editor
 
   void EditorApplication::openSceneDialog()
   {
-    Nebula::Scene &scene = getScene();
-    const bool loaded = Nebula::SceneSerializer::load(scene, getAssets(), m_state.scenePath);
-
-    if (!loaded)
+    const std::string path = openFileDialog("Open Scene", {"json"});
+    if (!path.empty())
     {
-      m_editorLog.info("Failed to load scene: " + m_state.scenePath);
+      loadSceneFromAbsolutePath(path);
+    }
+  }
+
+  void EditorApplication::loadSceneFromAbsolutePath(const std::string &absolutePath)
+  {
+    Nebula::FileAssetProvider *files = fileAssets();
+    if (files == nullptr)
+    {
       return;
     }
 
-    m_state.selectedEntity = {};
-    m_state.sceneDirty = false;
-    m_editorLog.info("Scene loaded: " + m_state.scenePath);
+    std::string logicalPath = absolutePath;
+    for (const auto &root : files->searchRoots())
+    {
+      std::error_code ec;
+      const auto rel = std::filesystem::relative(absolutePath, root, ec);
+      if (!ec)
+      {
+        logicalPath = rel.generic_string();
+        break;
+      }
+    }
 
+    if (!loadScene(logicalPath))
+    {
+      m_editorLog.info("Failed to load scene: " + logicalPath);
+      return;
+    }
     resolveSceneAssets();
     Nebula::Application::onStartup();
+    m_editorLog.info("Scene loaded: " + logicalPath);
+  }
+
+  Nebula::FileAssetProvider *EditorApplication::fileAssets()
+  {
+    return dynamic_cast<Nebula::FileAssetProvider *>(&getAssets());
+  }
+
+  void EditorApplication::refreshAssetCatalog()
+  {
+    if (Nebula::FileAssetProvider *files = fileAssets())
+    {
+      m_assetCatalog.refresh(*files);
+    }
+  }
+
+  void EditorApplication::spawnMeshAt(std::string_view meshPath, std::string_view materialPath,
+                                      const Nebula::Vec3 &position)
+  {
+    Nebula::Entity entity =
+        m_template.createStaticMesh(getScene(), getAssetManager(), position, meshPath, materialPath);
+    m_state.selectedEntity = entity;
+    m_state.sceneDirty = true;
+    resolveSceneAssets();
+  }
+
+  void EditorApplication::spawnPrefabAt(std::string_view prefabPath, const Nebula::Vec3 &position)
+  {
+    Nebula::Entity entity = instantiatePrefab(prefabPath);
+    if (entity.id != 0 && getScene().hasComponent<Nebula::TransformComponent>(entity))
+    {
+      getScene().getComponent<Nebula::TransformComponent>(entity).transform.setPosition(position);
+      m_state.sceneDirty = true;
+    }
   }
 
   void EditorApplication::newScene()

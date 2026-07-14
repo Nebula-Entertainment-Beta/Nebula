@@ -45,7 +45,9 @@ namespace Nebula
     const Material *getMaterial(MaterialHandle handle) const;
 
     /** CPU mesh bounds used to fit box colliders to rendered geometry. */
-    const MeshAsset *getCpuMeshAsset(std::string_view logicalPath) const;
+    const MeshAsset *getCpuMeshAsset(std::string_view logicalPath);
+
+    bool ensureCpuMeshLoaded(std::string_view logicalPath);
 
     bool isMeshValid(MeshHandle handle) const;
     bool isMaterialValid(MaterialHandle handle) const;

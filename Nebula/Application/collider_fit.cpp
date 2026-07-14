@@ -33,9 +33,10 @@ namespace Nebula
     return true;
   }
 
-  bool fitBoxColliderToMeshRenderer(ColliderComponent &collider, const AssetManager &assets,
+  bool fitBoxColliderToMeshRenderer(ColliderComponent &collider, AssetManager &assets,
                                     const MeshRendererComponent &meshRenderer)
   {
+    assets.ensureCpuMeshLoaded(meshRenderer.m_meshPath);
     const MeshAsset *meshAsset = assets.getCpuMeshAsset(meshRenderer.m_meshPath);
     if (meshAsset == nullptr)
     {

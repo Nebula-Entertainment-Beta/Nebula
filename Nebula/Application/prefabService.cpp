@@ -403,7 +403,16 @@ namespace Nebula
       }
       else if (std::string(fieldKey) == "scale" && transformJson.contains("scale"))
       {
-        transform.setScale(transformJson["scale"].get<float>());
+        const auto &scaleJson = transformJson["scale"];
+        if (scaleJson.is_number())
+        {
+          const float uniform = scaleJson.get<float>();
+          transform.setScale(uniform);
+        }
+        else if (scaleJson.is_array() && scaleJson.size() == 3)
+        {
+          transform.setScale({scaleJson[0].get<float>(), scaleJson[1].get<float>(), scaleJson[2].get<float>()});
+        }
       }
       return true;
     }

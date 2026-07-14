@@ -207,19 +207,20 @@ namespace Editor
       drawOverrideResetButton(scene, entity, state, assets, fileProvider, "TransformComponent", "yaw");
     }
 
-    float scale = t.getScale();
+    Nebula::Vec3 scale = t.getScale();
     std::string scaleLabel = "Scale";
     if (isPrefabInstance && isOverrideActive(scene, entity, "TransformComponent", "scale"))
     {
       scaleLabel += "*";
     }
-    if (ImGui::DragFloat(scaleLabel.c_str(), &scale, 0.01f))
+    if (ImGui::DragFloat3(scaleLabel.c_str(), &scale.x, 0.01f))
     {
       t.setScale(scale);
       if (isPrefabInstance)
       {
         auto &inst = scene.getComponent<Nebula::PrefabInstanceComponent>(entity);
-        Nebula::PrefabService::setInstanceOverrideField(inst, "TransformComponent", "scale", scale);
+        const float scaleArr[3] = {scale.x, scale.y, scale.z};
+        Nebula::PrefabService::setInstanceOverrideField(inst, "TransformComponent", "scale", scaleArr);
       }
       state.sceneDirty = true;
     }

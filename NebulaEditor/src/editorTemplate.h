@@ -15,5 +15,8 @@ namespace Editor
     Nebula::Entity createPlatform(Nebula::Scene &scene, Nebula::AssetManager &assets);
     Nebula::Entity createBouncePad(Nebula::Scene &scene, Nebula::AssetManager &assets);
     Nebula::Entity createWindVolume(Nebula::Scene &scene, Nebula::AssetManager &assets);
+    Nebula::Entity createStaticMesh(Nebula::Scene &scene, Nebula::AssetManager &assets,
+                                    const Nebula::Vec3 &position, std::string_view meshPath,
+                                    std::string_view materialPath, const char *tag = "Prop");
   };
 }
