@@ -18,7 +18,7 @@ target_link_libraries(imgui PUBLIC glfw glad)
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 # Reusable editor library: Nebula only (any game links this + supplies main/callbacks).
-add_library(NebulaEditorLib STATIC
+set(NEBULA_EDITOR_LIB_SOURCES
   src/editorApplication.cpp
   src/imGuiLayer.cpp
   src/editorLog.cpp
@@ -33,8 +33,15 @@ add_library(NebulaEditorLib STATIC
   src/panels/debugPanel.cpp
   src/panels/assetBrowserPanel.cpp
   src/render/sceneViewFrameBuffer.cpp
-  src/platform/fileDialog_mac.mm
 )
+
+if(APPLE)
+  list(APPEND NEBULA_EDITOR_LIB_SOURCES src/platform/fileDialog_mac.mm)
+else()
+  list(APPEND NEBULA_EDITOR_LIB_SOURCES src/platform/fileDialog_stub.cpp)
+endif()
+
+add_library(NebulaEditorLib STATIC ${NEBULA_EDITOR_LIB_SOURCES})
 
 target_include_directories(NebulaEditorLib PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
