@@ -2,11 +2,13 @@
 #include "qt/qtNodeGraphPanel.h"
 #include "qt/qtSceneViewEmbed.h"
 
+#include <QAbstractSpinBox>
 #include <QAction>
 #include <QAbstractNativeEventFilter>
 #include <QApplication>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDateTime>
 #include <QDockWidget>
 #include <QDragEnterEvent>
 #include <QDropEvent>
@@ -27,6 +29,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QShortcut>
 #include <QSpinBox>
 #include <QStyleFactory>
 #include <QTextCursor>
@@ -118,30 +121,35 @@ namespace Editor
           m_app.scenePointerPress(x, y, true, false,
                                   (GetKeyState(VK_SHIFT) & 0x8000) != 0,
                                   width, height);
-          return false;
+          // Edit mode: consume so GLFW does not also apply mouse edges.
+          return !m_app.playing();
         case WM_RBUTTONDOWN:
           SetFocus(msg->hwnd);
           SetCapture(msg->hwnd);
           m_app.scenePointerPress(x, y, false, true,
                                   (GetKeyState(VK_SHIFT) & 0x8000) != 0,
                                   width, height);
-          return false;
+          return !m_app.playing();
         case WM_MOUSEMOVE:
           m_app.scenePointerMove(x, y, (msg->wParam & MK_LBUTTON) != 0,
                                  (msg->wParam & MK_RBUTTON) != 0, width, height);
-          return false;
+          return !m_app.playing();
         case WM_LBUTTONUP:
           m_app.scenePointerRelease(x, y, true, false, width, height);
           if ((msg->wParam & (MK_LBUTTON | MK_RBUTTON)) == 0)
             ReleaseCapture();
-          return false;
+          return !m_app.playing();
         case WM_RBUTTONUP:
           m_app.scenePointerRelease(x, y, false, true, width, height);
           if ((msg->wParam & (MK_LBUTTON | MK_RBUTTON)) == 0)
             ReleaseCapture();
-          return false;
+          return !m_app.playing();
         case WM_MOUSEWHEEL:
-          m_app.sceneWheel(static_cast<float>(GET_WHEEL_DELTA_WPARAM(msg->wParam)));
+          if (!m_app.playing())
+          {
+            m_app.sceneWheel(static_cast<float>(GET_WHEEL_DELTA_WPARAM(msg->wParam)));
+            return true;
+          }
           return false;
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
@@ -151,10 +159,6 @@ namespace Editor
         case WM_KEYUP:
         case WM_SYSKEYUP:
           m_app.sceneKeyChanged(static_cast<int>(msg->wParam), false);
-          return false;
-        case WM_KILLFOCUS:
-          for (const int key : {'W', 'A', 'S', 'D', 'Q', 'Z'})
-            m_app.sceneKeyChanged(key, false);
           return false;
         default:
           return false;
@@ -399,7 +403,18 @@ namespace Editor
       QListWidget, QPlainTextEdit, QScrollArea { border: 1px solid #1a1c1f; }
       QListWidget::item { padding: 3px 6px; }
       QListWidget::item:selected { background: #3584e4; }
-      QDoubleSpinBox, QSpinBox, QLineEdit, QComboBox { padding: 2px 4px; border: 1px solid #1a1c1f; border-radius: 3px; background: #1c1e21; }
+      /* Do not put padding on QSpinBox/QDoubleSpinBox — it breaks the embedded
+         line edit (arrows still work, but you cannot click/type a value). */
+      QDoubleSpinBox, QSpinBox {
+        border: 1px solid #1a1c1f; border-radius: 3px; background: #1c1e21; color: #dcdce2;
+        padding-right: 2px;
+      }
+      QDoubleSpinBox::up-button, QSpinBox::up-button,
+      QDoubleSpinBox::down-button, QSpinBox::down-button { width: 16px; border: none; }
+      QLineEdit, QComboBox {
+        padding: 2px 4px; border: 1px solid #1a1c1f; border-radius: 3px;
+        background: #1c1e21; color: #dcdce2; selection-background-color: #3584e4;
+      }
       QMenuBar { background: #2d3035; }
       QMenuBar::item:selected { background: #3a3e44; }
       QMenu { background: #2d3035; border: 1px solid #1a1c1f; }
@@ -535,7 +550,11 @@ namespace Editor
     m_console = new QPlainTextEdit(this);
     m_console->setReadOnly(true);
     m_console->setMaximumBlockCount(2000);
+    m_console->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_console->setMinimumHeight(0);
     auto *consoleHost = new QWidget(this);
+    consoleHost->setMinimumHeight(0);
+    consoleHost->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     auto *consoleLayout = new QVBoxLayout(consoleHost);
     consoleLayout->setContentsMargins(3, 3, 3, 3);
     auto *clearConsole = new QPushButton("Clear", consoleHost);
@@ -550,40 +569,45 @@ namespace Editor
             });
     auto *consoleDock = new QDockWidget("Console", this);
     consoleDock->setWidget(consoleHost);
-    consoleDock->setMinimumHeight(120);
-    consoleDock->setMaximumHeight(300);
+    consoleDock->setMinimumHeight(64);
     addDockWidget(Qt::BottomDockWidgetArea, consoleDock);
 
     auto *debugHost = new QWidget(this);
+    debugHost->setMinimumHeight(0);
     auto *debugLayout = new QVBoxLayout(debugHost);
     debugLayout->setContentsMargins(4, 4, 4, 4);
     m_debugText = new QPlainTextEdit(debugHost);
     m_debugText->setReadOnly(true);
-    m_debugText->setMaximumHeight(150);
-    debugLayout->addWidget(m_debugText);
-    m_debugTuningHost = new QWidget(debugHost);
+    m_debugText->setMinimumHeight(0);
+    m_debugText->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_debugText->setMaximumHeight(120);
+    debugLayout->addWidget(m_debugText, 1);
+    auto *tuningScroll = new QScrollArea(debugHost);
+    tuningScroll->setWidgetResizable(true);
+    tuningScroll->setFrameShape(QFrame::NoFrame);
+    tuningScroll->setMinimumHeight(0);
+    tuningScroll->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_debugTuningHost = new QWidget(tuningScroll);
+    m_debugTuningHost->setMinimumHeight(0);
     m_debugTuningForm = new QFormLayout(m_debugTuningHost);
-    debugLayout->addWidget(m_debugTuningHost);
-    debugLayout->addStretch(1);
+    tuningScroll->setWidget(m_debugTuningHost);
+    debugLayout->addWidget(tuningScroll, 2);
     auto *debugDock = new QDockWidget("Debug", this);
     debugDock->setWidget(debugHost);
-    debugDock->setMinimumHeight(120);
-    debugDock->setMaximumHeight(300);
+    debugDock->setMinimumHeight(64);
     addDockWidget(Qt::BottomDockWidgetArea, debugDock);
     tabifyDockWidget(consoleDock, debugDock);
     consoleDock->raise();
 
     m_inspectorDock = inspDock;
     QTimer::singleShot(0, this,
-                       [this, hierDock, assetsDock, inspDock, consoleDock, debugDock]()
+                       [this, hierDock, assetsDock, inspDock, consoleDock]()
                        {
                          resizeDocks({hierDock, assetsDock}, {420, 260},
                                      Qt::Vertical);
                          resizeDocks({hierDock, inspDock}, {260, 360},
                                      Qt::Horizontal);
-                         resizeDocks({consoleDock}, {220}, Qt::Vertical);
-                         consoleDock->setMaximumHeight(QWIDGETSIZE_MAX);
-                         debugDock->setMaximumHeight(QWIDGETSIZE_MAX);
+                         resizeDocks({consoleDock}, {140}, Qt::Vertical);
                        });
 
     refreshAssets();
@@ -657,7 +681,28 @@ namespace Editor
                           m_app->deleteSelectedPublic();
                           refreshHierarchy();
                           rebuildInspector();
-                        }, QKeySequence::Delete);
+                        });
+    // Bind Delete only when not editing a text field (shortcut would steal Backspace/Delete).
+    {
+      auto *delShortcut = new QShortcut(QKeySequence::Delete, this);
+      delShortcut->setContext(Qt::WindowShortcut);
+      connect(delShortcut, &QShortcut::activated, this, [this]()
+              {
+                QWidget *focus = QApplication::focusWidget();
+                if (qobject_cast<QLineEdit *>(focus) != nullptr ||
+                    qobject_cast<QAbstractSpinBox *>(focus) != nullptr ||
+                    qobject_cast<QPlainTextEdit *>(focus) != nullptr ||
+                    (focus != nullptr && focus->inherits("QSpinBox")) ||
+                    (focus != nullptr && focus->parentWidget() != nullptr &&
+                     qobject_cast<QAbstractSpinBox *>(focus->parentWidget()) != nullptr))
+                {
+                  return;
+                }
+                m_app->deleteSelectedPublic();
+                refreshHierarchy();
+                rebuildInspector();
+              });
+    }
     editMenu->addAction("Save Selected as Prefab", this, [this]()
                         {
                           m_app->saveSelectedAsPrefabPublic();
@@ -1960,18 +2005,26 @@ namespace Editor
   void QtMainWindow::refreshConsole()
   {
     const auto &lines = m_app->editorLog().getLines();
-    if (static_cast<int>(lines.size()) == m_lastLogCount)
+    const int count = static_cast<int>(lines.size());
+    if (count == m_lastLogCount)
     {
       return;
     }
     const bool wasAtBottom =
         m_console->verticalScrollBar()->value() >=
         m_console->verticalScrollBar()->maximum() - 2;
-    m_lastLogCount = static_cast<int>(lines.size());
-    m_console->clear();
-    QTextCursor cursor(m_console->document());
-    for (const auto &line : lines)
+
+    // Append only new lines — rebuilding the full document every frame kills FPS.
+    if (count < m_lastLogCount || m_lastLogCount < 0)
     {
+      m_console->clear();
+      m_lastLogCount = 0;
+    }
+    QTextCursor cursor(m_console->document());
+    cursor.movePosition(QTextCursor::End);
+    for (int i = m_lastLogCount; i < count; ++i)
+    {
+      const auto &line = lines[static_cast<std::size_t>(i)];
       const char *prefix = "[INFO] ";
       QColor color(220, 222, 226);
       if (line.level == Nebula::LogLevel::Warn)
@@ -1990,6 +2043,7 @@ namespace Editor
                             QString::fromStdString(line.text) + '\n',
                         format);
     }
+    m_lastLogCount = count;
     if (wasAtBottom)
     {
       m_console->moveCursor(QTextCursor::End);
@@ -2002,6 +2056,14 @@ namespace Editor
     {
       return;
     }
+    // Debug panel is diagnostic-only; updating QPlainTextEdit every frame is expensive.
+    const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
+    if (nowMs - m_lastDebugRefreshMs < 100)
+    {
+      return;
+    }
+    m_lastDebugRefreshMs = nowMs;
+
     Nebula::Input &input = m_app->inputRef();
     Nebula::ActionMapping &actions = m_app->actionsRef();
     const auto keyState = [&input](Nebula::Tasto key)
@@ -2063,7 +2125,11 @@ namespace Editor
             .arg(moveY, 0, 'f', 2)
             .arg(lookX, 0, 'f', 2)
             .arg(lookY, 0, 'f', 2);
-    m_debugText->setPlainText(text);
+    if (text != m_lastDebugText)
+    {
+      m_lastDebugText = text;
+      m_debugText->setPlainText(text);
+    }
   }
 
   void QtMainWindow::rebuildDebugTuning()

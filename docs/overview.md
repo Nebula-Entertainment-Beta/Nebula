@@ -8,10 +8,12 @@ Nebula is a small **C++ game engine** used by the club to learn graphics and eng
 |------|------|
 | `Nebula/include/` | Public entry headers (e.g. `Nebula.h`, `Window.h`) |
 | `Nebula/src/` | Core runtime (e.g. `Window`) |
-| `Nebula/Application/` | `Application` run loop, `Input`, `ActionMapping`, `Scene`, scripts/types (see `timestep` stub) |
-| `Nebula/Math/` | **3D** transform + orbit camera implemented; **2D** camera/transform stubs |
+| `Nebula/Application/` | `Application` run loop, `Input`, `ActionMapping`, `Scene`, scripts (plus intentional stubs like `timestep`) |
+| `Nebula/Math/` | **3D** transform + orbit camera implemented; **2D** camera/transform stubs kept for a future 2D pipeline |
 | `Nebula/render_pipeline/interface/` | API-agnostic render types (`Renderer`, `VertexArray`, …) |
 | `Nebula/render_pipeline/openGL/` | OpenGL implementations of those interfaces |
+| `Nebula/render_pipeline/vulkan/` | Vulkan factory stubs (backend-ready, not required to run today) |
+| `NebulaEditor/` | Qt 6 editor shell (docks + embedded GLFW Scene View) |
 
 Third-party code under `Nebula/vendor/` is **excluded** from this manual. Game projects (e.g. under `Nimbus/`) are also **excluded** — this HTML manual documents the **engine** only.
 

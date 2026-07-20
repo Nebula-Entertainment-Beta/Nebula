@@ -1,8 +1,6 @@
 #pragma once
 #include <script.h>
 #include <scriptParams.h>
-#include "combat.h"
-#include "traversal.h"
 #include "ecs/entity.h"
 
 namespace Nimbus
@@ -10,18 +8,12 @@ namespace Nimbus
   enum AttackStates
   {
     Idle,
-    HeavyWindup,
     LightWindup,
+    HeavyWindup,
     ActiveHitLight,
     ActiveHitHeavy,
     RecoveryLightAttack,
     RecoveryHeavyAttack,
-    HeavyAttack,
-    LightAttack,
-    WindupTimer,
-    RecoveryTimer,
-    ActiveHitTimer,
-
   };
 
   class PlayerScript : public Nebula::IScript
@@ -42,14 +34,14 @@ namespace Nimbus
     float getMoveSpeedMultiplier() const;
     bool isInvulnerable() const { return m_playerIFrameTimer > 0.f; }
     /** Call when an enemy hit lands (Day 4). Duration from CombatDirector tuning. */
-    void grantIFrame();
+    void grantIFrame(Nebula::ScriptContext &ctx);
 
   private:
     void applyPendingPlayerDamage(Nebula::ScriptContext &ctx);
     void applyAttackLunge(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt, float speedMultiplier);
-    void syncTraversalSettings(Nebula::ScriptContext &ctx);
     void snapToGround(Nebula::ScriptContext &ctx, Nebula::Entity self);
-    void handleKillPlane(Nebula::ScriptContext &ctx, Nebula::Entity self);
+    void resolveActiveHit(Nebula::ScriptContext &ctx, Nebula::Entity self, float damage, bool heavy,
+                          const char *label);
 
     float m_moveSpeed = 3.f;
     float m_health = 100.f;
@@ -66,8 +58,6 @@ namespace Nimbus
     bool m_prevJumpHeld = false;
     bool m_pendingJumpCut = false;
     bool m_pendingGroundSnap = true;
-    TraversalSettings m_traversal{};
-    Nebula::Entity m_traversalDirector{};
     Nebula::Vec3 m_spawnPosition{0.f, 0.5f, 0.f};
 
     AttackStates m_AttackState;

@@ -203,13 +203,15 @@ namespace Editor
   }
 
   GizmoAxis pickTranslateAxis(const Nebula::Mat4 &viewProjection, const Nebula::Vec3 &origin,
-                              float screenX, float screenY, float viewportWidth, float viewportHeight)
+                              float screenX, float screenY, float viewportWidth, float viewportHeight,
+                              float axisLength)
   {
     constexpr float kPickRadius = 18.0f;
+    const float len = std::max(axisLength, 0.1f);
     const Nebula::Vec3 axes[3] = {
-        {origin.x + 1.0f, origin.y, origin.z},
-        {origin.x, origin.y + 1.0f, origin.z},
-        {origin.x, origin.y, origin.z + 1.0f}};
+        {origin.x + len, origin.y, origin.z},
+        {origin.x, origin.y + len, origin.z},
+        {origin.x, origin.y, origin.z + len}};
     const GizmoAxis axisIds[3] = {GizmoAxis::X, GizmoAxis::Y, GizmoAxis::Z};
 
     GizmoAxis best = GizmoAxis::None;
@@ -233,10 +235,11 @@ namespace Editor
   }
 
   GizmoAxis pickTranslateAxis(const Nebula::Camera3D &camera, const Nebula::Vec3 &origin,
-                              float screenX, float screenY, float viewportWidth, float viewportHeight)
+                              float screenX, float screenY, float viewportWidth, float viewportHeight,
+                              float axisLength)
   {
     return pickTranslateAxis(camera.getViewProjectionMatrix(), origin, screenX, screenY, viewportWidth,
-                             viewportHeight);
+                             viewportHeight, axisLength);
   }
 
   bool dragTranslateAxis(GizmoAxis axis, const ScreenRay &ray, const Nebula::Vec3 &dragStartPos,

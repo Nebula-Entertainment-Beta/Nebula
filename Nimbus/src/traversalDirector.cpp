@@ -1,4 +1,5 @@
 #include "traversalDirector.h"
+#include "nimbusRuntime.h"
 
 namespace Nimbus
 {
@@ -7,7 +8,9 @@ namespace Nimbus
   {
     if (!ctx.scene.isValidEntity(self))
       return;
-    syncTraversalFromParams(ctx.scene.getScriptComponent(self), m_params, m_settings);
+    const Nebula::ScriptComponent &sc = ctx.scene.getScriptComponent(self);
+    m_lastParamsJson = sc.paramsJson;
+    syncTraversalFromParams(sc, m_params, traversal(ctx));
   }
 
   void TraversalDirector::onEnable(Nebula::ScriptContext &ctx, Nebula::Entity self)
@@ -19,6 +22,10 @@ namespace Nimbus
   {
     if (!ctx.scene.isValidEntity(self))
       return;
-    syncTraversalFromParams(ctx.scene.getScriptComponent(self), m_params, m_settings);
+    const Nebula::ScriptComponent &sc = ctx.scene.getScriptComponent(self);
+    if (sc.paramsJson == m_lastParamsJson)
+      return;
+    m_lastParamsJson = sc.paramsJson;
+    syncTraversalFromParams(sc, m_params, traversal(ctx));
   }
 }

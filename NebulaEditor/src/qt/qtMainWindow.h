@@ -4,6 +4,7 @@
 
 #include <QMainWindow>
 #include <QPoint>
+#include <QString>
 #include <QTimer>
 #include <memory>
 
@@ -94,6 +95,8 @@ namespace Editor
     Nebula::Entity m_lastSelected{};
     int m_lastEntityCount = -1;
     int m_lastGizmoMode = -1;
+    qint64 m_lastDebugRefreshMs = 0;
+    QString m_lastDebugText;
   };
 
 }

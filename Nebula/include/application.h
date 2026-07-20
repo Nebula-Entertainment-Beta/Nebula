@@ -3,7 +3,7 @@
  * @brief Engine **application shell**: window, input, scene, scripts, and a phased frame loop.
  *
  * **Owns:** `Window`, `Input`, `ActionMapping`, `Scene`, `ScriptRegistry`, `ScriptSystem`,
- * `SystemScheduler`, and `World` (aggregates scene/assets/input/actions/scripts/frame input).
+ * `SystemScheduler`, and frame input.
  *
  * Subclass `onStartup` (register script factories), `registerGameSystems` (gameplay systems),
  * and `onRender` (drawing). `run()` drives PreUpdate → Update → FixedUpdate → PostUpdate → Render.
@@ -24,14 +24,12 @@
 #include "input_Actions.h"
 #include "logSink.h"
 #include "script.h"
-#include "inputQuery.h"
 #include "sceneAccess.h"
 #include "eventBus.h"
 #include "renderer.h"
 #include "scriptFields.h"
 #include "scene.h"
 #include "clock.h"
-#include "world.h"
 #include "audioService.h"
 
 #include <memory>
@@ -88,11 +86,11 @@ namespace Nebula
         IAssetProvider &getAssets() { return m_assets; }
         const IAssetProvider &getAssets() const { return m_assets; }
 
-        World &getWorld() { return m_world; }
-        const World &getWorld() const { return m_world; }
-
         ScriptRegistry &getScriptRegistry() { return m_scriptRegistry; }
         ScriptContext makeScriptContext();
+        /** Opaque host session pointer copied into every ScriptContext. */
+        void setGameUserData(void *data) { m_gameUserData = data; }
+        void *gameUserData() const { return m_gameUserData; }
         void setLogSink(ILogSink *sink) { m_logSink = sink; }
         SystemScheduler &getScheduler() { return m_scheduler; }
 
@@ -158,9 +156,8 @@ namespace Nebula
         int m_lastFbWidth = 0;
         int m_lastFbHeight = 0;
         SceneAccess m_sceneAccess{m_scene};
-        FrameInputQuery m_inputQuery{m_frameInput};
         ILogSink *m_logSink = nullptr;
-        World m_world;
+        void *m_gameUserData = nullptr;
         std::unique_ptr<IPhysicsWorld> m_physicsWorld;
         std::unique_ptr<PhysicsQueryAdapter> m_physicsQuery;
         std::unique_ptr<IAudioService> m_audio;

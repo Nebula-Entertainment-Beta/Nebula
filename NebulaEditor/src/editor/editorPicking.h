@@ -37,9 +37,11 @@ namespace Editor
   };
 
   GizmoAxis pickTranslateAxis(const Nebula::Camera3D &camera, const Nebula::Vec3 &origin,
-                              float screenX, float screenY, float viewportWidth, float viewportHeight);
+                              float screenX, float screenY, float viewportWidth, float viewportHeight,
+                              float axisLength = 1.f);
   GizmoAxis pickTranslateAxis(const Nebula::Mat4 &viewProjection, const Nebula::Vec3 &origin,
-                              float screenX, float screenY, float viewportWidth, float viewportHeight);
+                              float screenX, float screenY, float viewportWidth, float viewportHeight,
+                              float axisLength = 1.f);
 
   bool dragTranslateAxis(GizmoAxis axis, const ScreenRay &ray, const Nebula::Vec3 &dragStartPos,
                          Nebula::Vec3 &outNewPos);

@@ -3,6 +3,8 @@
 #include "combat.h"
 #include "scriptParams.h"
 
+#include <string>
+
 namespace Nimbus
 {
 
@@ -21,6 +23,7 @@ namespace Nimbus
     int m_enemiesPerWave;
     float m_spawnRadius;
     float m_timeBetweenWaves;
+    std::string m_lastParamsJson;
     Nebula::ScriptParams m_params;
   };
 }

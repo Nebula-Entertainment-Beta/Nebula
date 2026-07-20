@@ -1,5 +1,5 @@
 #include "checkpoint_Script.h"
-#include "encounterState.h"
+#include "nimbusRuntime.h"
 #include "nimbus_config.h"
 #include "traversalVolumes.h"
 
@@ -26,9 +26,9 @@ namespace Nimbus
     {
       return;
     }
-    const Nebula::Vec3 pos = ctx.scene.getTransform(self).transform.getPosition();
-    EncounterState::instance().checkpointPosition = pos;
-    EncounterState::instance().hasCheckpoint = true;
+    EncounterState &enc = encounter(ctx);
+    enc.checkpointPosition = ctx.scene.getTransform(self).transform.getPosition();
+    enc.hasCheckpoint = true;
     m_armed = false;
     if (ctx.log != nullptr)
     {

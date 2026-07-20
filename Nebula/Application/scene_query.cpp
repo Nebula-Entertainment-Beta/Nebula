@@ -1,4 +1,5 @@
 #include "scene_query.h"
+#include "component.h"
 #include "scene.h"
 #include "tag_component.h"
 
@@ -19,6 +20,27 @@ namespace Nebula
       }
     }
     return {};
+  }
+
+  Entity findPrimaryCameraEntity(Scene &scene)
+  {
+    Entity fallback{};
+    for (const Entity entity : scene.getAllEntities())
+    {
+      if (!scene.hasComponent<CameraComponent>(entity))
+      {
+        continue;
+      }
+      if (scene.getComponent<CameraComponent>(entity).isPrimary)
+      {
+        return entity;
+      }
+      if (fallback.id == 0)
+      {
+        fallback = entity;
+      }
+    }
+    return fallback;
   }
 
   std::vector<Entity> findAllByTag(Scene &scene, std::string_view tag)

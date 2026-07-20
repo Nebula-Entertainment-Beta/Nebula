@@ -2,7 +2,7 @@
  * @file script.h
  * @brief Script **lifecycle** interface and per-frame context passed to gameplay hooks.
  *
- * **Owns:** `ScriptContext` (`ISceneAccess` + optional `IInputQuery`), `IScript`, `ScriptPtr`.
+ * **Owns:** `ScriptContext` (`ISceneAccess` + optional frame input), `IScript`, `ScriptPtr`.
  *
  * **Why:** Lets entities in JSON name a behavior (`ScriptComponent::scriptName`) while C++ classes
  * implement `onUpdate` / `onRender` / … without the engine depending on every game type.
@@ -11,7 +11,7 @@
 
 #include <memory>
 #include "scene.h"
-#include "inputQuery.h"
+#include "frameCommands.h"
 #include "logSink.h"
 #include "sceneAccess.h"
 
@@ -28,8 +28,8 @@ namespace Nebula
   struct ScriptContext
   {
     ISceneAccess &scene;
-    IInputQuery *input = nullptr;   // nullptr = transform-only scripts
-    ILogSink *log = nullptr;        // nullptr = no host console (standalone game)
+    const FrameInput *input = nullptr; // nullptr = transform-only scripts
+    ILogSink *log = nullptr;           // nullptr = no host console (standalone game)
     IPhysicsQuery *physics = nullptr;
     Scene *physicsScene = nullptr;
     AssetManager *assetManager = nullptr;
@@ -38,6 +38,8 @@ namespace Nebula
     IAudioService *audio = nullptr;
     void *scriptRebuildUserData = nullptr;
     void (*requestScriptRebuildFn)(void *userData) = nullptr;
+    /** Host-owned game session state (e.g. NimbusRuntime); nullptr when unused. */
+    void *gameUserData = nullptr;
 
     void requestScriptRebuild() const
     {

@@ -1,5 +1,7 @@
 #include "systemScheduler.h"
 
+#include <algorithm>
+
 namespace Nebula
 {
   void SystemScheduler::add(SystemPhase phase, SystemFn fn)
@@ -16,19 +18,15 @@ namespace Nebula
 
   void SystemScheduler::runFixed(SystemPhase phase, float fixedDt, float frameDt, float fixedStep, int maxSteps)
   {
-    m_fixedAccumulator += frameDt;
+    // Cap catch-up so one hitch cannot schedule a multi-step death spiral.
+    const float maxCatchUp = fixedStep * static_cast<float>(std::max(maxSteps, 1));
+    m_fixedAccumulator += std::min(frameDt, maxCatchUp);
     int steps = 0;
     while (m_fixedAccumulator >= fixedStep && steps < maxSteps)
     {
       run(phase, fixedDt);
       m_fixedAccumulator -= fixedStep;
       steps++;
-    }
-    // Always simulate at least once per rendered frame so one-frame inputs (jump)
-    // aren't dropped when frameDt < fixedStep.
-    if (steps == 0 && frameDt > 0.f)
-    {
-      run(phase, fixedDt);
     }
   }
 

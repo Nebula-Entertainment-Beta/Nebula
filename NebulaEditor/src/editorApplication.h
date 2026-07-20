@@ -142,18 +142,11 @@ namespace Editor
     float m_qtPointerY = 0.f;
     bool m_qtRightDragging = false;
     bool m_qtLeftLooking = false;
-    bool m_qtMoveForward = false;
-    bool m_qtMoveBackward = false;
-    bool m_qtMoveLeft = false;
-    bool m_qtMoveRight = false;
-    bool m_qtMoveDown = false;
-    bool m_qtMoveUp = false;
     ColliderHandle m_qtColliderHandle = ColliderHandle::None;
     bool m_qtColliderSymmetric = false;
 
     void enterPlayMode();
     void exitPlayMode();
-    void createEmptyEntity();
     void deleteSelectedEntity();
     void saveSelectedEntityAsPrefab();
     void newScene(NewSceneBuilder builder);

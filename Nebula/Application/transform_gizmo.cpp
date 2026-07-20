@@ -4,7 +4,10 @@
 #include "assetManager.h"
 #include "camera3D.h"
 #include "component.h"
+#include "debug_line_renderer.h"
 #include "material.h"
+#include "physics/collision_math.h"
+#include "physics/physics_component.h"
 #include "renderer.h"
 #include "scene.h"
 #include "scene_query.h"
@@ -12,6 +15,7 @@
 
 #include <glad/glad.h>
 
+#include <algorithm>
 #include <cmath>
 #include <vector>
 
@@ -19,28 +23,6 @@ namespace Nebula
 {
   namespace
   {
-    Entity findPrimaryCameraEntity(Scene &scene)
-    {
-      Entity fallback{};
-      for (const Entity entity : scene.getAllEntities())
-      {
-        if (!scene.hasComponent<CameraComponent>(entity))
-        {
-          continue;
-        }
-        const auto &cam = scene.getComponent<CameraComponent>(entity);
-        if (cam.isPrimary)
-        {
-          return entity;
-        }
-        if (fallback.id == 0)
-        {
-          fallback = entity;
-        }
-      }
-      return fallback;
-    }
-
     Vec3 findCameraTarget(Scene &scene, Entity cameraEntity)
     {
       if (!scene.isValidEntity(cameraEntity) || !scene.hasComponent<CameraComponent>(cameraEntity))
@@ -63,59 +45,6 @@ namespace Nebula
       }
       return Vec3{0.f, 0.f, 0.f};
     }
-
-    struct DebugLineRenderer
-    {
-      unsigned int vao = 0;
-      unsigned int vbo = 0;
-      bool initialized = false;
-
-      void ensureInitialized()
-      {
-        if (initialized)
-        {
-          return;
-        }
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
-        glBindVertexArray(0);
-        initialized = true;
-      }
-
-      void draw(const std::vector<Vec3> &lines, const Mat4 &mvp, Shader &shader, const Vec3 &color)
-      {
-        if (lines.empty())
-        {
-          return;
-        }
-
-        ensureInitialized();
-        std::vector<float> packed;
-        packed.reserve(lines.size() * 3);
-        for (const Vec3 &p : lines)
-        {
-          packed.push_back(p.x);
-          packed.push_back(p.y);
-          packed.push_back(p.z);
-        }
-
-        shader.bind();
-        shader.setMat4("uMVP", mvp);
-        shader.setVec3("uColor", color);
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
-                     packed.data(), GL_DYNAMIC_DRAW);
-        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(lines.size()));
-        glBindVertexArray(0);
-        shader.unbind();
-      }
-    };
 
     void appendAxisLines(const Vec3 &origin, float length, std::vector<Vec3> &xLines,
                          std::vector<Vec3> &yLines, std::vector<Vec3> &zLines)
@@ -201,6 +130,34 @@ namespace Nebula
     }
   } // namespace
 
+  float transformGizmoAxisLength(Scene &scene, Entity entity)
+  {
+    if (!scene.isValidEntity(entity) || !scene.hasComponent<TransformComponent>(entity))
+    {
+      return 1.f;
+    }
+
+    float halfMax = 0.5f;
+    if (scene.hasComponent<ColliderComponent>(entity))
+    {
+      const CollisionMath math;
+      const AABB box = math.worldAABBFromEntity(scene, entity);
+      halfMax = 0.5f * std::max({box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z});
+    }
+    else
+    {
+      // Builtin cube meshes are ~1 unit; scale is the authored world size.
+      const Vec3 s = scene.getComponent<TransformComponent>(entity).transform.getScale();
+      halfMax = 0.5f * std::max({std::fabs(s.x), std::fabs(s.y), std::fabs(s.z)});
+    }
+    if (!(halfMax > 0.f))
+    {
+      halfMax = 0.5f;
+    }
+    // Extend past the mesh surface so handles stay clickable on large blocks.
+    return std::clamp(halfMax * 1.35f, 0.75f, 64.f);
+  }
+
   void renderTransformGizmo(const RenderSystemContext &ctx, Entity selectedEntity, int gizmoMode)
   {
     if (!ctx.scene.isValidEntity(selectedEntity) ||
@@ -269,7 +226,7 @@ namespace Nebula
     }
 
     const Vec3 origin = ctx.scene.getComponent<TransformComponent>(selectedEntity).transform.getPosition();
-    const float axisLength = 1.0f;
+    const float axisLength = transformGizmoAxisLength(ctx.scene, selectedEntity);
 
     static DebugLineRenderer lineRenderer;
     std::vector<Vec3> xLines;
@@ -293,7 +250,8 @@ namespace Nebula
     }
 
     GLboolean depthWasEnabled = glIsEnabled(GL_DEPTH_TEST);
-    glEnable(GL_DEPTH_TEST);
+    // Always draw handles on top so large meshes cannot bury them.
+    glDisable(GL_DEPTH_TEST);
     glLineWidth(3.f);
 
     lineRenderer.draw(xLines, vp, *debugMaterial->shader, Vec3{0.95f, 0.25f, 0.25f});
@@ -301,9 +259,9 @@ namespace Nebula
     lineRenderer.draw(zLines, vp, *debugMaterial->shader, Vec3{0.25f, 0.45f, 0.95f});
 
     glLineWidth(1.f);
-    if (!depthWasEnabled)
+    if (depthWasEnabled)
     {
-      glDisable(GL_DEPTH_TEST);
+      glEnable(GL_DEPTH_TEST);
     }
   }
 

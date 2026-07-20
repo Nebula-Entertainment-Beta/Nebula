@@ -17,22 +17,6 @@ namespace Nebula
 {
   namespace
   {
-    Entity findPrimaryCameraEntity(Scene &scene)
-    {
-      Entity fallback{};
-      for (const Entity entity : scene.getAllEntities())
-      {
-        if (!scene.hasComponent<CameraComponent>(entity))
-          continue;
-        const auto &cam = scene.getComponent<CameraComponent>(entity);
-        if (cam.isPrimary)
-          return entity;
-        if (fallback.id == 0)
-          fallback = entity;
-      }
-      return fallback;
-    }
-
     Vec3 fallbackTarget(Scene &scene, Entity cameraEntity)
     {
       for (const Entity entity : scene.getAllEntities())

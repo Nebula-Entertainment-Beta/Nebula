@@ -2,6 +2,7 @@
 
 #include <Nebula.h>
 
+#include "nimbusRuntime.h"
 #include "register_Script.h"
 #include "sceneDefaults.h"
 
@@ -11,6 +12,7 @@ public:
   explicit NimbusApp(const Nebula::ApplicationSpec &spec)
       : Nebula::Application(spec)
   {
+    setGameUserData(&m_runtime);
     Nebula::Scene &scene = getScene();
     if (!Nebula::SceneSerializer::load(scene, getAssets(), m_scenePath))
     {
@@ -34,6 +36,7 @@ protected:
   }
 
 private:
+  Nimbus::NimbusRuntime m_runtime;
   std::string m_scenePath = "scenes/vertical_slice.json";
 };
 

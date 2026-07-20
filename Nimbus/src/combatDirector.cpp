@@ -1,4 +1,5 @@
 #include "combatDirector.h"
+#include "nimbusRuntime.h"
 
 namespace Nimbus
 {
@@ -36,13 +37,13 @@ namespace Nimbus
 
   void combatDirector::onCreate(Nebula::ScriptContext &ctx, Nebula::Entity self)
   {
-
     if (!ctx.scene.isValidEntity(self))
     {
       return;
     }
     const Nebula::ScriptComponent &sc = ctx.scene.getScriptComponent(self);
-    syncCombatFromParams(sc, m_params, Nimbus::Combat::instance(), m_enemiesPerWave, m_spawnRadius, m_timeBetweenWaves);
+    m_lastParamsJson = sc.paramsJson;
+    syncCombatFromParams(sc, m_params, combat(ctx), m_enemiesPerWave, m_spawnRadius, m_timeBetweenWaves);
   }
 
   void combatDirector::onEnable(Nebula::ScriptContext &ctx, Nebula::Entity self)
@@ -57,6 +58,11 @@ namespace Nimbus
       return;
     }
     const Nebula::ScriptComponent &sc = ctx.scene.getScriptComponent(self);
-    syncCombatFromParams(sc, m_params, Nimbus::Combat::instance(), m_enemiesPerWave, m_spawnRadius, m_timeBetweenWaves);
+    if (sc.paramsJson == m_lastParamsJson)
+    {
+      return;
+    }
+    m_lastParamsJson = sc.paramsJson;
+    syncCombatFromParams(sc, m_params, combat(ctx), m_enemiesPerWave, m_spawnRadius, m_timeBetweenWaves);
   }
 }

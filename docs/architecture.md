@@ -11,8 +11,8 @@ flowchart TB
     NE[NimbusEditor host main]
   end
   subgraph editor [NebulaEditor — tools]
-    EL[NebulaEditorLib panels]
-    EM[main.cpp generic NebulaEditor]
+    EL[NebulaEditorLib Qt docks]
+    EM[qt_editor_main.cpp]
   end
   subgraph public [Nebula/include — public API]
     P[Nebula.h application.h scene.h ...]

@@ -265,9 +265,13 @@ namespace Nebula
         {
           return;
         }
-        reconcile(scene);
         const EntityKey key = EntityKey::from(entity);
         auto it = m_bodies.find(key);
+        if (it == m_bodies.end() || it->second.actor == nullptr)
+        {
+          reconcile(scene);
+          it = m_bodies.find(key);
+        }
         if (it == m_bodies.end() || it->second.actor == nullptr)
         {
           if (scene.isValidEntity(entity) && scene.hasComponent<TransformComponent>(entity))
@@ -495,6 +499,17 @@ namespace Nebula
           {
             BodyRecord &record = it->second;
             const PxTransform desired(toPx(tf.getPosition()), yawToQuat(tf.getYaw()));
+            const PxVec3 delta = desired.p - record.commandedPose.p;
+            const bool poseChanged =
+                delta.magnitudeSquared() > 1e-8f ||
+                std::fabs(desired.q.x - record.commandedPose.q.x) > 1e-5f ||
+                std::fabs(desired.q.y - record.commandedPose.q.y) > 1e-5f ||
+                std::fabs(desired.q.z - record.commandedPose.q.z) > 1e-5f ||
+                std::fabs(desired.q.w - record.commandedPose.q.w) > 1e-5f;
+            if (!poseChanged)
+            {
+              continue;
+            }
             if (record.isStatic || record.kinematic)
             {
               if (record.kinematic)

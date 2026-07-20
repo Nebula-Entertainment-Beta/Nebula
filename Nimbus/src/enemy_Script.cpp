@@ -1,4 +1,5 @@
 #include "enemy_Script.h"
+#include "nimbusRuntime.h"
 #include "nimbus_config.h"
 
 #include <cmath>
@@ -14,7 +15,7 @@ namespace Nimbus
       return;
     }
     const Nebula::ScriptComponent &sc = ctx.scene.getScriptComponent(entity);
-    const float tunedHealth = Nimbus::Combat::instance().enemyMaxHealth;
+    const float tunedHealth = combat(ctx).enemyMaxHealth;
     health = m_params.readScriptParamFloat(sc.paramsJson, "health", tunedHealth);
     attackDamage = m_params.readScriptParamFloat(sc.paramsJson, "attackDamage", 10.f);
   }
@@ -23,7 +24,8 @@ namespace Nimbus
   {
     float hitDamage = 0.f;
     bool hitHeavy = false;
-    while (Nimbus::Combat::instance().popEnemyHit(entity, hitDamage, hitHeavy))
+    Combat &c = combat(ctx);
+    while (c.popEnemyHit(entity, hitDamage, hitHeavy))
     {
       receiveHit(ctx, entity, hitDamage, hitHeavy);
     }
@@ -138,7 +140,7 @@ namespace Nimbus
       return;
     }
 
-    const Nimbus::Combat &t = Nimbus::Combat::instance();
+    const Combat &t = combat(ctx);
     const Nebula::Entity player = findPlayer(ctx);
     const float dist = distanceTo(ctx, entity, player);
 
@@ -203,9 +205,10 @@ namespace Nimbus
       {
         if (ctx.scene.isValidEntity(player) && dist <= t.enemyAttackRange)
         {
-          if (Nimbus::Combat::instance().playerIFrameTimer <= 0.f)
+          Combat &c = combat(ctx);
+          if (c.playerIFrameTimer <= 0.f)
           {
-            Nimbus::Combat::instance().queuePlayerDamage(attackDamage);
+            c.queuePlayerDamage(attackDamage);
           }
           if (ctx.log != nullptr)
           {

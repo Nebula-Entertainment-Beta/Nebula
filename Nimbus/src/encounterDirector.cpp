@@ -1,7 +1,6 @@
 #include "encounterDirector.h"
-#include "encounterState.h"
+#include "nimbusRuntime.h"
 #include "nimbus_config.h"
-#include "combat.h"
 
 namespace Nimbus
 {
@@ -12,13 +11,13 @@ namespace Nimbus
     {
       m_initialSpawn = ctx.scene.getTransform(player).transform.getPosition();
     }
-    EncounterState::instance().resetForPlay(m_initialSpawn);
+    encounter(ctx).resetForPlay(m_initialSpawn);
+    combat(ctx).clearTransient();
   }
 
   void EncounterDirector::onUpdate(Nebula::ScriptContext &ctx, Nebula::Entity, float)
   {
-    EncounterState &enc = EncounterState::instance();
-    if (enc.retryRequested)
+    if (encounter(ctx).retryRequested)
     {
       applyRetry(ctx);
     }
@@ -26,7 +25,7 @@ namespace Nimbus
 
   void EncounterDirector::applyRetry(Nebula::ScriptContext &ctx)
   {
-    EncounterState &enc = EncounterState::instance();
+    EncounterState &enc = encounter(ctx);
     const Nebula::Entity player = ctx.scene.findByTag(kPlayerTag);
     if (ctx.scene.isValidEntity(player))
     {
@@ -34,9 +33,7 @@ namespace Nimbus
           enc.hasCheckpoint ? enc.checkpointPosition : m_initialSpawn;
       ctx.scene.getTransform(player).transform.setPosition(respawn);
     }
-    Combat::instance().pendingPlayerDamage = 0.f;
-    Combat::instance().playerIFrameTimer = 0.f;
-    Combat::instance().enemyHitRequests.clear();
+    combat(ctx).clearTransient();
     if (ctx.log != nullptr)
     {
       ctx.log->info("[Encounter] Retry — restored checkpoint");

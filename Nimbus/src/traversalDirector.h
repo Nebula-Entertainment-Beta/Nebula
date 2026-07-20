@@ -1,8 +1,8 @@
-
 #pragma once
 #include "script.h"
-#include "traversal.h"
 #include "scriptParams.h"
+
+#include <string>
 
 namespace Nimbus
 {
@@ -13,10 +13,8 @@ namespace Nimbus
     void onEnable(Nebula::ScriptContext &, Nebula::Entity) override;
     void onUpdate(Nebula::ScriptContext &, Nebula::Entity, float) override;
 
-    const TraversalSettings &settings() const { return m_settings; }
-
   private:
-    TraversalSettings m_settings{};
+    std::string m_lastParamsJson;
     Nebula::ScriptParams m_params;
   };
 };

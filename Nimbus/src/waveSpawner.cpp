@@ -1,7 +1,7 @@
 #include "waveSpawner.h"
 
 #include "combatSpawn.h"
-#include "encounterState.h"
+#include "nimbusRuntime.h"
 #include "nimbus_config.h"
 #include "tag_component.h"
 
@@ -23,13 +23,14 @@ namespace Nimbus
     m_maxWaves = m_params.readScriptParamInt(sc.paramsJson, "maxWaves", 3);
     m_spawned = !m_waveEnemies.empty();
     m_waitTimer = 0.f;
-    EncounterState::instance().waveIndex = m_waveIndex;
-    EncounterState::instance().wavesToWin = m_maxWaves;
+    EncounterState &enc = encounter(ctx);
+    enc.waveIndex = m_waveIndex;
+    enc.wavesToWin = m_maxWaves;
   }
 
   void WaveSpawner::onUpdate(Nebula::ScriptContext &ctx, Nebula::Entity entity, float dt)
   {
-    EncounterState &enc = EncounterState::instance();
+    EncounterState &enc = encounter(ctx);
     if (enc.objectiveComplete)
     {
       return;
@@ -88,8 +89,8 @@ namespace Nimbus
     }
 
     m_waitTimer += dt;
-    const float delay = Nimbus::Combat::instance().timeBetweenWaves;
-    if (m_waitTimer >= delay)
+    const Combat &c = combat(ctx);
+    if (m_waitTimer >= c.timeBetweenWaves)
     {
       m_spawned = false;
       m_waitTimer = 0.f;
@@ -98,8 +99,9 @@ namespace Nimbus
 
   void WaveSpawner::spawnWave(Nebula::ScriptContext &ctx, Nebula::Entity entity)
   {
-    const int count = Nimbus::Combat::instance().wavesPerSecond();
-    const float radius = Nimbus::Combat::instance().spawnRadius;
+    const Combat &c = combat(ctx);
+    const int count = c.wavesPerSecond();
+    const float radius = c.spawnRadius;
 
     m_waveEnemies.clear();
     m_waveEnemies.reserve(static_cast<std::size_t>(count));

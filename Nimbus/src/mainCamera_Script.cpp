@@ -35,7 +35,7 @@ namespace Nimbus
     {
       return;
     }
-    const Nebula::FrameInput &f = ctx.input->frame();
+    const Nebula::FrameInput &f = *ctx.input;
 
     const float turnX = f.lookX * m_lookSensitivity;
     const float turnY = f.lookY * m_lookSensitivity;

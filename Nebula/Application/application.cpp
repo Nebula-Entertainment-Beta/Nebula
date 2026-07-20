@@ -17,8 +17,7 @@ namespace Nebula
 
   Application::Application(const ApplicationSpec &spec)
       : m_window(WindowSpec{spec.title, spec.width, spec.height, spec.rendererAPI}),
-        m_assets(), m_assetManager(m_assets),
-        m_world(m_scene, m_assets, m_input, m_actionMapping, m_scriptRegistry, m_frameInput)
+        m_assets(), m_assetManager(m_assets)
   {
     m_width = spec.width;
     m_height = spec.height;
@@ -150,7 +149,6 @@ namespace Nebula
     ScriptContext ctx = makeScriptContext();
     m_scriptSystem.initializeAll(ctx);
     m_scheduler.resetFixedAccumulator();
-    m_world.prevJumpDown() = false;
   }
 
   void Application::bindNewScripts()
@@ -210,7 +208,7 @@ namespace Nebula
 
   ScriptContext Application::makeScriptContext()
   {
-    ScriptContext ctx{m_sceneAccess, &m_inputQuery, m_logSink};
+    ScriptContext ctx{m_sceneAccess, &m_frameInput, m_logSink};
     ctx.physics = m_physicsQuery.get();
     ctx.physicsScene = &m_scene;
     ctx.assetManager = &m_assetManager;
@@ -222,16 +220,13 @@ namespace Nebula
     }
     ctx.scriptRebuildUserData = this;
     ctx.requestScriptRebuildFn = &Application::onRequestScriptRebuild;
+    ctx.gameUserData = m_gameUserData;
     return ctx;
   }
 
-  void buildFrameInput(World &world, EventBus &bus)
+  void buildFrameInput(Input &input, ActionMapping &map, FrameInput &f, EventBus &bus)
   {
-    FrameInput &f = world.frameInput();
     f.clear();
-
-    Input &input = world.input();
-    ActionMapping &map = world.actions();
 
     if (map.wasActionPressed(Action::LightAttack, input))
     {
@@ -243,14 +238,12 @@ namespace Nebula
       f.heavyAttackPressed = true;
     }
 
-    bool &prevJumpDown = world.prevJumpDown();
     const bool jumpDown = map.isActionDown(Action::Jump, input);
-    if (map.wasActionPressed(Action::Jump, input) || (jumpDown && !prevJumpDown))
+    if (map.wasActionPressed(Action::Jump, input))
     {
       f.jumpPressed = true;
     }
     f.jumpHeld = jumpDown;
-    prevJumpDown = jumpDown;
 
     if (map.isActionDown(Action::FastFall, input))
     {
@@ -259,7 +252,6 @@ namespace Nebula
 
     if (map.wasActionPressed(Action::Interact, input))
     {
-
       bus.push(InteractPressedEvent{});
     }
 
@@ -278,7 +270,7 @@ namespace Nebula
     m_scheduler.add(SystemPhase::PreUpdate, [this](float)
                     {
                       m_eventBus.clear();
-                      buildFrameInput(m_world, m_eventBus); });
+                      buildFrameInput(m_input, m_actionMapping, m_frameInput, m_eventBus); });
 
     m_scheduler.add(SystemPhase::Update, [this](float dt)
                     {

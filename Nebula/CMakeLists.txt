@@ -33,7 +33,6 @@ add_library(Nebula STATIC
     Application/scriptFields.cpp
     Application/scriptParams.cpp
     Application/clock.cpp
-    Application/world.cpp 
     Application/scriptSystem.cpp
     Application/systemScheduler.cpp
     Application/asset_id.cpp
@@ -48,6 +47,7 @@ add_library(Nebula STATIC
     Application/collider_fit.cpp
     Application/collider_debug.cpp
     Application/transform_gizmo.cpp
+    Application/debug_line_renderer.cpp
     Application/eventBus.cpp
     Application/null_physics_world.cpp
     Application/physx_physics_world.cpp

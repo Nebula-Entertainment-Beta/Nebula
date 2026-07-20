@@ -1,6 +1,6 @@
 #include "player_Script.h"
 #include "combatHelper.h"
-#include "encounterState.h"
+#include "nimbusRuntime.h"
 #include "nimbus_config.h"
 #include "physicsQuery.h"
 #include "scriptParams.h"
@@ -22,7 +22,6 @@ namespace Nimbus
     }
     const Nebula::ScriptComponent &sc = ctx.scene.getScriptComponent(self);
     m_moveSpeed = m_params.readScriptParamFloat(sc.paramsJson, "moveSpeed", 3.f);
-    m_traversalDirector = ctx.scene.findByTag("TraversalDirector");
     m_spawnPosition = ctx.scene.getTransform(self).transform.getPosition();
     m_pendingGroundSnap = true;
   }
@@ -83,7 +82,7 @@ namespace Nimbus
 
   void PlayerScript::onUpdate(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt)
   {
-    EncounterState &enc = EncounterState::instance();
+    EncounterState &enc = encounter(ctx);
     if (enc.restorePlayer && ctx.scene.isValidEntity(self))
     {
       const Nebula::Vec3 respawn =
@@ -104,18 +103,17 @@ namespace Nimbus
         m_playerIFrameTimer = 0.f;
       }
     }
-    Nimbus::Combat::instance().playerIFrameTimer = m_playerIFrameTimer;
+    combat(ctx).playerIFrameTimer = m_playerIFrameTimer;
     applyPendingPlayerDamage(ctx);
 
     // Capture jump on the render frame (edge + buffer) so presses aren't lost.
     if (ctx.input != nullptr)
     {
-      const Nebula::FrameInput &f = ctx.input->frame();
-      syncTraversalSettings(ctx);
+      const Nebula::FrameInput &f = *ctx.input;
       if (f.jumpPressed || (f.jumpHeld && !m_prevJumpHeld))
       {
         m_wantsJump = true;
-        m_jumpBufferTimer = m_traversal.jumpBufferTime;
+        m_jumpBufferTimer = traversal(ctx).jumpBufferTime;
       }
       if (!f.jumpHeld && m_prevJumpHeld && m_velocityY > 0.f)
       {
@@ -137,21 +135,21 @@ namespace Nimbus
     movement(ctx, self, fixedDt);
   }
 
-  void PlayerScript::grantIFrame()
+  void PlayerScript::grantIFrame(Nebula::ScriptContext &ctx)
   {
-    m_playerIFrameTimer = Nimbus::Combat::instance().playerIFrameDuration;
-    Nimbus::Combat::instance().playerIFrameTimer = m_playerIFrameTimer;
+    m_playerIFrameTimer = combat(ctx).playerIFrameDuration;
+    combat(ctx).playerIFrameTimer = m_playerIFrameTimer;
   }
 
   void PlayerScript::applyPendingPlayerDamage(Nebula::ScriptContext &ctx)
   {
-    const float damage = Nimbus::Combat::instance().consumePendingPlayerDamage();
+    const float damage = combat(ctx).consumePendingPlayerDamage();
     if (damage <= 0.f || isInvulnerable())
     {
       return;
     }
     m_health -= damage;
-    grantIFrame();
+    grantIFrame(ctx);
     if (ctx.audio != nullptr)
     {
       ctx.audio->playOneShot("audio/hit.wav", 0.8f);
@@ -164,22 +162,12 @@ namespace Nimbus
     if (m_health <= 0.f)
     {
       m_health = 100.f;
-      EncounterState::instance().requestRetry();
+      encounter(ctx).requestRetry();
       if (ctx.log != nullptr)
       {
         ctx.log->info("[Combat] Player defeated — requesting retry");
       }
     }
-  }
-
-  void PlayerScript::syncTraversalSettings(Nebula::ScriptContext &ctx)
-  {
-    if (!ctx.scene.isValidEntity(m_traversalDirector))
-      return;
-    syncTraversalFromParams(
-        ctx.scene.getScriptComponent(m_traversalDirector),
-        m_params,
-        m_traversal);
   }
 
   void PlayerScript::movement(Nebula::ScriptContext &ctx, Nebula::Entity self, float fixedDt)
@@ -192,9 +180,8 @@ namespace Nimbus
     if (!ctx.scene.isValidEntity(cameraEntity))
       return;
 
-    syncTraversalSettings(ctx);
-    const TraversalSettings &t = m_traversal;
-    const Nebula::FrameInput &f = ctx.input->frame();
+    const TraversalSettings &t = traversal(ctx);
+    const Nebula::FrameInput &f = *ctx.input;
 
     const bool wasGrounded = m_grounded;
 
@@ -334,13 +321,13 @@ namespace Nimbus
       m_grounded = false;
       m_coyoteTimer = 0.f;
       m_jumpBufferTimer = 0.f;
-      EncounterState &enc = EncounterState::instance();
+      EncounterState &enc = encounter(ctx);
       if (!enc.hasCheckpoint)
       {
         enc.checkpointPosition = m_spawnPosition;
         enc.hasCheckpoint = true;
       }
-      EncounterState::instance().requestRetry();
+      enc.requestRetry();
     }
   }
 
@@ -378,12 +365,9 @@ namespace Nimbus
     {
     case AttackStates::LightWindup:
     case AttackStates::HeavyWindup:
-      return 0.25f;
     case AttackStates::ActiveHitLight:
-    case AttackStates::LightAttack:
       return 0.25f;
     case AttackStates::ActiveHitHeavy:
-    case AttackStates::HeavyAttack:
       return 0.0f;
     case AttackStates::RecoveryLightAttack:
     case AttackStates::RecoveryHeavyAttack:
@@ -393,14 +377,46 @@ namespace Nimbus
     }
   }
 
+  void PlayerScript::resolveActiveHit(Nebula::ScriptContext &ctx, Nebula::Entity self, float damage,
+                                      bool heavy, const char *label)
+  {
+    if (m_hitThisSwing)
+    {
+      return;
+    }
+    const Nebula::Entity cameraEntity = GetCamera(ctx, self);
+    if (!ctx.scene.isValidEntity(cameraEntity))
+    {
+      m_hitThisSwing = true;
+      return;
+    }
+    const float yaw = ctx.scene.getCamera(cameraEntity).yaw;
+    const Nebula::Vec3 forward{-std::sin(yaw), 0.0f, -std::cos(yaw)};
+    const Nebula::Vec3 playerPos = ctx.scene.getTransform(self).transform.getPosition();
+    const Nebula::Vec3 hitCenter = playerPos + forward * 0.8f;
+    const Combat &t = combat(ctx);
+    const std::vector<Nebula::Entity> hits =
+        findEnemiesInSphere(ctx.scene, hitCenter, t.hitRadius);
+    for (const Nebula::Entity enemy : hits)
+    {
+      combat(ctx).queueEnemyHit(enemy, damage, heavy);
+      if (ctx.log != nullptr)
+      {
+        ctx.log->info(std::string("[Combat] ") + label + " hit enemy id=" +
+                      std::to_string(enemy.id) + " damage=" + std::to_string(damage));
+      }
+    }
+    m_hitThisSwing = true;
+  }
+
   void PlayerScript::combatFSM(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt, AttackStates state)
   {
     if (ctx.input == nullptr)
     {
       return;
     }
-    const Nebula::FrameInput &f = ctx.input->frame();
-    const Nimbus::Combat &t = Nimbus::Combat::instance();
+    const Nebula::FrameInput &f = *ctx.input;
+    const Combat &t = combat(ctx);
 
     switch (state)
     {
@@ -432,41 +448,9 @@ namespace Nimbus
       break;
 
     case AttackStates::ActiveHitLight:
-    case AttackStates::LightAttack:
       stateTimer += dt;
       applyAttackLunge(ctx, self, dt, 0.5f);
-      if (!m_hitThisSwing)
-      {
-        const Nebula::Entity cameraEntity = GetCamera(ctx, self);
-        if (ctx.scene.isValidEntity(cameraEntity))
-        {
-          const float yaw = ctx.scene.getCamera(cameraEntity).yaw;
-          const Nebula::Vec3 forward{-std::sin(yaw), 0.0f, -std::cos(yaw)};
-          const Nebula::Vec3 playerPos = ctx.scene.getTransform(self).transform.getPosition();
-          const Nebula::Vec3 hitCenter = playerPos + forward * 0.8f;
-          const std::vector<Nebula::Entity> hits =
-              findEnemiesInSphere(ctx.scene, hitCenter, t.hitRadius);
-          if (ctx.log != nullptr)
-          {
-            if (hits.empty())
-            {
-              ctx.log->info("[Combat] Light attack: no hits (radius=" +
-                            std::to_string(t.hitRadius) + ")");
-            }
-            else
-            {
-              for (const Nebula::Entity enemy : hits)
-              {
-                Nimbus::Combat::instance().queueEnemyHit(enemy, t.lightDamage, false);
-                ctx.log->info("[Combat] Light attack hit enemy id=" +
-                              std::to_string(enemy.id) + " damage=" +
-                              std::to_string(t.lightDamage));
-              }
-            }
-          }
-        }
-        m_hitThisSwing = true;
-      }
+      resolveActiveHit(ctx, self, t.lightDamage, false, "Light attack");
       if (stateTimer >= t.lightActive)
       {
         setAttackStates(AttackStates::RecoveryLightAttack);
@@ -474,41 +458,9 @@ namespace Nimbus
       break;
 
     case AttackStates::ActiveHitHeavy:
-    case AttackStates::HeavyAttack:
       stateTimer += dt;
       applyAttackLunge(ctx, self, dt, 1.25f);
-      if (!m_hitThisSwing)
-      {
-        const Nebula::Entity cameraEntity = GetCamera(ctx, self);
-        if (ctx.scene.isValidEntity(cameraEntity))
-        {
-          const float yaw = ctx.scene.getCamera(cameraEntity).yaw;
-          const Nebula::Vec3 forward{-std::sin(yaw), 0.0f, -std::cos(yaw)};
-          const Nebula::Vec3 playerPos = ctx.scene.getTransform(self).transform.getPosition();
-          const Nebula::Vec3 hitCenter = playerPos + forward * 0.8f;
-          const std::vector<Nebula::Entity> hits =
-              findEnemiesInSphere(ctx.scene, hitCenter, t.hitRadius);
-          if (ctx.log != nullptr)
-          {
-            if (hits.empty())
-            {
-              ctx.log->info("[Combat] Heavy attack: no hits (radius=" +
-                            std::to_string(t.hitRadius) + ")");
-            }
-            else
-            {
-              for (const Nebula::Entity enemy : hits)
-              {
-                Nimbus::Combat::instance().queueEnemyHit(enemy, t.heavyDamage, true);
-                ctx.log->info("[Combat] Heavy attack hit enemy id=" +
-                              std::to_string(enemy.id) + " damage=" +
-                              std::to_string(t.heavyDamage));
-              }
-            }
-          }
-        }
-        m_hitThisSwing = true;
-      }
+      resolveActiveHit(ctx, self, t.heavyDamage, true, "Heavy attack");
       if (stateTimer >= t.heavyActive)
       {
         setAttackStates(AttackStates::RecoveryHeavyAttack);

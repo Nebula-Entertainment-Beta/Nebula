@@ -1,8 +1,6 @@
 #include "mesh_import_options.h"
 
 #include <filesystem>
-#include "mesh_import_options.h"
-
 #include <nlohmann/json.hpp>
 
 #include <algorithm>

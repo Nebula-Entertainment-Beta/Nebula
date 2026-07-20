@@ -19,10 +19,8 @@ Headers under `Nebula/include/` are the only stable surface for games. Tier indi
 | `eventTypes.h` | **game** | Event payload types |
 | `input.h` | **game** | Keyboard/mouse (via Application) |
 | `input_Actions.h` | **game** | Action mapping |
-| `inputQuery.h` | **game** | Read-only input for scripts |
 | `inputTypes.h` | **game** | Input enums |
-| `frameCommands.h` | **game** | Per-frame input snapshot |
-| `world.h` | **game** | Aggregates scene/input/scripts |
+| `frameCommands.h` | **game** | Per-frame input snapshot (`ScriptContext::input`) |
 | `systemScheduler.h` | **game** | Register update/render systems |
 | `clock.h` | **game** | Time |
 | `assetProvider.h` | **game** | Asset path resolution |

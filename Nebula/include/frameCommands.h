@@ -2,7 +2,8 @@
 
 namespace Nebula
 {
-  class World;
+  class Input;
+  class ActionMapping;
   class EventBus;
 
   struct FrameInput
@@ -27,5 +28,5 @@ namespace Nebula
     }
   };
 
-  void buildFrameInput(World &world, EventBus &bus);
+  void buildFrameInput(Input &input, ActionMapping &actions, FrameInput &out, EventBus &bus);
 }

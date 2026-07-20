@@ -18,12 +18,6 @@ namespace Nimbus
     int waveIndex = 0;
     int wavesToWin = 3;
 
-    static EncounterState &instance()
-    {
-      static EncounterState s;
-      return s;
-    }
-
     void resetForPlay(const Nebula::Vec3 &spawn)
     {
       checkpointPosition = spawn;

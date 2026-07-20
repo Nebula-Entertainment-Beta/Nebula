@@ -21,10 +21,32 @@
 #include <cstring>
 #include <unordered_map>
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+#endif
+
 namespace Editor
 {
   namespace
   {
+    bool flyKeyDown(Nebula::Input &input, Nebula::Tasto key, int winVk)
+    {
+      if (input.isKeyDown(key))
+      {
+        return true;
+      }
+#ifdef _WIN32
+      (void)winVk;
+      return (GetAsyncKeyState(winVk) & 0x8000) != 0;
+#else
+      (void)winVk;
+      return false;
+#endif
+    }
+
     std::string toAssetsRelativeScenePath(const std::string &absolutePath)
     {
       const std::filesystem::path path(absolutePath);
@@ -107,8 +129,17 @@ namespace Editor
     {
       m_editorLog.info("Failed to load scene: " + m_state.scenePath);
       scene.clear();
+      if (m_buildNewScene)
+      {
+        m_buildNewScene(scene);
+        m_state.sceneDirty = true;
+        m_editorLog.info("Built default scene content for: " + m_state.scenePath);
+      }
     }
-    m_editorLog.info("Scene loaded: " + m_state.scenePath);
+    else
+    {
+      m_editorLog.info("Scene loaded: " + m_state.scenePath);
+    }
 
     resolveSceneAssets();
     refreshAssetCatalog();
@@ -142,28 +173,39 @@ namespace Editor
       return;
     }
 
-    // Keep the GLFW path as a keyboard fallback when the native child has
-    // focus. Pointer interaction is forwarded explicitly from Qt.
-    if (getInput().wasKeyPressed(Nebula::Tasto::w) && !m_qtRightDragging)
+    // Gizmo hotkeys only when not flying — W/A/S/D are for navigation while RMB is held.
+    if (!m_qtRightDragging)
     {
-      setGizmoMode(0);
-    }
-    if (getInput().wasKeyPressed(Nebula::Tasto::e) && !m_qtRightDragging)
-    {
-      setGizmoMode(1);
-    }
-    if (getInput().wasKeyPressed(Nebula::Tasto::r) && !m_qtRightDragging)
-    {
-      setGizmoMode(2);
+      if (getInput().wasKeyPressed(Nebula::Tasto::w))
+      {
+        setGizmoMode(0);
+      }
+      if (getInput().wasKeyPressed(Nebula::Tasto::e))
+      {
+        setGizmoMode(1);
+      }
+      if (getInput().wasKeyPressed(Nebula::Tasto::r))
+      {
+        setGizmoMode(2);
+      }
+      return;
     }
 
+    // Live key state only: RMB alone never translates. RMB+WASD/QZ flies.
+    Nebula::Input &input = getInput();
     const float move = 8.f * m_lastFrameDt;
-    if (m_qtRightDragging)
+    const float forward =
+        (flyKeyDown(input, Nebula::Tasto::w, 'W') ? move : 0.f) -
+        (flyKeyDown(input, Nebula::Tasto::s, 'S') ? move : 0.f);
+    const float right =
+        (flyKeyDown(input, Nebula::Tasto::d, 'D') ? move : 0.f) -
+        (flyKeyDown(input, Nebula::Tasto::a, 'A') ? move : 0.f);
+    const float up =
+        (flyKeyDown(input, Nebula::Tasto::z, 'Z') ? move : 0.f) -
+        (flyKeyDown(input, Nebula::Tasto::q, 'Q') ? move : 0.f);
+    if (forward != 0.f || right != 0.f || up != 0.f)
     {
-      m_state.flyCamera.moveAlongView(
-          (m_qtMoveForward ? move : 0.f) - (m_qtMoveBackward ? move : 0.f),
-          (m_qtMoveRight ? move : 0.f) - (m_qtMoveLeft ? move : 0.f),
-          (m_qtMoveUp ? move : 0.f) - (m_qtMoveDown ? move : 0.f));
+      m_state.flyCamera.moveAlongView(forward, right, up);
     }
   }
 
@@ -178,11 +220,9 @@ namespace Editor
     m_qtPointerY = y;
     if (right)
     {
+      // RMB starts a look session. Translation requires WASD held at the same time
+      // (polled live in handleQtSceneInteraction) — never from mouse alone.
       m_qtRightDragging = true;
-      // Fresh fly session: movement only comes from keys pressed while RMB is
-      // held, so stale flags can never push the camera on a plain right-click.
-      m_qtMoveForward = m_qtMoveBackward = m_qtMoveLeft = m_qtMoveRight = false;
-      m_qtMoveUp = m_qtMoveDown = false;
     }
     if (!left)
     {
@@ -222,10 +262,12 @@ namespace Editor
     {
       const auto &tf =
           scene.getComponent<Nebula::TransformComponent>(m_state.selectedEntity).transform;
+      const float axisLength =
+          Nebula::transformGizmoAxisLength(scene, m_state.selectedEntity);
       const GizmoAxis axis =
           m_qtGizmo.hitTest(m_qtGizmo.mode(), m_state.flyCameraViewProjection,
                             tf.getPosition(), x, y, static_cast<float>(width),
-                            static_cast<float>(height));
+                            static_cast<float>(height), axisLength);
       if (axis != GizmoAxis::None)
       {
         m_qtGizmo.beginDrag(axis, tf.getPosition(), tf.getYaw(), tf.getScale(), ray);
@@ -246,10 +288,14 @@ namespace Editor
     m_qtPointerX = x;
     m_qtPointerY = y;
 
+    // Look-only while RMB is held (or reported down). Never translate here.
     if (right || m_qtRightDragging)
     {
       m_qtRightDragging = true;
-      m_state.flyCamera.addLookDelta(dx * 0.005f, -dy * 0.005f);
+      if (dx != 0.f || dy != 0.f)
+      {
+        m_state.flyCamera.addLookDelta(dx * 0.005f, -dy * 0.005f);
+      }
     }
     if (left && m_qtPendingPick && !m_qtGizmo.isDragging() &&
         m_qtColliderHandle == ColliderHandle::None)
@@ -332,8 +378,6 @@ namespace Editor
     if (right)
     {
       m_qtRightDragging = false;
-      m_qtMoveForward = m_qtMoveBackward = m_qtMoveLeft = m_qtMoveRight = false;
-      m_qtMoveUp = m_qtMoveDown = false;
     }
     if (isPlaying() || !left || width <= 0 || height <= 0)
     {
@@ -367,7 +411,8 @@ namespace Editor
 
   void EditorApplication::sceneWheel(float delta)
   {
-    if (!isPlaying())
+    // Ignore scroll while RMB look is active — some devices emit wheel noise on click.
+    if (!isPlaying() && !m_qtRightDragging)
     {
       m_state.flyCamera.moveAlongView(delta * 0.0025f, 0.f, 0.f);
     }
@@ -375,42 +420,21 @@ namespace Editor
 
   void EditorApplication::sceneKeyChanged(int key, bool down)
   {
-    // Qt letter-key values match uppercase ASCII.
+    // Gizmo hotkeys when not flying. Fly movement uses live Input::isKeyDown while RMB is held.
+    if (!down || m_qtRightDragging)
+    {
+      return;
+    }
     switch (key)
     {
     case 'W':
-      m_qtMoveForward = down;
-      if (down && !m_qtRightDragging)
-      {
-        setGizmoMode(0);
-      }
-      break;
-    case 'S':
-      m_qtMoveBackward = down;
-      break;
-    case 'A':
-      m_qtMoveLeft = down;
-      break;
-    case 'D':
-      m_qtMoveRight = down;
-      break;
-    case 'Q':
-      m_qtMoveDown = down;
-      break;
-    case 'Z':
-      m_qtMoveUp = down;
+      setGizmoMode(0);
       break;
     case 'E':
-      if (down && !m_qtRightDragging)
-      {
-        setGizmoMode(1);
-      }
+      setGizmoMode(1);
       break;
     case 'R':
-      if (down && !m_qtRightDragging)
-      {
-        setGizmoMode(2);
-      }
+      setGizmoMode(2);
       break;
     default:
       break;
@@ -612,11 +636,6 @@ namespace Editor
     resolveSceneAssets();
     Nebula::Application::onStartup();
     m_editorLog.info("Scene loaded: " + std::string(path));
-  }
-
-  void EditorApplication::createEmptyEntity()
-  {
-    createEntityFromTemplate("empty");
   }
 
   bool EditorApplication::saveSelectedAsPrefab(std::string_view path)

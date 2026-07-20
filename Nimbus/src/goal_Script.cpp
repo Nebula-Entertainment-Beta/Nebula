@@ -1,5 +1,5 @@
 #include "goal_Script.h"
-#include "encounterState.h"
+#include "nimbusRuntime.h"
 #include "nimbus_config.h"
 #include "traversalVolumes.h"
 #include "audioService.h"
@@ -14,7 +14,7 @@ namespace Nimbus
 
   void GoalScript::onUpdate(Nebula::ScriptContext &ctx, Nebula::Entity self, float)
   {
-    EncounterState &enc = EncounterState::instance();
+    EncounterState &enc = encounter(ctx);
     if (m_triggered || enc.objectiveComplete || !ctx.scene.isValidEntity(self))
     {
       return;

@@ -54,3 +54,14 @@ build/
 .idea/
 *.swp
 *.swo
+
+# Legacy Dear ImGui layout (editor is Qt-only)
+imgui.ini
+
+# Local install / tool noise
+aqtinstall.log
+*.log
+
+# macOS Finder metadata
+.DS_Store
+**/.DS_Store

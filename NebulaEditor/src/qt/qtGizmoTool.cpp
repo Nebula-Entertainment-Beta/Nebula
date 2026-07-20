@@ -91,11 +91,12 @@ namespace Editor
 
   GizmoAxis QtGizmoTool::hitTest(GizmoMode mode, const Nebula::Mat4 &viewProjection,
                                  const Nebula::Vec3 &origin, float screenX, float screenY,
-                                 float viewportW, float viewportH) const
+                                 float viewportW, float viewportH, float axisLength) const
   {
     (void)mode;
     // Reuse translate axis picking for rotate rings / scale cubes (screen proximity).
-    return pickTranslateAxis(viewProjection, origin, screenX, screenY, viewportW, viewportH);
+    return pickTranslateAxis(viewProjection, origin, screenX, screenY, viewportW, viewportH,
+                             axisLength);
   }
 
 }

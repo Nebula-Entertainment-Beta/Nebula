@@ -44,12 +44,17 @@ namespace Nimbus
     float pendingPlayerDamage = 0.f;
     std::vector<EnemyHitRequest> enemyHitRequests;
 
-    static Combat &instance();
     int wavesPerSecond() const;
     void queueEnemyHit(Nebula::Entity target, float damage, bool heavy);
     bool popEnemyHit(Nebula::Entity target, float &damage, bool &heavy);
     void queuePlayerDamage(float damage);
     float consumePendingPlayerDamage();
+    void clearTransient()
+    {
+      playerIFrameTimer = 0.f;
+      pendingPlayerDamage = 0.f;
+      enemyHitRequests.clear();
+    }
   };
 
 }

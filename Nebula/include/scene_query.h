@@ -15,6 +15,9 @@ namespace Nebula
 
   Entity findByTag(Scene &scene, std::string_view tag);
 
+  /** First camera with isPrimary, else the first camera in the scene. */
+  Entity findPrimaryCameraEntity(Scene &scene);
+
   template <typename ComponentType>
   std::vector<Entity> findAllWith(const Scene &scene)
   {

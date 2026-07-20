@@ -28,7 +28,8 @@ namespace Editor
     GizmoAxis activeAxis() const { return m_axis; }
 
     GizmoAxis hitTest(GizmoMode mode, const Nebula::Mat4 &viewProjection, const Nebula::Vec3 &origin,
-                      float screenX, float screenY, float viewportW, float viewportH) const;
+                      float screenX, float screenY, float viewportW, float viewportH,
+                      float axisLength = 1.f) const;
 
   private:
     GizmoMode m_mode = GizmoMode::Translate;

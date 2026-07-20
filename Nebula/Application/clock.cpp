@@ -1,16 +1,23 @@
 #include "clock.h"
+
 #include <chrono>
 
 namespace Nebula
 {
+  namespace
+  {
+    double steadyNowSeconds()
+    {
+      using clock_t = std::chrono::steady_clock;
+      return std::chrono::duration<double>(clock_t::now().time_since_epoch()).count();
+    }
+  }
+
+  clock::clock() : m_startSeconds(steadyNowSeconds()) {}
 
   double clock::nowSeconds() const
   {
-    static const auto startTime = std::chrono::steady_clock::now();
-    auto currentTime = std::chrono::steady_clock::now();
-
-    std::chrono::duration<double> elapsed = currentTime - startTime;
-    return elapsed.count();
+    return steadyNowSeconds() - m_startSeconds;
   }
 
 }

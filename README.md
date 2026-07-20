@@ -53,14 +53,20 @@ git submodule update --init --recursive
 
 ### Configure the project
 
+PhysX is required (via vcpkg). Qt 6 is required for the editor. See [docs/MIDDLEWARE_SETUP.md](docs/MIDDLEWARE_SETUP.md).
+
 ```powershell
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake -S . -B build -G "Visual Studio 18 2026" -A x64 `
+  -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+  -DVCPKG_TARGET_TRIPLET=x64-windows
 ```
+
+(Use `"Visual Studio 17 2022"` if that is what you have installed.)
 
 ### Build the project
 
 ```powershell
-cmake --build build --config Debug
+cmake --build build --config Debug --parallel
 ```
 
 ### Run the game
@@ -69,6 +75,12 @@ From the project root (Visual Studio generator; adjust `Debug`/`Release` as need
 
 ```powershell
 .\build\Nimbus\Debug\Nimbus.exe
+```
+
+Editor:
+
+```powershell
+.\build\Nimbus\Debug\NimbusEditor.exe
 ```
 
 If you `cd build` first, then run:
@@ -81,11 +93,14 @@ If you `cd build` first, then run:
 
 ```powershell
 git submodule update --init --recursive
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64
-cmake --build build --config Debug
-cd build
-.\Nimbus\Debug\Nimbus.exe
+cmake -S . -B build -G "Visual Studio 18 2026" -A x64 `
+  -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+  -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake --build build --config Debug --parallel
+.\build\Nimbus\Debug\Nimbus.exe
 ```
+
+More demo steps: [docs/DEMO_CHECKLIST.md](docs/DEMO_CHECKLIST.md).
 
 ## Typing Conventions
 - `camelCase` for variables

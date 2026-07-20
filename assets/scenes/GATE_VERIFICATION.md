@@ -8,7 +8,7 @@
 ## PhysX
 
 - [ ] `Nimbus` play: grounded jump, bounce, wind, enemy hits
-- [ ] No `SimplePhysicsWorld` in default link
+- [ ] Default physics factory is PhysX (or null stub), not a custom world
 
 ## Qt editor
 
@@ -18,7 +18,8 @@
 
 ## Vertical slice
 
-- [ ] Default scene `scenes/vertical_slice.json` (or New Scene → Vertical Slice)
+- [ ] First launch builds/loads vertical slice (saved as `scenes/vertical_slice.json` under assets when the game creates it)
+- [ ] Or: Editor → New Scene → Vertical Slice
 - [ ] Multi-wave → checkpoint → goal → fail/retry
 
 ## Visuals / audio / nodes

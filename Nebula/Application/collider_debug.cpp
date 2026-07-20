@@ -4,6 +4,7 @@
 #include "assetManager.h"
 #include "camera3D.h"
 #include "component.h"
+#include "debug_line_renderer.h"
 #include "material.h"
 #include "physics/collision_math.h"
 #include "physics/physics_component.h"
@@ -20,28 +21,6 @@ namespace Nebula
 {
   namespace
   {
-
-    Entity findPrimaryCameraEntity(Scene &scene)
-    {
-      Entity fallback{};
-      for (const Entity entity : scene.getAllEntities())
-      {
-        if (!scene.hasComponent<CameraComponent>(entity))
-        {
-          continue;
-        }
-        const auto &cam = scene.getComponent<CameraComponent>(entity);
-        if (cam.isPrimary)
-        {
-          return entity;
-        }
-        if (fallback.id == 0)
-        {
-          fallback = entity;
-        }
-      }
-      return fallback;
-    }
 
     Vec3 fallbackTarget(Scene &scene, Entity cameraEntity)
     {
@@ -106,59 +85,6 @@ namespace Nebula
         outVerts.push_back(c[edge[1]]);
       }
     }
-
-    struct DebugLineRenderer
-    {
-      unsigned int vao = 0;
-      unsigned int vbo = 0;
-      bool initialized = false;
-
-      void ensureInitialized()
-      {
-        if (initialized)
-        {
-          return;
-        }
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
-        glBindVertexArray(0);
-        initialized = true;
-      }
-
-      void draw(const std::vector<Vec3> &lines, const Mat4 &mvp, Shader &shader, const Vec3 &color)
-      {
-        if (lines.empty())
-        {
-          return;
-        }
-
-        ensureInitialized();
-        std::vector<float> packed;
-        packed.reserve(lines.size() * 3);
-        for (const Vec3 &p : lines)
-        {
-          packed.push_back(p.x);
-          packed.push_back(p.y);
-          packed.push_back(p.z);
-        }
-
-        shader.bind();
-        shader.setMat4("uMVP", mvp);
-        shader.setVec3("uColor", color);
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
-                     packed.data(), GL_DYNAMIC_DRAW);
-        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(lines.size()));
-        glBindVertexArray(0);
-        shader.unbind();
-      }
-    };
 
   } // namespace
 
