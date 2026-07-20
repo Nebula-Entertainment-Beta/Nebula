@@ -22,8 +22,14 @@ namespace Nimbus
 
   private:
     void spawnWave(Nebula::ScriptContext &, Nebula::Entity);
+    void pruneDead(Nebula::ScriptContext &);
+    void clearWave(Nebula::ScriptContext &);
+    void writeProgress(Nebula::ScriptContext &, Nebula::Entity);
 
     bool m_spawned = false;
+    float m_waitTimer = 0.f;
+    int m_waveIndex = 0;
+    int m_maxWaves = 3;
     Nebula::ScriptParams m_params;
     std::vector<Nebula::Entity> m_waveEnemies;
   };

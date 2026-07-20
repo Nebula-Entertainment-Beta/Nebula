@@ -2,7 +2,10 @@
  * @file input.h
  * @brief GLFW-backed **keyboard, mouse buttons, cursor delta, and scroll** with per-frame edge detection.
  *
- * **Owns:** Per-key and per-button held / pressed-this-frame / released-this-frame arrays; mouse deltas reset in `beginFrame`.
+ * **Owns:** Per-key and per-button held / pressed-this-frame / released-this-frame arrays; mouse
+ * deltas reset in `beginFrame`. Call `beginFrame` at the **end** of each frame (after systems read
+ * input). Under a foreign event loop (Qt), GLFW callbacks can fire between frames; clearing at the
+ * start of the next frame would drop those edges.
  *
  * Gamepad is **not** implemented here yet. For gameplay-level keys, prefer `ActionMapping` on top of this type.
  *
@@ -53,6 +56,10 @@ namespace Nebula
 
     float mouseDeltaY() const { return m_mouseDeltaY; }
     float mouseScrollDeltaY() const { return m_mouseScrollDeltaY; }
+    /** Cursor position in window coordinates (GLFW content area). */
+    float cursorX() const { return static_cast<float>(m_lastCursorX); }
+    float cursorY() const { return static_cast<float>(m_lastCursorY); }
+    bool hasCursorSample() const { return m_haveCursorSample; }
 
   private:
     void *m_nativeWindow = nullptr;

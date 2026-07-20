@@ -96,6 +96,10 @@ namespace Nebula
                 return Tasto::n;
             case GLFW_KEY_M:
                 return Tasto::m;
+            case GLFW_KEY_LEFT_SHIFT:
+                return Tasto::left_shift;
+            case GLFW_KEY_RIGHT_SHIFT:
+                return Tasto::left_shift;
             default:
                 return std::nullopt;
             }

@@ -12,6 +12,9 @@
 #include "traversalDirector.h"
 #include "bouncePad_Script.h"
 #include "windVolume_Script.h"
+#include "checkpoint_Script.h"
+#include "goal_Script.h"
+#include "encounterDirector.h"
 
 namespace Nimbus
 {
@@ -91,10 +94,19 @@ namespace Nimbus
 
         static const Nebula::ScriptFieldDescriptor waveSpawnerFields[] = {
             {.name = "waveEnemies", .type = Nebula::ScriptFieldType::EntityVector, .defaultEntityVector = {}},
+            {.name = "waveIndex", .type = Nebula::ScriptFieldType::Int, .defaultInt = 0},
+            {.name = "maxWaves", .type = Nebula::ScriptFieldType::Int, .defaultInt = 3},
         };
         fieldRegistry.registerFields("WaveSpawner", waveSpawnerFields, std::size(waveSpawnerFields));
         registry.registerScript("WaveSpawner", []
                                 { return std::make_unique<WaveSpawner>(); });
+
+        registry.registerScript("Checkpoint", []
+                                { return std::make_unique<CheckpointScript>(); });
+        registry.registerScript("Goal", []
+                                { return std::make_unique<GoalScript>(); });
+        registry.registerScript("EncounterDirector", []
+                                { return std::make_unique<EncounterDirector>(); });
 
         static const Nebula::ScriptFieldDescriptor bouncePadFields[] = {
             {.name = "impulse", .type = Nebula::ScriptFieldType::Float, .defaultFloat = 14.f},

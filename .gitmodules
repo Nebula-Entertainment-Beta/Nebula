@@ -1,6 +1,3 @@
 [submodule "Nebula/vendor/glfw"]
 	path = Nebula/vendor/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "Nebula/vendor/imgui"]
-	path = Nebula/vendor/imgui
-	url = https://github.com/ocornut/imgui.git

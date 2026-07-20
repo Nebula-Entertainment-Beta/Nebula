@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build-and-check:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,16 +18,28 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             cmake ninja-build ripgrep nlohmann-json3-dev \
-            xorg-dev libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
+            xorg-dev libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules \
+            qt6-base-dev libgl1-mesa-dev
+
+      - name: Setup vcpkg PhysX
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+          $HOME/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+          $HOME/vcpkg/vcpkg install physx:x64-linux
 
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
             -DNEBULA_BUILD_DOCS=OFF \
-            -DGLFW_BUILD_DOCS=OFF
+            -DGLFW_BUILD_DOCS=OFF \
+            -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake \
+            -DCMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt6
 
       - name: Build
-        run: cmake --build build
+        run: cmake --build build --target Nebula Nimbus NebulaEditor NimbusEditor NebulaSmokeTests
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
 
       - name: Layer checks
         run: |
@@ -36,11 +48,33 @@ jobs:
           ./scripts/check_include_layers.sh
           ./scripts/check_editor_deps.sh
 
-      - name: Build NebulaEditor
-        run: cmake --build build --target NebulaEditor
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Build NimbusEditor
-        run: cmake --build build --target NimbusEditor
-      # .github/workflows/ci.yml — optional explicit step
-      - name: Build NebulaEditor
-        run: cmake --build build --target NebulaEditor
+      - name: Setup vcpkg PhysX
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git C:\vcpkg
+          C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+          C:\vcpkg\vcpkg install physx:x64-windows
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.7.3"
+          arch: win64_msvc2019_64
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+            -DNEBULA_BUILD_DOCS=OFF
+
+      - name: Build
+        run: cmake --build build --config Release --target Nebula Nimbus NebulaEditor NimbusEditor NebulaSmokeTests
+
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure

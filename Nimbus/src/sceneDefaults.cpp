@@ -224,7 +224,8 @@ namespace Nimbus
     addBouncePad(scene, Nebula::Vec3{4.5f, 0.26f, 0.0f}, 1.2f);
     addSolidPlatform(scene, Nebula::Vec3{11.0f, 4.0f, 0.0f}, 2.0f, "Platform");
     addWindVolume(scene, Nebula::Vec3{13.5f, 6.0f, 0.0f}, 1.5f);
-    addSolidPlatform(scene, Nebula::Vec3{16.0f, 7.5f, 0.0f}, 2.0f, kGoalTag);
+    const Nebula::Entity goal = addSolidPlatform(scene, Nebula::Vec3{16.0f, 7.5f, 0.0f}, 2.0f, kGoalTag);
+    scene.addComponent<Nebula::ScriptComponent>(goal).scriptName = "Goal";
 
     const float spawnY = playerSpawnYOnPlatform(kSpawnPlatformCenter.y, kSpawnPlatformScale);
     const Nebula::Entity playerEntity =
@@ -235,6 +236,95 @@ namespace Nimbus
     scene.addComponent<Nebula::TagComponent>(directorEntity).tag = "TraversalDirector";
     scene.addComponent<Nebula::TransformComponent>(directorEntity);
     scene.addComponent<Nebula::ScriptComponent>(directorEntity).scriptName = "TraversalDirector";
+  }
+
+  void buildVerticalSliceScene(Nebula::Scene &scene)
+  {
+    constexpr float kGroundScale = 20.0f;
+    constexpr float kGroundWorldHalfY = 0.05f;
+
+    {
+      const Nebula::Entity envEntity = scene.createEntity();
+      scene.addComponent<Nebula::TagComponent>(envEntity).tag = "Environment";
+      scene.addComponent<Nebula::TransformComponent>(envEntity);
+      scene.addComponent<Nebula::EnvironmentComponent>(envEntity);
+    }
+
+    const Nebula::Entity groundEntity = scene.createEntity();
+    scene.addComponent<Nebula::TagComponent>(groundEntity).tag = kGroundTag;
+    auto &groundTransform = scene.addComponent<Nebula::TransformComponent>(groundEntity);
+    groundTransform.transform.setPosition(Nebula::Vec3{0.0f, 0.0f, 0.0f});
+    groundTransform.transform.setScale(12.0f);
+    auto &groundMesh = scene.addComponent<Nebula::MeshRendererComponent>(groundEntity);
+    groundMesh.m_meshPath = "meshes/ground_cloud.mesh";
+    groundMesh.m_materialPath = "materials/ground_cloud.mat";
+    auto &groundCollider = scene.addComponent<Nebula::ColliderComponent>(groundEntity);
+    groundCollider.halfExtents = {12.0f, kGroundWorldHalfY / kGroundScale, 12.0f};
+    groundCollider.isStatic = true;
+    groundCollider.shape = Nebula::ColliderComponent::Shape::Box;
+    scene.addComponent<Nebula::ScriptComponent>(groundEntity).scriptName = "Ground";
+
+    addSolidPlatform(scene, Nebula::Vec3{-8.0f, 0.0f, 0.0f}, 3.0f, kSpawnTag);
+    addSolidPlatform(scene, Nebula::Vec3{-4.0f, 1.0f, 0.0f}, 2.0f, "Platform");
+    addBouncePad(scene, Nebula::Vec3{-4.0f, 1.26f, 0.0f}, 1.2f);
+    addSolidPlatform(scene, Nebula::Vec3{0.0f, 2.0f, 0.0f}, 2.0f, "Platform");
+    addWindVolume(scene, Nebula::Vec3{2.5f, 3.5f, 0.0f}, 1.5f);
+
+    addSolidPlatform(scene, Nebula::Vec3{5.0f, 0.0f, 0.0f}, 2.5f, "CheckpointPad");
+    {
+      const Nebula::Entity checkpoint = scene.createEntity();
+      scene.addComponent<Nebula::TagComponent>(checkpoint).tag = "Checkpoint";
+      auto &tf = scene.addComponent<Nebula::TransformComponent>(checkpoint);
+      tf.transform.setPosition(Nebula::Vec3{5.0f, 1.5f, 0.0f});
+      tf.transform.setScale(2.0f);
+      auto &col = scene.addComponent<Nebula::ColliderComponent>(checkpoint);
+      col.halfExtents = {0.5f, 0.5f, 0.5f};
+      col.isStatic = true;
+      col.isTrigger = true;
+      col.shape = Nebula::ColliderComponent::Shape::Box;
+      scene.addComponent<Nebula::ScriptComponent>(checkpoint).scriptName = "Checkpoint";
+    }
+
+    addSolidPlatform(scene, Nebula::Vec3{10.0f, 0.0f, 0.0f}, 6.0f, "Arena");
+    addSolidPlatform(scene, Nebula::Vec3{16.0f, 1.0f, 0.0f}, 2.0f, "GoalPad");
+    {
+      const Nebula::Entity goal = scene.createEntity();
+      scene.addComponent<Nebula::TagComponent>(goal).tag = kGoalTag;
+      auto &tf = scene.addComponent<Nebula::TransformComponent>(goal);
+      tf.transform.setPosition(Nebula::Vec3{16.0f, 2.5f, 0.0f});
+      tf.transform.setScale(2.0f);
+      auto &col = scene.addComponent<Nebula::ColliderComponent>(goal);
+      col.halfExtents = {0.5f, 0.5f, 0.5f};
+      col.isStatic = true;
+      col.isTrigger = true;
+      col.shape = Nebula::ColliderComponent::Shape::Box;
+      scene.addComponent<Nebula::ScriptComponent>(goal).scriptName = "Goal";
+    }
+
+    const Nebula::Entity player =
+        addPlayer(scene, Nebula::Vec3{-8.0f, playerSpawnYOnPlatform(0.0f, 3.0f), 0.0f});
+    addMainCamera(scene, player);
+
+    const Nebula::Entity combatDirector = scene.createEntity();
+    scene.addComponent<Nebula::TagComponent>(combatDirector).tag = "CombatDirector";
+    scene.addComponent<Nebula::TransformComponent>(combatDirector);
+    scene.addComponent<Nebula::ScriptComponent>(combatDirector).scriptName = "CombatDirector";
+
+    const Nebula::Entity traversalDirector = scene.createEntity();
+    scene.addComponent<Nebula::TagComponent>(traversalDirector).tag = "TraversalDirector";
+    scene.addComponent<Nebula::TransformComponent>(traversalDirector);
+    scene.addComponent<Nebula::ScriptComponent>(traversalDirector).scriptName = "TraversalDirector";
+
+    const Nebula::Entity encounter = scene.createEntity();
+    scene.addComponent<Nebula::TagComponent>(encounter).tag = "EncounterDirector";
+    scene.addComponent<Nebula::TransformComponent>(encounter);
+    scene.addComponent<Nebula::ScriptComponent>(encounter).scriptName = "EncounterDirector";
+
+    const Nebula::Entity spawner = scene.createEntity();
+    scene.addComponent<Nebula::TagComponent>(spawner).tag = "WaveSpawner";
+    auto &spawnerTf = scene.addComponent<Nebula::TransformComponent>(spawner);
+    spawnerTf.transform.setPosition(Nebula::Vec3{10.0f, 0.5f, 0.0f});
+    scene.addComponent<Nebula::ScriptComponent>(spawner).scriptName = "WaveSpawner";
   }
 
 }

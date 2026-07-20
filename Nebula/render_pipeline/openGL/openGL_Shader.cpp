@@ -95,6 +95,12 @@ namespace Nebula{
           glUniform3f(loc, value.x, value.y, value.z);
   }
 
+  void OpenGL_Shader::setFloat(const std::string& name, float value) const {
+      const GLint loc = glGetUniformLocation(m_rendererID, name.c_str());
+      if (loc >= 0)
+          glUniform1f(loc, value);
+  }
+
   // Static member of OpenGL_Shader — may access private m_rendererID on `impl`.
   std::shared_ptr<Shader> OpenGL_Shader::create(
       const std::string& vertexSrc,

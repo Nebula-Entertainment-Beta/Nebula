@@ -50,11 +50,14 @@ add_library(Nebula STATIC
     Application/transform_gizmo.cpp
     Application/eventBus.cpp
     Application/null_physics_world.cpp
-    Application/simple_physics_world.cpp
+    Application/physx_physics_world.cpp
     Application/physics/collision_math.cpp
     Application/physics_system.cpp
     Application/physics_query_adapter.cpp
     Application/scene_query.cpp
+    Application/fmod_audio_service.cpp
+    Application/nodeGraphRuntime.cpp
+    Application/environment_render.cpp
     render_pipeline/interface/renderer.cpp
     render_pipeline/interface/texture.cpp
     render_pipeline/openGL/openGL_Renderer.cpp
@@ -87,7 +90,18 @@ target_include_directories(Nebula PRIVATE
 
 )
 
-find_package(nlohmann_json CONFIG REQUIRED)
+if(NOT TARGET nlohmann_json::nlohmann_json)
+  find_package(nlohmann_json CONFIG QUIET)
+  if(NOT nlohmann_json_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+      nlohmann_json
+      GIT_REPOSITORY https://github.com/nlohmann/json.git
+      GIT_TAG v3.11.3
+    )
+    FetchContent_MakeAvailable(nlohmann_json)
+  endif()
+endif()
 
 if(NOT TARGET assimp::assimp)
   find_package(assimp QUIET)
@@ -107,4 +121,38 @@ if(NOT TARGET assimp::assimp)
   endif()
 endif()
 
+find_package(unofficial-omniverse-physx-sdk CONFIG QUIET)
+if(NOT unofficial-omniverse-physx-sdk_FOUND)
+  find_package(PhysX QUIET)
+endif()
+
 target_link_libraries(Nebula PRIVATE glfw glad nlohmann_json::nlohmann_json glm::glm-header-only assimp::assimp)
+
+if(TARGET unofficial::omniverse-physx-sdk::sdk)
+  target_link_libraries(Nebula PRIVATE unofficial::omniverse-physx-sdk::sdk)
+  target_compile_definitions(Nebula PRIVATE NEBULA_USE_PHYSX=1)
+elseif(TARGET PhysX::PhysX)
+  target_link_libraries(Nebula PRIVATE PhysX::PhysX PhysX::Foundation PhysX::Common PhysX::Extensions)
+  target_compile_definitions(Nebula PRIVATE NEBULA_USE_PHYSX=1)
+else()
+  message(FATAL_ERROR "PhysX SDK not found. Install via vcpkg: vcpkg install physx:x64-windows and pass -DCMAKE_TOOLCHAIN_FILE=...")
+endif()
+
+# Optional FMOD Core (set FMOD_ROOT to the API folder with inc/ and lib/).
+if(DEFINED ENV{FMOD_ROOT} AND NOT FMOD_ROOT)
+  set(FMOD_ROOT "$ENV{FMOD_ROOT}")
+endif()
+if(FMOD_ROOT)
+  find_path(FMOD_INCLUDE_DIR fmod.hpp PATHS "${FMOD_ROOT}/inc" "${FMOD_ROOT}/api/core/inc" NO_DEFAULT_PATH)
+  find_library(FMOD_LIBRARY NAMES fmod_vc fmod PATHS "${FMOD_ROOT}/lib/x64" "${FMOD_ROOT}/api/core/lib/x64" NO_DEFAULT_PATH)
+  if(FMOD_INCLUDE_DIR AND FMOD_LIBRARY)
+    target_include_directories(Nebula PRIVATE "${FMOD_INCLUDE_DIR}")
+    target_link_libraries(Nebula PRIVATE "${FMOD_LIBRARY}")
+    target_compile_definitions(Nebula PRIVATE NEBULA_USE_FMOD=1)
+    message(STATUS "FMOD found: ${FMOD_LIBRARY}")
+  else()
+    message(STATUS "FMOD_ROOT set but headers/libs not found; using audio stub")
+  endif()
+else()
+  message(STATUS "FMOD not configured (optional); using audio stub — see docs/MIDDLEWARE_SETUP.md")
+endif()

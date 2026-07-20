@@ -1,9 +1,12 @@
 #include "prefabService.h"
 
+#include "component.h"
 #include "entityComponentJson_internal.h"
 #include "prefabOverrides.h"
 #include "prefabSerializer.h"
 #include "renderResources.h"
+#include "tag_component.h"
+#include "physics/physics_component.h"
 
 #include <nlohmann/json.hpp>
 #include <string>
@@ -121,6 +124,14 @@ namespace Nebula
       if (scene.hasComponent<ColliderComponent>(entity))
       {
         scene.removeComponent<ColliderComponent>(entity);
+      }
+      if (scene.hasComponent<EnvironmentComponent>(entity))
+      {
+        scene.removeComponent<EnvironmentComponent>(entity);
+      }
+      if (scene.hasComponent<followTargetComponent>(entity))
+      {
+        scene.removeComponent<followTargetComponent>(entity);
       }
     }
 

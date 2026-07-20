@@ -32,7 +32,8 @@ namespace Nebula
         ComponentStorage<RigidBodyComponent>,
         ComponentStorage<ColliderComponent>,
         ComponentStorage<followTargetComponent>,
-        ComponentStorage<PrefabInstanceComponent>>;
+        ComponentStorage<PrefabInstanceComponent>,
+        ComponentStorage<EnvironmentComponent>>;
 
     template <typename T>
     struct ComponentTypeIndex;

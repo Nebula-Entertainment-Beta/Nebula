@@ -1,6 +1,6 @@
 /**
  * @file iphysics_world.h
- * @brief Physics simulation boundary; backend implementations (simple, Jolt, …) stay in .cpp.
+ * @brief Physics simulation boundary; PhysX (or null) backends stay in .cpp.
  */
 #pragma once
 
@@ -40,7 +40,8 @@ namespace Nebula
     virtual void moveKinematic(Scene &scene, Entity entity, const Vec3 &delta, bool &outGrounded) = 0;
   };
 
-  std::unique_ptr<IPhysicsWorld> createSimplePhysicsWorld();
+  /** NVIDIA PhysX-backed world (default runtime). */
+  std::unique_ptr<IPhysicsWorld> createPhysXWorld();
   std::unique_ptr<IPhysicsWorld> createNullPhysicsWorld();
 
 } // namespace Nebula

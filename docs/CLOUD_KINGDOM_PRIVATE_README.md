@@ -117,7 +117,7 @@ Success checks:
 
 Goals:
 
-- Start the true editor workflow with Dear ImGui.
+- Use the native Qt 6 editor workflow.
 
 Deliverables:
 

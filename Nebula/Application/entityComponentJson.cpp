@@ -164,6 +164,37 @@ namespace Nebula::EntityComponentJson
       entityJson["TagComponent"] = {{"tag", component.tag}};
     }
 
+    void writeFollowTargetComponent(nlohmann::json &entityJson, const followTargetComponent &component,
+                                    bool includeEntityRefs)
+    {
+      nlohmann::json followJson = nlohmann::json::object();
+      if (!component.targetTag.empty())
+      {
+        followJson["targetTag"] = component.targetTag;
+      }
+      if (includeEntityRefs && component.targetEntity.id != 0)
+      {
+        followJson["targetEntityId"] = component.targetEntity.id;
+      }
+      entityJson["followTargetComponent"] = std::move(followJson);
+    }
+
+    void writeEnvironmentComponent(nlohmann::json &entityJson, const EnvironmentComponent &component)
+    {
+      entityJson["EnvironmentComponent"] = {
+          {"skyTop", {component.skyTop.x, component.skyTop.y, component.skyTop.z}},
+          {"skyBottom", {component.skyBottom.x, component.skyBottom.y, component.skyBottom.z}},
+          {"fogColor", {component.fogColor.x, component.fogColor.y, component.fogColor.z}},
+          {"fogDensity", component.fogDensity},
+          {"lightDirection",
+           {component.lightDirection.x, component.lightDirection.y, component.lightDirection.z}},
+          {"lightColor", {component.lightColor.x, component.lightColor.y, component.lightColor.z}},
+          {"lightIntensity", component.lightIntensity},
+          {"timeOfDayPreset", component.timeOfDayPreset},
+          {"cloudLayerHeight", component.cloudLayerHeight},
+          {"cloudOpacity", component.cloudOpacity}};
+    }
+
     void writeRigidBodyComponent(nlohmann::json &entityJson, const RigidBodyComponent &component)
     {
       entityJson["RigidBodyComponent"] = {
@@ -342,6 +373,53 @@ namespace Nebula::EntityComponentJson
       }
     }
 
+    void loadFollowTargetComponent(Scene &scene, Entity entity, const nlohmann::json &entityJson)
+    {
+      if (!entityJson.contains("followTargetComponent"))
+      {
+        return;
+      }
+
+      const auto &followJson = entityJson["followTargetComponent"];
+      auto &followComponent = scene.addComponent<followTargetComponent>(entity);
+      readStringField(followJson, "targetTag", followComponent.targetTag);
+      if (followJson.contains("targetEntityId") && followJson["targetEntityId"].is_number_unsigned())
+      {
+        const EntityID targetId = followJson["targetEntityId"].get<EntityID>();
+        for (const Entity candidate : scene.getAllEntities())
+        {
+          if (candidate.id == targetId)
+          {
+            followComponent.targetEntity = candidate;
+            break;
+          }
+        }
+      }
+    }
+
+    void loadEnvironmentComponent(Scene &scene, Entity entity, const nlohmann::json &entityJson)
+    {
+      if (!entityJson.contains("EnvironmentComponent"))
+      {
+        return;
+      }
+      const auto &envJson = entityJson["EnvironmentComponent"];
+      auto &env = scene.addComponent<EnvironmentComponent>(entity);
+      readVec3ArrayField(envJson, "skyTop", env.skyTop);
+      readVec3ArrayField(envJson, "skyBottom", env.skyBottom);
+      readVec3ArrayField(envJson, "fogColor", env.fogColor);
+      readFloatField(envJson, "fogDensity", env.fogDensity);
+      readVec3ArrayField(envJson, "lightDirection", env.lightDirection);
+      readVec3ArrayField(envJson, "lightColor", env.lightColor);
+      readFloatField(envJson, "lightIntensity", env.lightIntensity);
+      if (envJson.contains("timeOfDayPreset") && envJson["timeOfDayPreset"].is_number_integer())
+      {
+        env.timeOfDayPreset = envJson["timeOfDayPreset"].get<int>();
+      }
+      readFloatField(envJson, "cloudLayerHeight", env.cloudLayerHeight);
+      readFloatField(envJson, "cloudOpacity", env.cloudOpacity);
+    }
+
     void loadRigidBodyComponent(Scene &scene, Entity entity, const nlohmann::json &entityJson)
     {
       if (!entityJson.contains("RigidBodyComponent"))
@@ -443,6 +521,11 @@ namespace Nebula::EntityComponentJson
       {
         writeTagComponent(entityJson, scene.getComponent<TagComponent>(entity));
       }
+      if (scene.hasComponent<followTargetComponent>(entity))
+      {
+        writeFollowTargetComponent(entityJson, scene.getComponent<followTargetComponent>(entity),
+                                   opts.includeCameraEntityRefs);
+      }
       if (scene.hasComponent<RigidBodyComponent>(entity))
       {
         writeRigidBodyComponent(entityJson, scene.getComponent<RigidBodyComponent>(entity));
@@ -450,6 +533,10 @@ namespace Nebula::EntityComponentJson
       if (scene.hasComponent<ColliderComponent>(entity))
       {
         writeColliderComponent(entityJson, scene.getComponent<ColliderComponent>(entity));
+      }
+      if (scene.hasComponent<EnvironmentComponent>(entity))
+      {
+        writeEnvironmentComponent(entityJson, scene.getComponent<EnvironmentComponent>(entity));
       }
       if (opts.includePrefabInstance && scene.hasComponent<PrefabInstanceComponent>(entity))
       {
@@ -466,8 +553,10 @@ namespace Nebula::EntityComponentJson
       loadCameraComponent(scene, entity, entityJson);
       loadScriptComponent(scene, entity, entityJson);
       loadTagComponent(scene, entity, entityJson);
+      loadFollowTargetComponent(scene, entity, entityJson);
       loadRigidBodyComponent(scene, entity, entityJson);
       loadColliderComponent(scene, entity, entityJson);
+      loadEnvironmentComponent(scene, entity, entityJson);
       loadPrefabInstanceComponent(scene, entity, entityJson);
     }
 

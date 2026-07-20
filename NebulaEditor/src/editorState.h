@@ -18,7 +18,7 @@ namespace Editor
   struct EditorState
   {
     Nebula::Entity selectedEntity{};
-    std::string scenePath = "scenes/combat_arena.json";
+    std::string scenePath = "scenes/vertical_slice.json";
     bool sceneDirty = false;
     bool showColliderGizmos = true;
     bool showTransformGizmo = true;

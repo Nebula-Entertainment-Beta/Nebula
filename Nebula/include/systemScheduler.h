@@ -22,6 +22,7 @@ namespace Nebula
     void run(SystemPhase phase, float dt);
     void runFixed(SystemPhase phase, float fixedDt, float frameDt,
                   float fixedStep = 1.f / 60.f, int maxSteps = 5);
+    void resetFixedAccumulator() { m_fixedAccumulator = 0.f; }
 
   private:
     std::vector<SystemFn> m_preUpdate;
@@ -29,6 +30,7 @@ namespace Nebula
     std::vector<SystemFn> m_fixedUpdate;
     std::vector<SystemFn> m_postUpdate;
     std::vector<SystemFn> m_render;
+    float m_fixedAccumulator = 0.f;
     std::vector<SystemFn> &bucket(SystemPhase p);
   };
 }

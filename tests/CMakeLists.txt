@@ -1,0 +1,3 @@
+add_executable(NebulaSmokeTests smoke_tests.cpp)
+target_link_libraries(NebulaSmokeTests PRIVATE Nebula)
+add_test(NAME NebulaSmokeTests COMMAND NebulaSmokeTests)

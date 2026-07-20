@@ -9,6 +9,8 @@
 #include "physics/physics_system.h"
 #include "physics_query_adapter.h"
 #include "math_types.h"
+#include "audioService.h"
+#include "environment.h"
 
 namespace Nebula
 {
@@ -27,19 +29,24 @@ namespace Nebula
 
     // create default scene data
     m_scene = Scene();
-    m_physicsWorld = createSimplePhysicsWorld();
+    m_physicsWorld = createPhysXWorld();
+    if (!m_physicsWorld)
+    {
+      m_physicsWorld = createNullPhysicsWorld();
+    }
     m_physicsQuery = std::make_unique<PhysicsQueryAdapter>(*m_physicsWorld);
+    m_audio = createAudioService();
   }
 
-  void Application::run()
+  bool Application::startFrameLoop()
   {
-    if (m_hasRun)
+    if (m_frameLoopActive || m_hasRun)
     {
-      return;
+      return m_frameLoopActive;
     }
     if (!m_window.isValid())
     {
-      return;
+      return false;
     }
     auto &ctx = m_window.getGraphicsContext();
     ctx.makeCurrent();
@@ -48,34 +55,66 @@ namespace Nebula
     m_assetManager.resolveScene(m_scene, m_renderer.resources());
     m_rendererInitialized = true;
     m_hasRun = true;
-
-    float lastTime = m_clock.nowSeconds();
-
+    m_frameLoopActive = true;
+    m_lastFrameTime = m_clock.nowSeconds();
     registerEngineSystems();
     registerGameSystems();
     onStartup();
+    return true;
+  }
 
-    while (!m_window.shouldWindowClose())
+  bool Application::pumpFrame()
+  {
+    if (!m_frameLoopActive || !m_window.isValid() || m_window.shouldWindowClose())
     {
-      m_input.beginFrame();
-      double newtime = m_clock.nowSeconds();
-      float dt = static_cast<float>(newtime - lastTime);
-      lastTime = newtime;
-      m_window.pollEvents();
-      m_actionMapping.updateMappings(m_input);
-      m_scheduler.run(SystemPhase::PreUpdate, dt);
-      m_scheduler.run(SystemPhase::Update, dt);
-      m_scheduler.runFixed(SystemPhase::FixedUpdate, 1.f / 60.f, dt);
-      m_scheduler.run(SystemPhase::PostUpdate, dt);
-      m_scheduler.run(SystemPhase::Render, dt);
-
-      ctx.swap();
+      return false;
     }
+    auto &ctx = m_window.getGraphicsContext();
+    const float newtime = m_clock.nowSeconds();
+    const float dt = newtime - m_lastFrameTime;
+    m_lastFrameTime = newtime;
+    // Poll after any events that Qt's message loop may already have delivered into
+    // GLFW callbacks between frames. Clear edge/delta state only after consumers run,
+    // otherwise Qt+embedded HWND input is wiped before Update sees it.
+    m_window.pollEvents();
+    m_actionMapping.updateMappings(m_input);
+    m_scheduler.run(SystemPhase::PreUpdate, dt);
+    m_scheduler.run(SystemPhase::Update, dt);
+    m_scheduler.runFixed(SystemPhase::FixedUpdate, 1.f / 60.f, dt);
+    m_scheduler.run(SystemPhase::PostUpdate, dt);
+    m_scheduler.run(SystemPhase::Render, dt);
+    if (m_audio)
+    {
+      m_audio->update();
+    }
+    ctx.swap();
+    m_input.beginFrame();
+    return true;
+  }
 
+  void Application::stopFrameLoop()
+  {
+    if (!m_frameLoopActive)
+    {
+      return;
+    }
     ScriptContext shutdownCtx = makeScriptContext();
     m_scriptSystem.shutdownAll(shutdownCtx);
     m_renderer.Shutdown();
     m_rendererInitialized = false;
+    m_frameLoopActive = false;
+  }
+
+  void Application::run()
+  {
+    if (!startFrameLoop())
+    {
+      return;
+    }
+    while (pumpFrame())
+    {
+    }
+    stopFrameLoop();
   }
 
   Application::~Application()
@@ -100,17 +139,24 @@ namespace Nebula
   {
     ScriptContext ctx = makeScriptContext();
     m_scriptSystem.rebuildFromScene(m_scene, m_scriptRegistry, ctx);
-    m_scriptSystem.initializeAll(ctx);
     if (m_rendererInitialized)
     {
       m_assetManager.resolveSceneAssets(m_scene, m_renderer.resources());
     }
   }
 
+  void Application::activateScripts()
+  {
+    ScriptContext ctx = makeScriptContext();
+    m_scriptSystem.initializeAll(ctx);
+    m_scheduler.resetFixedAccumulator();
+    m_world.prevJumpDown() = false;
+  }
+
   void Application::bindNewScripts()
   {
     ScriptContext ctx = makeScriptContext();
-    m_scriptSystem.bindNewFromScene(m_scene, m_scriptRegistry, ctx);
+    m_scriptSystem.bindNewFromScene(m_scene, m_scriptRegistry, ctx, m_isPlaying);
     if (m_rendererInitialized)
     {
       m_assetManager.resolveSceneAssets(m_scene, m_renderer.resources());
@@ -130,6 +176,10 @@ namespace Nebula
   void Application::onStartup()
   {
     rebuildScripts();
+    if (m_isPlaying)
+    {
+      activateScripts();
+    }
   }
 
   void Application::onUpdate(float dt)
@@ -154,7 +204,8 @@ namespace Nebula
     {
       m_renderer.setViewport(0, 0, m_width, m_height);
     }
-    m_renderer.clear(Vec4{0.1f, 0.1f, 0.15f, 1.0f});
+    const EnvironmentComponent env = findEnvironmentOrDefault(m_scene);
+    m_renderer.clear(environmentClearColor(env));
   }
 
   ScriptContext Application::makeScriptContext()
@@ -164,6 +215,7 @@ namespace Nebula
     ctx.physicsScene = &m_scene;
     ctx.assetManager = &m_assetManager;
     ctx.assets = &m_assets;
+    ctx.audio = m_audio.get();
     if (m_rendererInitialized)
     {
       ctx.renderResources = &m_renderer.resources();
@@ -191,14 +243,14 @@ namespace Nebula
       f.heavyAttackPressed = true;
     }
 
-    static bool s_prevJumpDown = false;
+    bool &prevJumpDown = world.prevJumpDown();
     const bool jumpDown = map.isActionDown(Action::Jump, input);
-    if (map.wasActionPressed(Action::Jump, input) || (jumpDown && !s_prevJumpDown))
+    if (map.wasActionPressed(Action::Jump, input) || (jumpDown && !prevJumpDown))
     {
       f.jumpPressed = true;
     }
     f.jumpHeld = jumpDown;
-    s_prevJumpDown = jumpDown;
+    prevJumpDown = jumpDown;
 
     if (map.isActionDown(Action::FastFall, input))
     {
@@ -262,6 +314,11 @@ namespace Nebula
     m_scheduler.add(SystemPhase::Render, [this](float dt)
                     {
                       onRender();
+                      if (m_isPlaying)
+                      {
+                        ScriptContext ctx = makeScriptContext();
+                        m_scriptSystem.renderAll(ctx, dt);
+                      }
                       if (renderSceneToMainFramebuffer()) {
                             renderScene(RenderSystemContext{ m_scene, m_assetManager, m_renderer, m_window });
                       } });

@@ -13,7 +13,8 @@
   X(RigidBodyComponent, 5)              \
   X(ColliderComponent, 6)               \
   X(followTargetComponent, 7)           \
-  X(PrefabInstanceComponent, 8)
+  X(PrefabInstanceComponent, 8)         \
+  X(EnvironmentComponent, 9)
 
 #define NEBULA_COMPONENT_APPLY(Type, Index) Type
 #define NEBULA_COMPONENTS(X) NEBULA_COMPONENTS_WITH_INDEX(NEBULA_COMPONENT_JOIN)

@@ -1,14 +1,37 @@
 #include "scriptSystem.h"
 #include "script_Registry.h"
-#include <iostream>
 #include "component.h"
+#include "tag_component.h"
+
+#include <sstream>
+#include <string>
 
 namespace Nebula
 {
+  namespace
+  {
+    void logBindFailure(ScriptContext &ctx, Scene &scene, Entity entity, const std::string &scriptName)
+    {
+      std::ostringstream oss;
+      oss << "[ScriptSystem] Failed to bind script \"" << scriptName << "\" on entity id=" << entity.id;
+      if (scene.hasComponent<TagComponent>(entity))
+      {
+        const auto &tag = scene.getComponent<TagComponent>(entity);
+        if (!tag.tag.empty())
+        {
+          oss << " tag=\"" << tag.tag << '"';
+        }
+      }
+      oss << " — not registered in ScriptRegistry";
+      if (ctx.log != nullptr)
+      {
+        ctx.log->error(oss.str());
+      }
+    }
+  }
 
   void ScriptSystem::rebuildFromScene(Scene &scene, ScriptRegistry &registry, ScriptContext &ctx)
   {
-
     shutdownAll(ctx);
 
     int bindFailures = 0;
@@ -27,30 +50,16 @@ namespace Nebula
       else
       {
         bindFailures++;
-        std::cerr << "[ScriptSystem] Failed to bind script \""
-                  << sc.scriptName
-                  << "\" on entity id=" << entity.id;
-
-        if (scene.hasComponent<TagComponent>(entity))
-        {
-          const auto &tag = scene.getComponent<TagComponent>(entity);
-          if (!tag.tag.empty())
-          {
-            std::cerr << " tag=\"" << tag.tag << '"';
-          }
-        }
-
-        std::cerr << " — not registered in ScriptRegistry\n";
+        logBindFailure(ctx, scene, entity, sc.scriptName);
       }
     }
-    if (bindFailures > 0)
+    if (bindFailures > 0 && ctx.log != nullptr)
     {
-      std::cerr << "[ScriptSystem] " << bindFailures
-                << " script(s) failed to bind\n";
+      ctx.log->error("[ScriptSystem] " + std::to_string(bindFailures) + " script(s) failed to bind");
     }
   }
 
-  void ScriptSystem::bindNewFromScene(Scene &scene, ScriptRegistry &registry, ScriptContext &ctx)
+  void ScriptSystem::bindNewFromScene(Scene &scene, ScriptRegistry &registry, ScriptContext &ctx, bool activate)
   {
     for (const Entity entity : scene.getAllEntities())
     {
@@ -66,14 +75,16 @@ namespace Nebula
       ScriptPtr script = registry.createScript(sc.scriptName);
       if (script)
       {
-        script->onCreate(ctx, entity);
-        script->onEnable(ctx, entity);
+        if (activate)
+        {
+          script->onCreate(ctx, entity);
+          script->onEnable(ctx, entity);
+        }
         m_instances[entity] = std::move(script);
       }
       else
       {
-        std::cerr << "[ScriptSystem] Failed to bind new script \""
-                  << sc.scriptName << "\" on entity id=" << entity.id << '\n';
+        logBindFailure(ctx, scene, entity, sc.scriptName);
       }
     }
   }

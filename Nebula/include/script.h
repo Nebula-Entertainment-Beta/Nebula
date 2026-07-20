@@ -23,6 +23,7 @@ namespace Nebula
   class AssetManager;
   class IAssetProvider;
   class IRenderResourceFactory;
+  class IAudioService;
 
   struct ScriptContext
   {
@@ -34,6 +35,7 @@ namespace Nebula
     AssetManager *assetManager = nullptr;
     const IAssetProvider *assets = nullptr;
     IRenderResourceFactory *renderResources = nullptr;
+    IAudioService *audio = nullptr;
     void *scriptRebuildUserData = nullptr;
     void (*requestScriptRebuildFn)(void *userData) = nullptr;
 

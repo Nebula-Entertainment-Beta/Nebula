@@ -12,6 +12,7 @@
 
 #include <glad/glad.h>
 
+#include <cmath>
 #include <vector>
 
 namespace Nebula
@@ -126,9 +127,81 @@ namespace Nebula
       zLines.push_back(origin);
       zLines.push_back({origin.x, origin.y, origin.z + length});
     }
+
+    void appendArrowTips(const Vec3 &origin, float length, std::vector<Vec3> &xLines,
+                         std::vector<Vec3> &yLines, std::vector<Vec3> &zLines)
+    {
+      const float tip = length * 0.15f;
+      xLines.push_back({origin.x + length, origin.y, origin.z});
+      xLines.push_back({origin.x + length - tip, origin.y + tip * 0.5f, origin.z});
+      xLines.push_back({origin.x + length, origin.y, origin.z});
+      xLines.push_back({origin.x + length - tip, origin.y - tip * 0.5f, origin.z});
+      yLines.push_back({origin.x, origin.y + length, origin.z});
+      yLines.push_back({origin.x + tip * 0.5f, origin.y + length - tip, origin.z});
+      yLines.push_back({origin.x, origin.y + length, origin.z});
+      yLines.push_back({origin.x - tip * 0.5f, origin.y + length - tip, origin.z});
+      zLines.push_back({origin.x, origin.y, origin.z + length});
+      zLines.push_back({origin.x + tip * 0.5f, origin.y, origin.z + length - tip});
+      zLines.push_back({origin.x, origin.y, origin.z + length});
+      zLines.push_back({origin.x - tip * 0.5f, origin.y, origin.z + length - tip});
+    }
+
+    void appendCircle(const Vec3 &origin, float radius, int axis, std::vector<Vec3> &out, int segments = 32)
+    {
+      constexpr float kPi = 3.14159265f;
+      for (int i = 0; i < segments; ++i)
+      {
+        const float a0 = (kPi * 2.f) * (static_cast<float>(i) / segments);
+        const float a1 = (kPi * 2.f) * (static_cast<float>(i + 1) / segments);
+        Vec3 p0{};
+        Vec3 p1{};
+        if (axis == 0) // YZ
+        {
+          p0 = {origin.x, origin.y + std::cos(a0) * radius, origin.z + std::sin(a0) * radius};
+          p1 = {origin.x, origin.y + std::cos(a1) * radius, origin.z + std::sin(a1) * radius};
+        }
+        else if (axis == 1) // XZ
+        {
+          p0 = {origin.x + std::cos(a0) * radius, origin.y, origin.z + std::sin(a0) * radius};
+          p1 = {origin.x + std::cos(a1) * radius, origin.y, origin.z + std::sin(a1) * radius};
+        }
+        else // XY
+        {
+          p0 = {origin.x + std::cos(a0) * radius, origin.y + std::sin(a0) * radius, origin.z};
+          p1 = {origin.x + std::cos(a1) * radius, origin.y + std::sin(a1) * radius, origin.z};
+        }
+        out.push_back(p0);
+        out.push_back(p1);
+      }
+    }
+
+    void appendScaleCubes(const Vec3 &origin, float length, std::vector<Vec3> &xLines,
+                          std::vector<Vec3> &yLines, std::vector<Vec3> &zLines)
+    {
+      const float h = length * 0.08f;
+      const auto box = [&](const Vec3 &c, std::vector<Vec3> &lines)
+      {
+        const Vec3 corners[8] = {
+            {c.x - h, c.y - h, c.z - h}, {c.x + h, c.y - h, c.z - h},
+            {c.x + h, c.y + h, c.z - h}, {c.x - h, c.y + h, c.z - h},
+            {c.x - h, c.y - h, c.z + h}, {c.x + h, c.y - h, c.z + h},
+            {c.x + h, c.y + h, c.z + h}, {c.x - h, c.y + h, c.z + h},
+        };
+        const int edges[12][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6},
+                                  {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
+        for (const auto &e : edges)
+        {
+          lines.push_back(corners[e[0]]);
+          lines.push_back(corners[e[1]]);
+        }
+      };
+      box({origin.x + length, origin.y, origin.z}, xLines);
+      box({origin.x, origin.y + length, origin.z}, yLines);
+      box({origin.x, origin.y, origin.z + length}, zLines);
+    }
   } // namespace
 
-  void renderTransformGizmo(const RenderSystemContext &ctx, Entity selectedEntity)
+  void renderTransformGizmo(const RenderSystemContext &ctx, Entity selectedEntity, int gizmoMode)
   {
     if (!ctx.scene.isValidEntity(selectedEntity) ||
         !ctx.scene.hasComponent<TransformComponent>(selectedEntity))
@@ -202,7 +275,22 @@ namespace Nebula
     std::vector<Vec3> xLines;
     std::vector<Vec3> yLines;
     std::vector<Vec3> zLines;
-    appendAxisLines(origin, axisLength, xLines, yLines, zLines);
+    if (gizmoMode == 1)
+    {
+      appendCircle(origin, axisLength, 0, xLines);
+      appendCircle(origin, axisLength, 1, yLines);
+      appendCircle(origin, axisLength, 2, zLines);
+    }
+    else if (gizmoMode == 2)
+    {
+      appendAxisLines(origin, axisLength, xLines, yLines, zLines);
+      appendScaleCubes(origin, axisLength, xLines, yLines, zLines);
+    }
+    else
+    {
+      appendAxisLines(origin, axisLength, xLines, yLines, zLines);
+      appendArrowTips(origin, axisLength, xLines, yLines, zLines);
+    }
 
     GLboolean depthWasEnabled = glIsEnabled(GL_DEPTH_TEST);
     glEnable(GL_DEPTH_TEST);

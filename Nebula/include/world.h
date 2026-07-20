@@ -25,6 +25,9 @@ namespace Nebula
     FrameInput &frameInput() { return m_frameInput; }
     const FrameInput &frameInput() const { return m_frameInput; }
 
+    bool &prevJumpDown() { return m_prevJumpDown; }
+    bool prevJumpDown() const { return m_prevJumpDown; }
+
   private:
     Scene &m_scene;
     IAssetProvider &m_assets;
@@ -32,6 +35,7 @@ namespace Nebula
 
     ActionMapping &m_actions;
     ScriptRegistry &m_scripts;
-    FrameInput &m_frameInput; // or embed FrameInput here; see 6.4
+    FrameInput &m_frameInput;
+    bool m_prevJumpDown = false;
   };
 }

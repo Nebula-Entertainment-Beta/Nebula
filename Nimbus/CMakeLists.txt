@@ -18,6 +18,9 @@ add_library(NimbusScripts STATIC
   src/traversalVolumes.cpp
   src/bouncePad_Script.cpp
   src/windVolume_Script.cpp
+  src/checkpoint_Script.cpp
+  src/goal_Script.cpp
+  src/encounterDirector.cpp
 )
 
 target_include_directories(NimbusScripts PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -25,8 +28,6 @@ target_link_libraries(NimbusScripts PUBLIC Nebula)
 
 add_executable(Nimbus
   src/main.cpp
-  src/nimbus.cpp
-  
 )
 
 target_link_libraries(Nimbus PRIVATE Nebula NimbusScripts)
@@ -38,4 +39,9 @@ target_include_directories(NimbusEditor PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 target_link_libraries(NimbusEditor PRIVATE NebulaEditorLib NimbusScripts)
-target_compile_definitions(NimbusEditor PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD)
+set_target_properties(NimbusEditor PROPERTIES WIN32_EXECUTABLE FALSE)
+# Ensure Qt deploy path is discoverable at runtime on Windows.
+if(WIN32)
+  set_property(TARGET NimbusEditor APPEND PROPERTY VS_DEBUGGER_ENVIRONMENT
+    "PATH=C:/Qt/6.7.3/msvc2019_64/bin;$ENV{PATH}")
+endif()

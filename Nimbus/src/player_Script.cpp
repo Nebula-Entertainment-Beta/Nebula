@@ -1,9 +1,11 @@
 #include "player_Script.h"
 #include "combatHelper.h"
+#include "encounterState.h"
 #include "nimbus_config.h"
 #include "physicsQuery.h"
 #include "scriptParams.h"
 #include "traversalVolumes.h"
+#include "audioService.h"
 
 #include <cmath>
 #include <string>
@@ -81,6 +83,19 @@ namespace Nimbus
 
   void PlayerScript::onUpdate(Nebula::ScriptContext &ctx, Nebula::Entity self, float dt)
   {
+    EncounterState &enc = EncounterState::instance();
+    if (enc.restorePlayer && ctx.scene.isValidEntity(self))
+    {
+      const Nebula::Vec3 respawn =
+          enc.hasCheckpoint ? enc.checkpointPosition : m_spawnPosition;
+      ctx.scene.getTransform(self).transform.setPosition(respawn);
+      m_health = 100.f;
+      m_velocityY = 0.f;
+      m_grounded = false;
+      m_playerIFrameTimer = 0.f;
+      enc.restorePlayer = false;
+    }
+
     if (m_playerIFrameTimer > 0.f)
     {
       m_playerIFrameTimer -= dt;
@@ -137,10 +152,23 @@ namespace Nimbus
     }
     m_health -= damage;
     grantIFrame();
+    if (ctx.audio != nullptr)
+    {
+      ctx.audio->playOneShot("audio/hit.wav", 0.8f);
+    }
     if (ctx.log != nullptr)
     {
       ctx.log->info("[Combat] Player took " + std::to_string(damage) +
                     " damage, health=" + std::to_string(m_health));
+    }
+    if (m_health <= 0.f)
+    {
+      m_health = 100.f;
+      EncounterState::instance().requestRetry();
+      if (ctx.log != nullptr)
+      {
+        ctx.log->info("[Combat] Player defeated — requesting retry");
+      }
     }
   }
 
@@ -185,6 +213,10 @@ namespace Nimbus
       m_jumpBufferTimer = 0.f;
       m_coyoteTimer = 0.f;
       m_grounded = false;
+      if (ctx.audio != nullptr)
+      {
+        ctx.audio->playOneShot("audio/jump.wav", 0.7f);
+      }
       m_wantsJump = false;
       m_jumpGraceTimer = 0.15f;
       if (ctx.log != nullptr)
@@ -294,16 +326,21 @@ namespace Nimbus
     else
       m_coyoteTimer = std::max(0.f, m_coyoteTimer - fixedDt);
 
-    // --- Kill plane ---
+    // --- Kill plane (routes through shared fail/retry) ---
     const Nebula::Vec3 pos = ctx.scene.getTransform(self).transform.getPosition();
     if (pos.y < t.killY)
     {
-      auto &xf = ctx.scene.getTransform(self);
-      xf.transform.setPosition(m_spawnPosition);
       m_velocityY = 0.f;
       m_grounded = false;
       m_coyoteTimer = 0.f;
       m_jumpBufferTimer = 0.f;
+      EncounterState &enc = EncounterState::instance();
+      if (!enc.hasCheckpoint)
+      {
+        enc.checkpointPosition = m_spawnPosition;
+        enc.hasCheckpoint = true;
+      }
+      EncounterState::instance().requestRetry();
     }
   }
 

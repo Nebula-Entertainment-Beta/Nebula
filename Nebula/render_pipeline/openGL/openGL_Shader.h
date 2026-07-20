@@ -23,6 +23,7 @@ namespace Nebula
         void setInt(const std::string &name, int value) const override;
         void setMat4(const std::string &name, const Mat4 &matrix) const override;
         void setVec3(const std::string &name, const Vec3 &value) const override;
+        void setFloat(const std::string &name, float value) const override;
 
         /** @brief Returns nullptr if compile/link failed (logs errors to stderr). */
         static std::shared_ptr<Shader> create(const std::string &vertexSrc,

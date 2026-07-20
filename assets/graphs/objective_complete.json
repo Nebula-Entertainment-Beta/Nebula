@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "nodes": [
+    {"id": 1, "type": "Event", "name": "OnObjectiveReady"},
+    {"id": 2, "type": "Action", "name": "CompleteObjective"}
+  ],
+  "links": [{"from": 1, "to": 2}]
+}

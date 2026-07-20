@@ -16,14 +16,12 @@ namespace Nebula
 
   void SystemScheduler::runFixed(SystemPhase phase, float fixedDt, float frameDt, float fixedStep, int maxSteps)
   {
-
-    static float accumulator = 0.f;
-    accumulator += frameDt;
+    m_fixedAccumulator += frameDt;
     int steps = 0;
-    while (accumulator >= fixedStep && steps < maxSteps)
+    while (m_fixedAccumulator >= fixedStep && steps < maxSteps)
     {
       run(phase, fixedDt);
-      accumulator -= fixedStep;
+      m_fixedAccumulator -= fixedStep;
       steps++;
     }
     // Always simulate at least once per rendered frame so one-frame inputs (jump)

@@ -4,6 +4,7 @@
 #include "material.h"
 #include "texture.h"
 #include "component.h"
+#include "environment.h"
 #include "scene.h"
 #include "camera3D.h"
 #include "renderer.h"
@@ -123,37 +124,41 @@ namespace Nebula
                              ? (static_cast<float>(fbw) / static_cast<float>(fbh))
                              : (16.0f / 9.0f);
 
+    Camera3D activeCamera;
+    Vec3 cameraEye{};
     const Mat4 vp = [&]() -> Mat4
     {
       if (ctx.overrideViewProjection != nullptr)
       {
+        if (ctx.overrideCamera != nullptr)
+        {
+          cameraEye = ctx.overrideCamera->getEyePosition();
+        }
         return *ctx.overrideViewProjection;
       }
       if (ctx.overrideCamera != nullptr)
       {
-        Camera3D camera = *ctx.overrideCamera;
-        camera.setAspectRatio(aspect);
-        return camera.getViewProjectionMatrix();
+        activeCamera = *ctx.overrideCamera;
+        activeCamera.setAspectRatio(aspect);
+        cameraEye = activeCamera.getEyePosition();
+        return activeCamera.getViewProjectionMatrix();
       }
 
       const auto &cameraComponent = ctx.scene.getComponent<CameraComponent>(cameraEntity);
-      Camera3D camera;
-      camera.setTarget(findCameraTarget(ctx.scene, cameraEntity));
-      camera.setPivotOffset(cameraComponent.pivotOffset);
-      camera.setDistance(cameraComponent.distance);
-      camera.setYaw(cameraComponent.yaw);
-      camera.setPitch(cameraComponent.pitch);
-      camera.setFOV(cameraComponent.fov);
-      camera.setNearPlane(cameraComponent.nearClip);
-      camera.setFarPlane(cameraComponent.farClip);
-      camera.setAspectRatio(aspect);
-      return camera.getViewProjectionMatrix();
+      activeCamera.setTarget(findCameraTarget(ctx.scene, cameraEntity));
+      activeCamera.setPivotOffset(cameraComponent.pivotOffset);
+      activeCamera.setDistance(cameraComponent.distance);
+      activeCamera.setYaw(cameraComponent.yaw);
+      activeCamera.setPitch(cameraComponent.pitch);
+      activeCamera.setFOV(cameraComponent.fov);
+      activeCamera.setNearPlane(cameraComponent.nearClip);
+      activeCamera.setFarPlane(cameraComponent.farClip);
+      activeCamera.setAspectRatio(aspect);
+      cameraEye = activeCamera.getEyePosition();
+      return activeCamera.getViewProjectionMatrix();
     }();
 
-    if (ctx.overrideCamera == nullptr)
-    {
-      (void)cameraEntity;
-    }
+    const EnvironmentComponent env = findEnvironmentOrDefault(ctx.scene);
 
     for (const Entity entity : ctx.scene.getAllEntities())
     {
@@ -173,6 +178,12 @@ namespace Nebula
       const Mat4 mvp = vp * transform.transform.getModelMatrix();
       material->shader->setMat4("uMVP", mvp);
       material->shader->setVec3("uColor", material->color);
+      material->shader->setVec3("uLightDir", env.lightDirection);
+      material->shader->setVec3("uLightColor", env.lightColor);
+      material->shader->setFloat("uLightIntensity", env.lightIntensity);
+      material->shader->setVec3("uFogColor", env.fogColor);
+      material->shader->setFloat("uFogDensity", env.fogDensity);
+      material->shader->setVec3("uCameraPos", cameraEye);
       if (material->albedoTexture)
       {
         material->shader->setInt("uUseTexture", 1);

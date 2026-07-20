@@ -14,4 +14,7 @@ namespace Nimbus
   /** Platforming test room with bounce pads, wind volumes, spawn, and goal. */
   void buildTraversalTestScene(Nebula::Scene &scene);
 
+  /** Combined traversal + arena combat + objective vertical slice. */
+  void buildVerticalSliceScene(Nebula::Scene &scene);
+
 }

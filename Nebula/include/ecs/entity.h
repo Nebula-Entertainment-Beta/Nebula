@@ -21,6 +21,15 @@ namespace Nebula
     }
 
     friend bool operator!=(const Entity &a, const Entity &b) { return !(a == b); }
+
+    friend bool operator<(const Entity &a, const Entity &b)
+    {
+      if (a.id != b.id)
+      {
+        return a.id < b.id;
+      }
+      return a.generation < b.generation;
+    }
   };
 
 } // namespace Nebula

@@ -31,6 +31,9 @@ namespace Nebula
 
         /** Sets a `vec3` uniform. Program must be bound. */
         virtual void setVec3(const std::string &name, const Vec3 &value) const = 0;
+
+        /** Sets a `float` uniform. Program must be bound. */
+        virtual void setFloat(const std::string &name, float value) const = 0;
     };
 
 }

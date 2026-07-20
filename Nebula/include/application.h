@@ -32,6 +32,7 @@
 #include "scene.h"
 #include "clock.h"
 #include "world.h"
+#include "audioService.h"
 
 #include <memory>
 
@@ -61,6 +62,12 @@ namespace Nebula
         Application &operator=(Application &&) = delete;
 
         void run();
+        /** Init renderer/systems once for externally driven loops (e.g. Qt). */
+        bool startFrameLoop();
+        /** Advance one frame; returns false when the window should close. */
+        bool pumpFrame();
+        void stopFrameLoop();
+
         Window &getWindow() { return m_window; }
         const Window &getWindow() const { return m_window; }
         Renderer &getRenderer() { return m_renderer; }
@@ -113,7 +120,10 @@ namespace Nebula
         void setPlaying(bool playing) { m_isPlaying = playing; }
 
         ScriptSystem &getScriptSystem() { return m_scriptSystem; }
+        /** Bind script instances from the scene without running lifecycle hooks. */
         void rebuildScripts();
+        /** Run onCreate/onEnable for currently bound scripts (Play / runtime start). */
+        void activateScripts();
         void bindNewScripts();
         void queueScriptRebuild();
 
@@ -128,6 +138,8 @@ namespace Nebula
         bool m_isPlaying = false;
         bool m_pendingScriptRebuild = false;
         bool m_rendererInitialized = false;
+        bool m_frameLoopActive = false;
+        float m_lastFrameTime = 0.f;
         uint32_t m_width;
         uint32_t m_height;
         std::string m_title;
@@ -151,5 +163,6 @@ namespace Nebula
         World m_world;
         std::unique_ptr<IPhysicsWorld> m_physicsWorld;
         std::unique_ptr<PhysicsQueryAdapter> m_physicsQuery;
+        std::unique_ptr<IAudioService> m_audio;
     };
 }
